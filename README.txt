@@ -1,21 +1,24 @@
-Files included
+What to upload
 
-admin.html
-- smarter scheduling with repeat-reduction
-- add/remove players after season starts
-- manual matchup editor
-- score entry
-- weekly ranking
-- standings history by week
-- WhatsApp-ready copy buttons
-- weekly awards
-- export public-data.js
+Admin repo:
+- index.html   -> use the admin file if you want admin at the main repo link
 
-public.html
-- auto-loads public-data.js from the same folder
-- optional manual file loading
-- overview, schedule, leaderboard, history
+Public access options:
+Option A: same repo
+- keep your admin page as index.html
+- upload public.html to the same repo
+- upload public-data.js to the same repo
+- members open:
+  https://vivekjai2000.github.io/pickleball-league-admin/public.html
 
-public-data.js
-- starter data file
-- replace this file with the one exported from admin.html whenever you want to publish updates
+Option B: separate public repo
+- create another repo, for example pickleball-league-public
+- upload public.html as index.html there
+- upload public-data.js there
+- members open that repo's GitHub Pages link
+
+Update workflow:
+1. Use admin page to update league info, schedule, and scores
+2. Click Export public-data.js
+3. Replace the existing public-data.js in the public GitHub repo
+4. Refresh the public page after GitHub Pages updates
