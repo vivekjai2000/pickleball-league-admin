@@ -1,0 +1,464 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pickleball League Admin Pro</title>
+  <style>
+    :root{
+      --bg:#f4f7fb; --card:#fff; --line:#d8e0ea; --text:#1f2937; --muted:#6b7280;
+      --blue:#2563eb; --green:#0f766e; --amber:#b45309; --red:#b91c1c;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--text)}
+    .wrap{max-width:1200px;margin:0 auto;padding:20px}
+    .hero,.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 22px rgba(15,23,42,.06)}
+    .hero{padding:20px;margin-bottom:16px}
+    h1,h2,h3{margin:0}
+    h1{font-size:28px}
+    .sub{color:var(--muted);margin-top:6px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    .card{padding:16px;margin-bottom:16px}
+    label{display:block;font-weight:700;margin:10px 0 6px}
+    input,select,textarea,button{font:inherit}
+    input,select,textarea{width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:12px;background:#fff}
+    textarea{min-height:120px;resize:vertical}
+    button{border:none;border-radius:12px;padding:11px 14px;font-weight:700;cursor:pointer}
+    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    .primary{background:var(--blue);color:#fff}
+    .secondary{background:#fff;color:var(--blue);border:1px solid var(--blue)}
+    .green{background:var(--green);color:#fff}
+    .amber{background:var(--amber);color:#fff}
+    .red{background:var(--red);color:#fff}
+    .row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .row2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    @media (max-width:760px){.row,.row2{grid-template-columns:1fr}}
+    .status{padding:11px 12px;border-radius:12px;background:#f8fafc;border:1px dashed var(--line);margin-top:12px;color:var(--muted)}
+    .pill{display:inline-block;background:#eef2ff;color:#1d4ed8;border-radius:999px;padding:6px 10px;font-size:13px;font-weight:700;margin:0 8px 8px 0}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
+    table{width:100%;border-collapse:collapse;min-width:760px}
+    th,td{padding:10px 12px;border-bottom:1px solid #e8eef5;text-align:left;vertical-align:top}
+    th{background:#f8fafc}
+    .small{font-size:13px;color:var(--muted)}
+    .week-box{border:1px dashed var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+    .badge{display:inline-block;background:#ecfeff;color:#0f766e;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>Pickleball League Admin Pro</h1>
+    <div class="sub">Admin-only GitHub-ready setup app. Add rated players, build season weeks, generate Saturday or Sunday round-robin schedules, and save everything in your browser.</div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>1) League Setup</h2>
+      <div class="row2">
+        <div>
+          <label>League title</label>
+          <input id="leagueTitle" value="Pouncy Tract Weekend Pickleball League">
+        </div>
+        <div>
+          <label>Subtitle</label>
+          <input id="leagueSubtitle" value="Short Pump, VA">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Season start</label>
+          <input id="seasonStart" type="date" value="2026-04-11">
+        </div>
+        <div>
+          <label>Season end</label>
+          <input id="seasonEnd" type="date" value="2026-10-03">
+        </div>
+        <div>
+          <label>Default courts</label>
+          <input id="defaultCourts" type="number" min="1" max="8" value="5">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Default rounds/day</label>
+          <input id="defaultRounds" type="number" min="1" max="12" value="8">
+        </div>
+        <div>
+          <label>Winning score</label>
+          <input id="winScore" type="number" min="1" max="30" value="11">
+        </div>
+        <div>
+          <label>ELO K-factor</label>
+          <input id="kFactor" type="number" min="1" max="60" value="24">
+        </div>
+      </div>
+      <div class="btns">
+        <button class="primary" onclick="generateWeeks()">Generate Season Weeks</button>
+        <button class="secondary" onclick="saveState()">Save</button>
+        <button class="secondary" onclick="loadState()">Load Saved</button>
+        <button class="amber" onclick="exportJson()">Export JSON</button>
+        <button class="secondary" onclick="document.getElementById('importJson').click()">Import JSON</button>
+        <button class="red" onclick="resetAll()">Reset</button>
+        <input id="importJson" type="file" accept=".json,application/json" style="display:none" onchange="importJson(event)">
+      </div>
+      <div id="profileStatus" class="status">Start by importing your player roster.</div>
+    </div>
+
+    <div class="card">
+      <h2>2) Master Roster + Ratings</h2>
+      <div class="small">Paste one player per line in this format: <b>Name, Rating</b>. Seeds are created automatically from highest rating to lowest.</div>
+      <textarea id="rosterInput" placeholder="Vivek, 4.02&#10;Vimal, 4.00&#10;Vin, 3.85"></textarea>
+      <div class="btns">
+        <button class="green" onclick="importRoster()">Import Roster</button>
+        <button class="secondary" onclick="loadSampleRoster()">Load Sample</button>
+      </div>
+      <div id="rosterStatus" class="status">No roster imported yet.</div>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead><tr><th>Seed</th><th>Player</th><th>Rating</th></tr></thead>
+          <tbody id="rosterBody"><tr><td colspan="3" class="small">No players yet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>3) Week Setup</h2>
+    <div class="small">Each week supports Saturday only, Sunday only, or both. You can adjust courts and rounds separately.</div>
+    <div id="weeksArea" style="margin-top:14px">No weeks generated yet.</div>
+  </div>
+
+  <div class="card">
+    <h2>4) Generate Day Schedule</h2>
+    <div class="row2">
+      <div>
+        <label>Week</label>
+        <select id="pickWeek"></select>
+      </div>
+      <div>
+        <label>Day</label>
+        <select id="pickDay">
+          <option value="Saturday">Saturday</option>
+          <option value="Sunday">Sunday</option>
+        </select>
+      </div>
+    </div>
+    <div class="btns">
+      <button class="primary" onclick="generateDaySchedule()">Generate Schedule</button>
+      <button class="secondary" onclick="copySchedule()">Copy Schedule</button>
+    </div>
+    <div id="scheduleStatus" class="status">Select week and day to build a schedule.</div>
+    <div class="table-wrap" style="margin-top:12px">
+      <table>
+        <thead><tr><th>Round</th><th>Court</th><th>Team 1</th><th>Team 2</th></tr></thead>
+        <tbody id="scheduleBody"><tr><td colspan="4" class="small">No schedule generated yet.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>5) Admin Snapshot</h2>
+    <div id="summaryBox" class="small">No setup yet.</div>
+  </div>
+</div>
+
+<script>
+const KEY = "pickleball_league_admin_pro_v2";
+let state = {
+  profile:{
+    leagueTitle:"Pouncy Tract Weekend Pickleball League",
+    leagueSubtitle:"Short Pump, VA",
+    seasonStart:"2026-04-11",
+    seasonEnd:"2026-10-03",
+    defaultCourts:5,
+    defaultRounds:8,
+    winScore:11,
+    kFactor:24
+  },
+  roster:[],
+  weeks:[]
+};
+
+function esc(s){return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");}
+function fmtDate(iso){if(!iso) return ""; const d=new Date(iso+"T12:00:00"); return d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});}
+function addDays(iso,n){const d=new Date(iso+"T12:00:00"); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10);}
+function saturdaysBetween(start,end){
+  let d=new Date(start+"T12:00:00");
+  while(d.getDay()!==6) d.setDate(d.getDate()+1);
+  const arr=[];
+  while(d.toISOString().slice(0,10)<=end){
+    arr.push(d.toISOString().slice(0,10));
+    d.setDate(d.getDate()+7);
+  }
+  return arr;
+}
+function syncProfileFromUI(){
+  state.profile = {
+    leagueTitle:document.getElementById("leagueTitle").value.trim(),
+    leagueSubtitle:document.getElementById("leagueSubtitle").value.trim(),
+    seasonStart:document.getElementById("seasonStart").value,
+    seasonEnd:document.getElementById("seasonEnd").value,
+    defaultCourts:Number(document.getElementById("defaultCourts").value||5),
+    defaultRounds:Number(document.getElementById("defaultRounds").value||8),
+    winScore:Number(document.getElementById("winScore").value||11),
+    kFactor:Number(document.getElementById("kFactor").value||24)
+  };
+}
+function pushProfileToUI(){
+  const p=state.profile;
+  document.getElementById("leagueTitle").value=p.leagueTitle;
+  document.getElementById("leagueSubtitle").value=p.leagueSubtitle;
+  document.getElementById("seasonStart").value=p.seasonStart;
+  document.getElementById("seasonEnd").value=p.seasonEnd;
+  document.getElementById("defaultCourts").value=p.defaultCourts;
+  document.getElementById("defaultRounds").value=p.defaultRounds;
+  document.getElementById("winScore").value=p.winScore;
+  document.getElementById("kFactor").value=p.kFactor;
+}
+function parseRoster(text){
+  const rows=(text||"").split(/\n+/).map(x=>x.trim()).filter(Boolean);
+  const out=[], seen=new Set();
+  for(const line of rows){
+    const idx=line.lastIndexOf(",");
+    if(idx<0) continue;
+    const name=line.slice(0,idx).trim();
+    const rating=parseFloat(line.slice(idx+1).trim());
+    if(!name || !Number.isFinite(rating) || seen.has(name.toLowerCase())) continue;
+    seen.add(name.toLowerCase());
+    out.push({name,rating});
+  }
+  out.sort((a,b)=>b.rating-a.rating || a.name.localeCompare(b.name));
+  out.forEach((r,i)=>r.seed=i+1);
+  return out;
+}
+function importRoster(){
+  const roster=parseRoster(document.getElementById("rosterInput").value);
+  if(!roster.length){
+    document.getElementById("rosterStatus").textContent="Could not parse roster. Use Name, Rating.";
+    return;
+  }
+  state.roster=roster;
+  renderRoster();
+  renderSummary();
+  document.getElementById("rosterStatus").textContent=`Imported ${roster.length} players successfully.`;
+  saveState();
+}
+function loadSampleRoster(){
+  document.getElementById("rosterInput").value=[
+    "Vivek, 4.02","Vimal, 4.00","Vin, 4.00","Murali, 4.00","Sunil, 4.00",
+    "Ravi, 4.00","Sheel, 4.25","Doumit, 3.75","Pavan, 3.70","Rohan, 3.60",
+    "Amit, 3.55","Raj, 3.50"
+  ].join("\n");
+}
+function renderRoster(){
+  const body=document.getElementById("rosterBody");
+  if(!state.roster.length){
+    body.innerHTML='<tr><td colspan="3" class="small">No players yet.</td></tr>';
+    return;
+  }
+  body.innerHTML=state.roster.map(r=>`<tr><td>${r.seed}</td><td><strong>${esc(r.name)}</strong></td><td>${r.rating.toFixed(2)}</td></tr>`).join("");
+}
+function generateWeeks(){
+  syncProfileFromUI();
+  if(!state.profile.seasonStart || !state.profile.seasonEnd || state.profile.seasonEnd < state.profile.seasonStart){
+    document.getElementById("profileStatus").textContent="Please enter a valid season start and end date.";
+    return;
+  }
+  const sats=saturdaysBetween(state.profile.seasonStart,state.profile.seasonEnd);
+  state.weeks=sats.map((sat,i)=>{
+    const sun=addDays(sat,1);
+    return {
+      week:i+1,
+      saturday:{date:sat,active:true,courts:state.profile.defaultCourts,rounds:state.profile.defaultRounds,schedule:[]},
+      sunday:{date:sun,active:sun<=state.profile.seasonEnd,courts:state.profile.defaultCourts,rounds:state.profile.defaultRounds,schedule:[]}
+    };
+  });
+  renderWeeks();
+  renderWeekOptions();
+  renderSummary();
+  document.getElementById("profileStatus").textContent=`Generated ${state.weeks.length} weeks successfully.`;
+  saveState();
+}
+function renderWeeks(){
+  const box=document.getElementById("weeksArea");
+  if(!state.weeks.length){box.innerHTML="No weeks generated yet."; return;}
+  box.innerHTML=state.weeks.map(w=>`
+    <div class="week-box">
+      <div style="margin-bottom:8px"><strong>Week ${w.week}</strong> <span class="small">| Sat ${fmtDate(w.saturday.date)}${w.sunday.date ? " | Sun "+fmtDate(w.sunday.date):""}</span></div>
+      <div class="row2">
+        <div>
+          <span class="badge">Saturday</span>
+          <div style="margin-top:8px">
+            <label><input type="checkbox" ${w.saturday.active?"checked":""} onchange="toggleDay(${w.week},'saturday',this.checked)" style="width:auto"> Active</label>
+          </div>
+          <div class="row2">
+            <div><label>Courts</label><input type="number" min="1" max="8" value="${w.saturday.courts}" onchange="updateDayField(${w.week},'saturday','courts',this.value)"></div>
+            <div><label>Rounds</label><input type="number" min="1" max="12" value="${w.saturday.rounds}" onchange="updateDayField(${w.week},'saturday','rounds',this.value)"></div>
+          </div>
+        </div>
+        <div>
+          <span class="badge">Sunday</span>
+          <div style="margin-top:8px">
+            <label><input type="checkbox" ${w.sunday.active?"checked":""} ${w.sunday.date?"":"disabled"} onchange="toggleDay(${w.week},'sunday',this.checked)" style="width:auto"> Active</label>
+          </div>
+          <div class="row2">
+            <div><label>Courts</label><input type="number" min="1" max="8" value="${w.sunday.courts}" ${w.sunday.date?"":"disabled"} onchange="updateDayField(${w.week},'sunday','courts',this.value)"></div>
+            <div><label>Rounds</label><input type="number" min="1" max="12" value="${w.sunday.rounds}" ${w.sunday.date?"":"disabled"} onchange="updateDayField(${w.week},'sunday','rounds',this.value)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+function renderWeekOptions(){
+  document.getElementById("pickWeek").innerHTML = state.weeks.map(w=>`<option value="${w.week}">Week ${w.week}</option>`).join("");
+}
+function toggleDay(week,day,val){
+  const w=state.weeks.find(x=>x.week===week); if(!w) return;
+  w[day].active=val; saveState(); renderSummary();
+}
+function updateDayField(week,day,field,val){
+  const w=state.weeks.find(x=>x.week===week); if(!w) return;
+  w[day][field]=Number(val||0); saveState(); renderSummary();
+}
+function buildSchedule(players,courts,rounds){
+  let rotation=players.slice();
+  const matches=[];
+  for(let r=1;r<=rounds;r++){
+    const active=rotation.slice(0, Math.min(rotation.length, courts*4));
+    for(let c=0;c<Math.floor(active.length/4);c++){
+      const i=c*4;
+      matches.push({
+        round:r,
+        court:c+1,
+        team1:[active[i],active[i+1]],
+        team2:[active[i+2],active[i+3]]
+      });
+    }
+    rotation.push(rotation.shift());
+  }
+  return matches;
+}
+function generateDaySchedule(){
+  if(!state.roster.length){
+    document.getElementById("scheduleStatus").textContent="Import the roster first.";
+    return;
+  }
+  const weekNum=Number(document.getElementById("pickWeek").value);
+  const dayLabel=document.getElementById("pickDay").value;
+  const dayKey=dayLabel.toLowerCase();
+  const week=state.weeks.find(w=>w.week===weekNum);
+  if(!week){document.getElementById("scheduleStatus").textContent="Week not found."; return;}
+  if(!week[dayKey].active){document.getElementById("scheduleStatus").textContent=`${dayLabel} is not active for Week ${weekNum}.`; return;}
+  week[dayKey].schedule = buildSchedule(state.roster.map(r=>r.name), week[dayKey].courts, week[dayKey].rounds);
+  renderScheduleTable(week[dayKey].schedule);
+  document.getElementById("scheduleStatus").textContent=`Generated ${week[dayKey].schedule.length} matches for Week ${weekNum} ${dayLabel}.`;
+  saveState();
+}
+function renderScheduleTable(rows){
+  const body=document.getElementById("scheduleBody");
+  if(!rows || !rows.length){
+    body.innerHTML='<tr><td colspan="4" class="small">No schedule generated yet.</td></tr>';
+    return;
+  }
+  body.innerHTML=rows.map(m=>`<tr><td>${m.round}</td><td>${m.court}</td><td>${esc(m.team1[0])} & ${esc(m.team1[1])}</td><td>${esc(m.team2[0])} & ${esc(m.team2[1])}</td></tr>`).join("");
+}
+function copySchedule(){
+  const weekNum=Number(document.getElementById("pickWeek").value);
+  const dayLabel=document.getElementById("pickDay").value;
+  const dayKey=dayLabel.toLowerCase();
+  const week=state.weeks.find(w=>w.week===weekNum);
+  if(!week || !week[dayKey].schedule.length){alert("Generate a schedule first."); return;}
+  let txt=`*${state.profile.leagueTitle}*\nWeek ${weekNum} • ${dayLabel}\n\n`;
+  let currentRound=null;
+  week[dayKey].schedule.forEach(m=>{
+    if(currentRound!==m.round){currentRound=m.round; txt += `*Round ${m.round}*\n`;}
+    txt += `Court ${m.court}: ${m.team1[0]} & ${m.team1[1]} vs ${m.team2[0]} & ${m.team2[1]}\n`;
+  });
+  navigator.clipboard.writeText(txt.trim()).then(()=>alert("Schedule copied."));
+}
+function renderSummary(){
+  const activeSat=state.weeks.filter(w=>w.saturday.active).length;
+  const activeSun=state.weeks.filter(w=>w.sunday.active).length;
+  const generated=state.weeks.reduce((n,w)=>n+(w.saturday.schedule.length?1:0)+(w.sunday.schedule.length?1:0),0);
+  document.getElementById("summaryBox").innerHTML = `
+    <span class="pill">${esc(state.profile.leagueTitle || "League")}</span>
+    <span class="pill">${state.roster.length} players</span>
+    <span class="pill">${state.weeks.length} weeks</span>
+    <span class="pill">${activeSat} Saturdays active</span>
+    <span class="pill">${activeSun} Sundays active</span>
+    <span class="pill">${generated} schedules generated</span>
+    <div style="margin-top:10px"><strong>Format:</strong> First to ${state.profile.winScore} • ${state.profile.defaultCourts} default courts • ${state.profile.defaultRounds} default rounds/day</div>
+  `;
+}
+function saveState(){syncProfileFromUI(); localStorage.setItem(KEY, JSON.stringify(state));}
+function loadState(){
+  const raw=localStorage.getItem(KEY);
+  if(!raw){alert("No saved state found."); return;}
+  state=JSON.parse(raw);
+  pushProfileToUI(); renderRoster(); renderWeeks(); renderWeekOptions(); renderSummary();
+  const first=state.weeks[0]?.saturday?.schedule || [];
+  renderScheduleTable(first);
+  document.getElementById("profileStatus").textContent="Saved state loaded.";
+}
+function exportJson(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="pickleball_league_admin_pro.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function importJson(event){
+  const file=event.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      state=JSON.parse(e.target.result);
+      pushProfileToUI(); renderRoster(); renderWeeks(); renderWeekOptions(); renderSummary();
+      const first=state.weeks[0]?.saturday?.schedule || [];
+      renderScheduleTable(first);
+      document.getElementById("profileStatus").textContent="Backup imported successfully.";
+      saveState();
+    }catch(err){alert("Could not import backup.");}
+  };
+  reader.readAsText(file);
+}
+function resetAll(){
+  if(!confirm("Reset everything?")) return;
+  localStorage.removeItem(KEY);
+  state = {
+    profile:{
+      leagueTitle:"Pouncy Tract Weekend Pickleball League",
+      leagueSubtitle:"Short Pump, VA",
+      seasonStart:"2026-04-11",
+      seasonEnd:"2026-10-03",
+      defaultCourts:5,
+      defaultRounds:8,
+      winScore:11,
+      kFactor:24
+    },
+    roster:[],
+    weeks:[]
+  };
+  pushProfileToUI();
+  document.getElementById("rosterInput").value="";
+  renderRoster(); renderWeeks(); renderWeekOptions(); renderScheduleTable([]); renderSummary();
+  document.getElementById("profileStatus").textContent="Reset complete.";
+  document.getElementById("rosterStatus").textContent="No roster imported yet.";
+  document.getElementById("scheduleStatus").textContent="Select week and day to build a schedule.";
+}
+window.addEventListener("load", ()=>{
+  pushProfileToUI();
+  renderRoster();
+  renderWeeks();
+  renderWeekOptions();
+  renderScheduleTable([]);
+  renderSummary();
+  if(localStorage.getItem(KEY)) loadState();
+});
+</script>
+</body>
+</html>
