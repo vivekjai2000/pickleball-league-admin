@@ -1,27 +1,21 @@
 Files included
 
 admin.html
-- admin-only page
-- league setup
-- roster import
-- schedule generation
+- smarter scheduling with repeat-reduction
+- add/remove players after season starts
+- manual matchup editor
 - score entry
 - weekly ranking
-- season leaderboard
+- standings history by week
+- WhatsApp-ready copy buttons
+- weekly awards
 - export public-data.js
 
 public.html
-- read-only viewer
-- automatically loads public-data.js from the same folder
-- also supports manual file loading
+- auto-loads public-data.js from the same folder
+- optional manual file loading
+- overview, schedule, leaderboard, history
 
 public-data.js
 - starter data file
 - replace this file with the one exported from admin.html whenever you want to publish updates
-
-Best workflow
-1. Host admin.html privately or use it only yourself.
-2. Host public.html and public-data.js in your public GitHub Pages repo.
-3. After updates in admin.html, click Export public-data.js.
-4. Replace the old public-data.js in GitHub with the new one.
-5. Refresh the public page after GitHub Pages updates.
