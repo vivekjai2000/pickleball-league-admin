@@ -1,0 +1,20 @@
+Google Sheets live sync setup
+
+1. Create a new Google Sheet.
+2. Open Extensions > Apps Script.
+3. Paste the contents of Code.gs from this bundle.
+4. Save the project.
+5. Deploy > New deployment > Web app.
+6. Execute as: Me
+7. Who has access: Anyone with the link
+8. Copy the Web App URL.
+9. In admin.html, open Google Sheets Sync tab.
+10. Paste the URL and click Save URL.
+11. Click Test Connection.
+12. Click Save Entire League to Google Sheets.
+13. Public page and player page will read live data automatically from Google Sheets.
+
+Reset behavior
+- In admin.html > Google Sheets Sync, click Reset Google Sheets Data.
+- This clears the stored league state in Google Sheets so you can start another league later.
+

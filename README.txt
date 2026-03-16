@@ -109,3 +109,18 @@ v18:
 - Improved mobile-friendly sports-app feel with sticky tab navigation.
 - Public playoffs respect the selected playoff format and show real progression if results are entered.
 - Export button in admin remains: Export public-data.js
+
+
+v19:
+- Fixed broken logo issue by embedding the shared logo directly into public.html, admin.html, and player.html.
+- Added automatic logo fallback logic.
+- Included a physical fallback image file: logo-fallback.jpg
+
+v20:
+- Added Google Sheets Sync tab in admin.
+- Admin can save the full league state to Google Sheets.
+- Admin can load the full league state back from Google Sheets.
+- Reset button clears the Google Sheets league data so you can start another league later.
+- Public page and player page can auto-read live data from Google Sheets through Apps Script.
+- Included Apps Script template: Code.gs
+- Included setup guide: GOOGLE_SHEETS_SETUP.txt

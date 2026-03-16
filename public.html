@@ -234,9 +234,30 @@ function buildPlayerStats() {
     return {...s, games, pct: games ? s.wins/games : 0, diff: s.pf-s.pa};
   }).sort((a,b) => b.pct-a.pct || b.diff-a.diff || a.name.localeCompare(b.name));
 }
+
+function getLiveGoogleUrl(){
+  return (window.POUNCY_PUBLIC_DATA && window.POUNCY_PUBLIC_DATA.profile && window.POUNCY_PUBLIC_DATA.profile.googleScriptUrl) || localStorage.getItem("pouncy_google_script_url") || "";
+}
+async function tryLoadLiveGoogleData(){
+  const url = getLiveGoogleUrl();
+  if(!url) return false;
+  try{
+    const res = await fetch(url + "?action=loadLeagueState", {method:"GET", mode:"cors"});
+    const json = await res.json();
+    if(json.ok && json.data){
+      data = json.data;
+      if(data.profile && data.profile.googleScriptUrl){
+        localStorage.setItem("pouncy_google_script_url", data.profile.googleScriptUrl);
+      }
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
 function useData() {
   if(!data) { viewerStatus.textContent="No public data found yet. Add public-data.js next to this page, or load a file manually."; return; }
-  viewerStatus.textContent="Public data loaded successfully.";
+  viewerStatus.textContent = getLiveGoogleUrl() ? "Live Google Sheets data loaded." : "Public data loaded successfully.";
   weekSel.innerHTML=(data.weeks||[]).map(w=>`<option value="${w.week}">Week ${w.week}</option>`).join('');
   renderOverview(); renderSchedule(); renderLeaderboard(); renderHistory(); renderPlayers(); renderPlayoffs(); renderHallOfFame();
 }
@@ -396,7 +417,7 @@ function renderHallOfFame() {
   `;
 }
 
-window.addEventListener('load', useData);
+window.addEventListener('load', async () => { await tryLoadLiveGoogleData(); useData(); });
 </script>
 
 <script>
