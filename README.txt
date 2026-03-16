@@ -143,3 +143,28 @@ v23:
 - Apps Script now computes the live season leaderboard from Google Sheets data.
 - A Leaderboard tab is written into the Google Sheet automatically.
 - Public page reads the computed Google Sheets leaderboard automatically.
+
+
+v24 fix:
+- Restored missing admin helper functions pushProfileToUI() and parseRoster().
+- Fixed Master Roster import section.
+- Hardened admin load logic so the roster tab and league setup continue to work reliably.
+
+
+v25 fix:
+- Hardened Master Roster import so it no longer silently fails.
+- Added better parsing for Name, Rating lines.
+- Added a quick roster count below the roster status.
+- Import now updates roster status even if summary/save helpers fail.
+
+
+v26:
+- Master Roster import now auto-syncs to Google Sheets when a Google Script URL is configured.
+- Add Player and Remove Player actions also auto-sync to Google Sheets.
+
+
+v27:
+- Public page now allows score entry only for current active scheduled matches.
+- Added strict pickleball score validation: valid examples 11-9, 13-11, 15-13. Invalid examples 11-10, 12-11, 14-13, 9-7.
+- Public score saves now update Google Sheets directly through Apps Script.
+- Completed matches remain read-only after save.

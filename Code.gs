@@ -47,6 +47,11 @@ function doPost(e) {
       return jsonOutput({ok:true, message:"Google Sheets league data was reset."});
     }
 
+    if (action === "updateMatchScore") {
+      const data = updateMatchScore_(payload);
+      return jsonOutput({ok:true, message:"Score updated successfully.", data:data});
+    }
+
     return jsonOutput({ok:false, error:"Unsupported POST action."});
   } catch (err) {
     return jsonOutput({ok:false, error:String(err)});
@@ -267,3 +272,46 @@ function computeSeason_(state){
 
 function round1_(n){ return Math.round((Number(n) || 0) * 10) / 10; }
 function round2_(n){ return Math.round((Number(n) || 0) * 100) / 100; }
+
+
+function isValidPickleballScore_(score1, score2){
+  score1 = Number(score1 || 0);
+  score2 = Number(score2 || 0);
+  if (!isFinite(score1) || !isFinite(score2)) return false;
+  if (score1 < 0 || score2 < 0 || score1 === score2) return false;
+  var hi = Math.max(score1, score2), lo = Math.min(score1, score2), diff = hi - lo;
+  if (hi < 11) return false;
+  if (hi === 11) return diff >= 2 && lo <= 9;
+  return lo >= 10 && diff === 2;
+}
+
+function updateMatchScore_(payload){
+  const weekNum = Number(payload.week || 0);
+  const dayKey = String(payload.day || "").toLowerCase();
+  const round = Number(payload.round || 0);
+  const court = Number(payload.court || 0);
+  const score1 = Number(payload.score1 || 0);
+  const score2 = Number(payload.score2 || 0);
+
+  if (!isValidPickleballScore_(score1, score2)) {
+    throw new Error("Invalid score. Valid examples: 11-9, 13-11, 15-13. Invalid examples: 11-10, 12-11, 14-13, 9-7.");
+  }
+
+  const state = loadLeagueState_();
+  const weeks = state.weeks || [];
+  const week = weeks.find(function(w){ return Number(w.week || 0) === weekNum; });
+  if (!week) throw new Error("Week not found.");
+  const day = week[dayKey];
+  if (!day || !day.schedule) throw new Error("Scheduled day not found.");
+  const match = day.schedule.find(function(m){
+    return Number(m.round || 0) === round && Number(m.court || 0) === court;
+  });
+  if (!match) throw new Error("Scheduled match not found.");
+
+  match.score1 = score1;
+  match.score2 = score2;
+  match.completed = true;
+
+  saveLeagueState_(state);
+  return loadLeagueState_();
+}

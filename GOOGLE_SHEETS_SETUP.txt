@@ -28,3 +28,8 @@ That means:
 - Apps Script calculates the leaderboard when data is loaded or saved
 - Public page reads the computed leaderboard automatically
 - A Leaderboard tab is also written into your Google Sheet
+
+
+Public score entry
+
+This version allows score updates directly from public.html for current active scheduled matches only. Scores are validated by both the public page and Apps Script before being saved into Google Sheets.
