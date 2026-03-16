@@ -124,3 +124,9 @@ v20:
 - Public page and player page can auto-read live data from Google Sheets through Apps Script.
 - Included Apps Script template: Code.gs
 - Included setup guide: GOOGLE_SHEETS_SETUP.txt
+
+
+v21 fix:
+- Fixed Google Sheets URL Save button in admin.
+- URL now saves directly to state and localStorage.
+- Admin field now repopulates automatically on reload.
