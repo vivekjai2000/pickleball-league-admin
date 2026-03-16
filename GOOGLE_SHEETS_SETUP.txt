@@ -18,3 +18,13 @@ Reset behavior
 - In admin.html > Google Sheets Sync, click Reset Google Sheets Data.
 - This clears the stored league state in Google Sheets so you can start another league later.
 
+
+
+Automatic DUPR-style leaderboard from Google Sheets
+
+This version calculates the season leaderboard and DUPR-style ratings inside Apps Script.
+That means:
+- Google Sheets stores the league state
+- Apps Script calculates the leaderboard when data is loaded or saved
+- Public page reads the computed leaderboard automatically
+- A Leaderboard tab is also written into your Google Sheet

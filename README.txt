@@ -130,3 +130,16 @@ v21 fix:
 - Fixed Google Sheets URL Save button in admin.
 - URL now saves directly to state and localStorage.
 - Admin field now repopulates automatically on reload.
+
+
+v22:
+- Added automatic Google Sheets sync after score save.
+- Also auto-syncs after schedule generation, check-in save, and playoff updates when a Google Script URL is configured.
+- Manual 'Save Entire League to Google Sheets' still remains available.
+
+
+v23:
+- Added automatic DUPR-style rating and leaderboard calculation in Code.gs.
+- Apps Script now computes the live season leaderboard from Google Sheets data.
+- A Leaderboard tab is written into the Google Sheet automatically.
+- Public page reads the computed Google Sheets leaderboard automatically.
