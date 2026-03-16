@@ -100,3 +100,12 @@ v17:
 - Added Championship Center to the public home screen.
 - Added latest results widget on the public overview page.
 - Public overview now highlights champion, final status, and recent completed matches.
+
+
+v18:
+- Added configurable playoff format in admin (Top 4 / Top 8 / Top 12).
+- Upgraded automatic doubles round robin scheduler with stronger fairness logic for partner diversity, opponent diversity, and rest balancing.
+- Upgraded rating system to a DUPR-style score-aware rating model.
+- Improved mobile-friendly sports-app feel with sticky tab navigation.
+- Public playoffs respect the selected playoff format and show real progression if results are entered.
+- Export button in admin remains: Export public-data.js
