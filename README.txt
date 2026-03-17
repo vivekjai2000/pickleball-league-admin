@@ -178,3 +178,10 @@ v28 fix:
 v29:
 - Updated the first hero tile/header background across admin.html, public.html, and player.html to a darker blue gradient like the reference screenshot.
 - Adjusted hero tab/button styling for better contrast on the dark background.
+
+
+v30:
+- Fixed admin JavaScript so admin buttons work again.
+- Fixed Master Roster import function.
+- Redesigned the top hero tile across admin.html, public.html, and player.html to match the reference style with left logo, location, and tagline.
+- Kept logo fallback behavior.
