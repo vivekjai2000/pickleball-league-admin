@@ -52,6 +52,11 @@ function doPost(e) {
       return jsonOutput({ok:true, message:"Score updated successfully.", data:data});
     }
 
+    if (action === "updateWeekSignup") {
+      const data = updateWeekSignup_(payload);
+      return jsonOutput({ok:true, message:"Week sign-up saved successfully.", data:data});
+    }
+
     return jsonOutput({ok:false, error:"Unsupported POST action."});
   } catch (err) {
     return jsonOutput({ok:false, error:String(err)});
@@ -311,6 +316,26 @@ function updateMatchScore_(payload){
   match.score1 = score1;
   match.score2 = score2;
   match.completed = true;
+
+  saveLeagueState_(state);
+  return loadLeagueState_();
+}
+
+
+function updateWeekSignup_(payload){
+  const weekNum = Number(payload.week || 0);
+  const dayKey = String(payload.day || "").toLowerCase();
+  const players = Array.isArray(payload.players) ? payload.players.map(function(x){ return String(x || "").trim(); }).filter(Boolean) : [];
+  if (!weekNum) throw new Error("Week is required.");
+  if (dayKey !== "saturday" && dayKey !== "sunday") throw new Error("Day must be saturday or sunday.");
+
+  const state = loadLeagueState_();
+  const week = (state.weeks || []).find(function(w){ return Number(w.week || 0) === weekNum; });
+  if (!week) throw new Error("Week not found.");
+  if (!week[dayKey] || !week[dayKey].active) throw new Error("This day is not active for the selected week.");
+
+  if (!state.availability) state.availability = {};
+  state.availability["W" + weekNum + "_" + dayKey] = players;
 
   saveLeagueState_(state);
   return loadLeagueState_();
