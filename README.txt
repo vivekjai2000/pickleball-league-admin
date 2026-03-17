@@ -168,3 +168,13 @@ v27:
 - Added strict pickleball score validation: valid examples 11-9, 13-11, 15-13. Invalid examples 11-10, 12-11, 14-13, 9-7.
 - Public score saves now update Google Sheets directly through Apps Script.
 - Completed matches remain read-only after save.
+
+
+v28 fix:
+- Fixed a JavaScript syntax error in admin.html that was breaking all admin buttons.
+- Repaired the Master Roster parser so roster import works again.
+
+
+v29:
+- Updated the first hero tile/header background across admin.html, public.html, and player.html to a darker blue gradient like the reference screenshot.
+- Adjusted hero tab/button styling for better contrast on the dark background.
