@@ -69,3 +69,6 @@ If players were seeing Failed to fetch while saving sign-up, update Code.gs from
 Current Signup Week
 
 Admin can now select a Current Signup Week. Public sign-up uses that week first. Schedule generation in admin also checks that players have signed up for the selected week/day before generating matches.
+
+
+If Week Sign-Up shows 'Unsupported GET action', replace Code.gs with this version and redeploy your Apps Script Web App. This bundle also includes a POST fallback in public.html.

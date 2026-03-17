@@ -244,3 +244,8 @@ v41:
 - Added signed-up player preview in the Schedule tile.
 - Admin now shows exactly who will be used before generation, for example: Scheduling with: Doumit, Murali, Ravi, Sheel.
 - Added a blocker message that includes the actual signed-up player list when fewer than 4 players are eligible.
+
+
+v42:
+- Fixed Week Sign-Up by adding GET support for updateWeekSignup in Code.gs.
+- Added POST fallback in public.html so sign-up still saves if GET is not yet deployed.

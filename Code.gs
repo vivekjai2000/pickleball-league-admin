@@ -21,6 +21,23 @@ function doGet(e) {
       return jsonOutput({ok:false, error:String(err)});
     }
   }
+  if (action === "updateWeekSignup") {
+    try {
+      const playersRaw = (e && e.parameter && e.parameter.players) || "";
+      const players = String(playersRaw)
+        .split("|")
+        .map(function(x){ return String(x || "").trim(); })
+        .filter(Boolean);
+      const data = updateWeekSignup_({
+        week: (e && e.parameter && e.parameter.week) || "",
+        day: (e && e.parameter && e.parameter.day) || "",
+        players: players
+      });
+      return jsonOutput({ok:true, message:"Week sign-up saved successfully.", data:data});
+    } catch (err) {
+      return jsonOutput({ok:false, error:String(err)});
+    }
+  }
   return jsonOutput({ok:false, error:"Unsupported GET action."});
 }
 
