@@ -98,7 +98,8 @@ function defaultLeagueState_(){
       winScore:11,
       kFactor:24,
       minMatchesForPlayoffs:8,
-      googleScriptUrl:""
+      googleScriptUrl:"",
+      currentSignupWeek:""
     },
     roster:[],
     weeks:[],
@@ -333,6 +334,8 @@ function updateWeekSignup_(payload){
   const week = (state.weeks || []).find(function(w){ return Number(w.week || 0) === weekNum; });
   if (!week) throw new Error("Week not found.");
   if (!week[dayKey] || !week[dayKey].active) throw new Error("This day is not active for the selected week.");
+  var sched = Array.isArray(week[dayKey].schedule) ? week[dayKey].schedule : [];
+  if (sched.length > 0) throw new Error("Sign-up is closed because matches were already generated for this day.");
 
   if (!state.availability) state.availability = {};
   state.availability["W" + weekNum + "_" + dayKey] = players;

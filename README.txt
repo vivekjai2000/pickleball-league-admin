@@ -220,3 +220,15 @@ v37:
 - Players can sign up separately for Saturday and Sunday from the public page.
 - Public sign-up writes to Google Sheets availability.
 - Admin schedule generation uses the same availability list for active week/day round robin generation.
+
+
+v38:
+- Fixed Week Sign-Up save to use a GET-based Apps Script endpoint to avoid failed fetch on some browsers.
+- Sign-up tile now hides automatically once matches are generated or completed for the active day.
+- Added Apps Script support for updateWeekSignup via GET.
+
+
+v39:
+- Added Current Signup Week selector to admin.
+- Public sign-up now uses the explicit current signup week from admin when set.
+- Admin schedule generation now requires signed-up players for the selected week/day before creating schedules.
