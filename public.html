@@ -598,6 +598,18 @@ function renderPlayoffs() {
   const p = data.playoffs || {};
   const rows = (data.season||[]);
   const fmt = Number(p.format || data.profile?.playoffFormat || 12);
+  const headerTitle = `Top ${fmt} Playoff View`;
+  const headerSubtitle = fmt === 4
+    ? 'Seeds 1-4 advance directly to the semifinals.'
+    : fmt === 8
+      ? 'Seeds 1-8 advance to the quarterfinals.'
+      : 'Seeds 1-4 receive byes. Seeds 5-12 play in.';
+
+  const titleEl = document.getElementById("playoffHeaderTitle");
+  const subEl = document.getElementById("playoffHeaderSubtitle");
+  if(titleEl) titleEl.textContent = headerTitle;
+  if(subEl) subEl.textContent = headerSubtitle + ' This view is generated automatically from the current season leaderboard.';
+
   if(fmt===4 && p.semifinals && p.final){
     const show = m => `${esc(m.a || 'TBD')} vs ${esc(m.b || 'TBD')}${m.winner ? `<br><strong>Winner: ${esc(m.winner)}</strong>` : ''}`;
     playoffBox.innerHTML = `<div class="bracket-card"><h3>Semifinals</h3><div class="small" style="margin-top:10px">${show(p.semifinals.s1)}<br><br>${show(p.semifinals.s2)}</div></div><div class="bracket-card"><h3>Final</h3><div class="small" style="margin-top:10px">${show(p.final.f1)}<br><br><strong>Champion</strong><br>${esc(p.champion || 'TBD')}</div></div>`;

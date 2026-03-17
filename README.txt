@@ -249,3 +249,7 @@ v41:
 v42:
 - Fixed Week Sign-Up by adding GET support for updateWeekSignup in Code.gs.
 - Added POST fallback in public.html so sign-up still saves if GET is not yet deployed.
+
+
+v43:
+- Made the playoff tile header and subtitle dynamic in public.html based on the playoff format selected in admin league setup (Top 4, Top 8, or Top 12).
