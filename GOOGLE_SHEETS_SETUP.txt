@@ -72,3 +72,8 @@ Admin can now select a Current Signup Week. Public sign-up uses that week first.
 
 
 If Week Sign-Up shows 'Unsupported GET action', replace Code.gs with this version and redeploy your Apps Script Web App. This bundle also includes a POST fallback in public.html.
+
+
+Week Setup auto-sync
+
+This version auto-syncs Week Setup changes to Google Sheets. When you toggle Saturday or Sunday active, or change courts/rounds, the admin page now pushes those changes automatically if the Google Apps Script URL is configured.

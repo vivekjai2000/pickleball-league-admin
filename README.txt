@@ -253,3 +253,8 @@ v42:
 
 v43:
 - Made the playoff tile header and subtitle dynamic in public.html based on the playoff format selected in admin league setup (Top 4, Top 8, or Top 12).
+
+
+v44:
+- Week Setup changes now auto-sync to Google Sheets.
+- Toggling Saturday/Sunday active and changing courts/rounds no longer require manual Save Entire League to Google Sheets.
