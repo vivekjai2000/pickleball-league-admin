@@ -258,3 +258,9 @@ v43:
 v44:
 - Week Setup changes now auto-sync to Google Sheets.
 - Toggling Saturday/Sunday active and changing courts/rounds no longer require manual Save Entire League to Google Sheets.
+
+
+v45:
+- Fixed public playoff header to use playoff format from Admin League Setup first.
+- Removed the Testing only tile from public.html.
+- Added a new Weekly Ranking tile under Overview.
