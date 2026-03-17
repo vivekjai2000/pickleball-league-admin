@@ -277,3 +277,11 @@ v47:
 v48:
 - Moved Latest Results below This Weekend’s Matches in Overview.
 - Moved Season Leaderboard to the bottom tile in the Rankings tab.
+
+
+Final URL structure:
+- /admin/  -> Admin panel
+- /league/ -> Public league page
+- /player/ -> Player page
+
+Upload entire folder to GitHub repo root.
