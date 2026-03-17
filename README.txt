@@ -264,3 +264,11 @@ v45:
 - Fixed public playoff header to use playoff format from Admin League Setup first.
 - Removed the Testing only tile from public.html.
 - Added a new Weekly Ranking tile under Overview.
+
+
+v47:
+- Fixed public page data population by hardening live Google Sheets loading and fallback behavior.
+- Removed Weekly Ranking tile from Overview.
+- Replaced Leaderboard tab with Rankings tab.
+- Rankings tab now shows Weekly Ranking as the first tile and Season Leaderboard as the second tile.
+- Removed the Testing only tile from public.html.
