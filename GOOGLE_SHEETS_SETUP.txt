@@ -33,3 +33,24 @@ That means:
 Public score entry
 
 This version allows score updates directly from public.html for current active scheduled matches only. Scores are validated by both the public page and Apps Script before being saved into Google Sheets.
+
+
+Important after this update
+
+If you see "Unsupported POST action" when saving scores from public.html, your deployed Apps Script is still using an older Code.gs version.
+
+Fix:
+1. Open your Google Apps Script project
+2. Replace Code.gs with the new Code.gs from this bundle
+3. Save the project
+4. Deploy > Manage deployments
+5. Edit your Web App deployment
+6. Deploy the new version
+7. Refresh public.html
+
+After redeploying, Save Score on public.html will update Google Sheets successfully.
+
+
+Admin auto-refresh
+
+This version refreshes admin.html from Google Sheets every 15 seconds when a valid Apps Script URL is configured. That means scores saved from public.html will appear in admin automatically after a short delay.

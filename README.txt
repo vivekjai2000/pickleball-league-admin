@@ -197,3 +197,13 @@ v32:
 v33:
 - Removed the Testing only / manual file load tile from public.html.
 - Fixed hero subtitle text so Short Pump, VA and the Round Robin tagline are visible on all pages.
+
+
+v34:
+- Ensured Code.gs supports updateMatchScore POST action used by public.html.
+- Added Apps Script redeploy instructions for fixing Unsupported POST action.
+
+
+v35:
+- Added admin auto-refresh from Google Sheets every 15 seconds when a Google Script URL is configured.
+- Admin now picks up score changes saved from public.html without needing a manual reload.
