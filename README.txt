@@ -192,3 +192,8 @@ v32:
 - Kept the redesigned left-logo hero layout across admin.html, public.html, and player.html.
 - Fixed admin JavaScript so buttons work.
 - Hid the testing/manual load tile from public.html.
+
+
+v33:
+- Removed the Testing only / manual file load tile from public.html.
+- Fixed hero subtitle text so Short Pump, VA and the Round Robin tagline are visible on all pages.
