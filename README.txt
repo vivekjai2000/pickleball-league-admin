@@ -272,3 +272,8 @@ v47:
 - Replaced Leaderboard tab with Rankings tab.
 - Rankings tab now shows Weekly Ranking as the first tile and Season Leaderboard as the second tile.
 - Removed the Testing only tile from public.html.
+
+
+v48:
+- Moved Latest Results below This Weekend’s Matches in Overview.
+- Moved Season Leaderboard to the bottom tile in the Rankings tab.
