@@ -232,3 +232,15 @@ v39:
 - Added Current Signup Week selector to admin.
 - Public sign-up now uses the explicit current signup week from admin when set.
 - Admin schedule generation now requires signed-up players for the selected week/day before creating schedules.
+
+
+v40:
+- Fixed admin schedule generation so it now strictly uses signed-up players only.
+- Fixed bulk schedule generation to also use signed-up players only.
+- Added clearer status messages when no sign-ups exist or fewer than 4 players signed up.
+
+
+v41:
+- Added signed-up player preview in the Schedule tile.
+- Admin now shows exactly who will be used before generation, for example: Scheduling with: Doumit, Murali, Ravi, Sheel.
+- Added a blocker message that includes the actual signed-up player list when fewer than 4 players are eligible.
