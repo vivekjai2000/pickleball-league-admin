@@ -3,17 +3,22 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Pouncy Tract League Viewer</title>
+<title>Pouncy Tract League Admin</title>
 <style>
 :root {
-  --bg:#f5f7fb; --card:#ffffff; --line:#dde5ee; --text:#15202b; --muted:#667085;
-  --blue:#2563eb; --blue2:#1d4ed8; --gold:#b7791f; --silver:#6b7280; --bronze:#92400e;
-  --shadow:0 12px 30px rgba(15,23,42,.08); --radius:22px;
+  --bg:#f4f7fb; --card:#ffffff; --line:#dde5ee; --text:#15202b; --muted:#667085;
+  --blue:#2563eb; --blue2:#1d4ed8; --green:#0f766e; --amber:#b45309; --red:#b91c1c;
+  --shadow:0 10px 28px rgba(15,23,42,.08); --radius:20px;
 }
 * { box-sizing:border-box; }
-body { margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; }
-.wrap { max-width:1180px; margin:0 auto; padding:18px; }
-.hero,.card { background:#fff; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); }
+body {
+  margin:0; background:#f5f7fb;
+  color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+}
+.wrap { max-width:1280px; margin:0 auto; padding:18px; }
+.hero,.card {
+  background:#ffffff; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
+}
 .hero { padding:24px; margin-bottom:18px; position:relative; overflow:hidden; background:#f8fafc; border:1px solid #e5e7eb; border-radius:22px; }
 .hero:before { content:""; position:absolute; inset:auto -120px -120px auto; width:240px; height:240px; background:radial-gradient(circle,rgba(219,234,254,.55) 0%, rgba(219,234,254,0) 72%); }
 .logo { width:132px; height:132px; object-fit:cover; border-radius:24px; display:block; margin:0; box-shadow:0 8px 22px rgba(0,0,0,.12); position:relative; z-index:1; border:6px solid rgba(255,255,255,.95); background:#ffffff; flex:0 0 auto; }
@@ -23,63 +28,71 @@ h1,h2,h3 { margin:0; }
 .hero-location { color:#dbeafe; font-size:22px; font-weight:700; margin-top:8px; }
 .hero-tagline { color:#e5eef9; font-size:14px; font-weight:600; margin-top:12px; line-height:1.6; }
 h1 { font-size:32px; letter-spacing:-.02em; color:#111827; font-weight:900; }
+h2 { font-size:22px; }
+.sub {
+  color:var(--muted); margin-top:8px; font-size:15px; line-height:1.55; max-width:980px; margin-left:auto; margin-right:auto;
+}
 .tabs { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:20px; position:relative; z-index:1; }
 .tabbtn { border:1px solid #d1d5db; border-radius:14px; padding:12px 16px; font-weight:700; cursor:pointer; background:#ffffff; color:#1e3a8a; min-height:46px; min-width:120px; box-shadow:0 2px 8px rgba(37,99,235,.06); }
 .tabbtn.active { background:linear-gradient(180deg,var(--blue),var(--blue2)); color:#fff; border-color:var(--blue); }
 .section { display:none; } .section.active { display:block; }
-.card { padding:18px; margin-bottom:16px; }
-.grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
-.grid2 { display:grid; grid-template-columns:1.1fr .9fr; gap:16px; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
 .row2 { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
-.stat { background:linear-gradient(180deg,#ffffff,#f8fbff); border:1px solid var(--line); border-radius:18px; padding:16px; }
-.stat .label { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.06em; }
-.stat .value { font-size:28px; font-weight:800; margin-top:6px; }
-.small { color:var(--muted); font-size:13px; line-height:1.5; }
-.status { padding:12px 13px; border-radius:14px; background:#f8fbff; border:1px dashed #d7e1ec; margin-top:12px; color:var(--muted); line-height:1.5; font-size:14px; }
-select,button,input[type="file"] { font:inherit; }
-select { width:100%; padding:12px; border:1px solid #ccd7e5; border-radius:14px; background:#fff; font-size:16px; }
-button { border:none; border-radius:14px; padding:12px 14px; font-weight:700; cursor:pointer; min-height:46px; font-size:15px; background:linear-gradient(180deg,var(--blue),var(--blue2)); color:#fff; }
-.table-wrap { overflow:auto; border:1px solid var(--line); border-radius:16px; background:#fff; margin-top:12px; }
-table { width:100%; border-collapse:collapse; min-width:760px; }
+.card { padding:18px; margin-bottom:16px; }
+label { display:block; font-weight:700; margin:10px 0 6px; font-size:14px; }
+input,select,textarea,button { font:inherit; }
+input[type="text"],input[type="date"],input[type="number"],select,textarea {
+  width:100%; padding:12px; border:1px solid #ccd7e5; border-radius:14px; background:#fff; font-size:16px;
+}
+textarea { min-height:128px; resize:vertical; }
+input[type="checkbox"] { width:18px; height:18px; accent-color:var(--blue); vertical-align:middle; margin-right:8px; }
+button {
+  border:none; border-radius:14px; padding:12px 14px; font-weight:700; cursor:pointer; min-height:46px; font-size:15px;
+}
+.primary { background:linear-gradient(180deg,var(--blue),var(--blue2)); color:#fff; }
+.secondary { background:#fff; color:var(--blue); border:1px solid #cfe0ff; }
+.green { background:linear-gradient(180deg,#128270,#0f766e); color:#fff; }
+.amber { background:linear-gradient(180deg,#c76816,#b45309); color:#fff; }
+.red { background:linear-gradient(180deg,#cc2f2f,#b91c1c); color:#fff; }
+.btns { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+.btns>* { flex:0 1 auto; }
+.status {
+  padding:12px 13px; border-radius:14px; background:#f8fbff; border:1px dashed #d7e1ec; margin-top:12px; color:var(--muted); line-height:1.5; font-size:14px;
+}
+.pill {
+  display:inline-block; background:#eef4ff; color:#1d4ed8; border-radius:999px; padding:7px 11px; font-size:13px; font-weight:700; margin:0 8px 8px 0;
+}
+.small { font-size:13px; color:var(--muted); line-height:1.5; }
+.table-wrap { overflow:auto; border:1px solid var(--line); border-radius:16px; background:#fff; }
+table { width:100%; border-collapse:collapse; min-width:880px; background:#fff; }
 th,td { padding:10px 12px; border-bottom:1px solid #e9eef5; text-align:left; vertical-align:top; font-size:14px; }
 th { background:#f8fbff; }
-.rank-card { border:1px solid var(--line); border-radius:18px; padding:14px; background:linear-gradient(180deg,#fff,#fbfdff); margin-bottom:12px; }
-.rank-1 { border-color:#f6d48c; background:linear-gradient(180deg,#fff8e7,#fff); }
-.rank-2 { border-color:#d8dde6; background:linear-gradient(180deg,#f8fafc,#fff); }
-.rank-3 { border-color:#e7c5b1; background:linear-gradient(180deg,#fff7f2,#fff); }
-.rank-num { width:34px; height:34px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; font-weight:800; margin-bottom:10px; }
-.rank-1 .rank-num { background:#fff1c7; color:var(--gold); }
-.rank-2 .rank-num { background:#eceff4; color:var(--silver); }
-.rank-3 .rank-num { background:#f9e1d5; color:var(--bronze); }
-.podium { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:12px; }
-.match-card,.player-card,.bracket-card {
-  border:1px solid var(--line); border-radius:18px; padding:14px; background:#fff; margin-bottom:12px;
+.week-box,.mobile-card,.award-box {
+  border:1px solid var(--line); border-radius:16px; padding:14px; margin-bottom:14px; background:#fff;
 }
-.match-head { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
-.team-row { display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-top:1px solid #edf2f7; }
-.team-row:first-of-type { border-top:none; }
-.team-name { font-weight:700; } .team-score { font-weight:800; }
-.players-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
-.player-card a { color:var(--blue); text-decoration:none; font-weight:700; }
-.bracket-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; align-items:start; }
-.pill { display:inline-block; background:#eef4ff; color:#1d4ed8; border-radius:999px; padding:7px 11px; font-size:13px; font-weight:700; margin:0 8px 8px 0; }
-.hero-banner {
-  border:1px solid #dbe7f6; border-radius:20px; padding:18px; background:linear-gradient(180deg,#f8fbff,#ffffff);
+.week-title {
+  margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
 }
-.champ-name { font-size:28px; font-weight:900; letter-spacing:-.02em; margin-top:6px; }
-.widget-list { display:grid; gap:12px; }
-.widget-item { border:1px solid var(--line); border-radius:16px; padding:12px; background:#fff; }
-
+.day-panel {
+  border:1px dashed #d8e6f3; border-radius:16px; padding:12px; background:#fbfdff;
+}
+.badge {
+  display:inline-block; background:#ecfeff; color:#0f766e; border-radius:999px; padding:4px 10px; font-size:12px; font-weight:700; margin-bottom:8px;
+}
+.score-grid { display:grid; grid-template-columns:1fr 120px 120px 120px; gap:10px; align-items:end; }
+.desktop-only { display:block; } .mobile-only { display:none; }
 @media (max-width:900px) {
   .hero-layout { flex-direction:column; text-align:center; }
   .hero-copy { text-align:center; }
   .hero-location { font-size:18px; }
   .logo { width:116px; height:116px; margin:0 auto; }
 
-  .grid4, .grid2, .row2, .podium, .players-grid, .bracket-grid { grid-template-columns:1fr; }
-  .wrap { padding:12px; }
-  .logo { width:146px; max-width:58vw; }
+  .grid2,.grid3,.row2,.score-grid { grid-template-columns:1fr; }
+  .desktop-only { display:none; } .mobile-only { display:block; }
+  .wrap { padding:12px; } .logo { width:146px; max-width:58vw; }
   .tabbtn { min-width:0; flex:1 1 calc(50% - 10px); }
+  .btns>* { flex:1 1 100%; }
 }
 </style>
 </head>
@@ -96,434 +109,914 @@ th { background:#f8fbff; }
     </div>
     <div class="tabs"><div class="tabs"><div class="tabs">
       <button class="tabbtn active" onclick="showTab('overview', this)">Overview</button>
+      <button class="tabbtn" onclick="showTab('setup', this)">League Setup</button>
+      <button class="tabbtn" onclick="showTab('roster', this)">Roster</button>
       <button class="tabbtn" onclick="showTab('schedule', this)">Schedule</button>
-      <button class="tabbtn" onclick="showTab('leaderboard', this)">Leaderboard</button>
+      <button class="tabbtn" onclick="showTab('scores', this)">Scores</button>
+      <button class="tabbtn" onclick="showTab('rankings', this)">Rankings</button>
       <button class="tabbtn" onclick="showTab('history', this)">History</button>
-      <button class="tabbtn" onclick="showTab('players', this)">Players</button>
-      <button class="tabbtn" onclick="showTab('playoffs', this)">Playoffs</button>
-      <button class="tabbtn" onclick="showTab('hof', this)">Hall of Fame</button>
+      <button class="tabbtn" onclick="showTab('awards', this)">Awards</button>
+      <button class="tabbtn" onclick="showTab('checkin', this)">Check-In</button>
+      <button class="tabbtn" onclick="showTab('quicktools', this)">Quick Tools</button>
+      <button class="tabbtn" onclick="showTab('playoffmanager', this)">Playoff Manager</button>
+      <button class="tabbtn" onclick="showTab('sheetsync', this)">Google Sheets Sync</button>
     </div>
   </div>
 
   <div id="overview" class="section active">
-    <div class="grid4" id="statsGrid"></div>
-    <div class="card" style="margin-top:16px">
-      <h2>Championship Center</h2>
-      <div id="championshipCenterBox" class="small" style="margin-top:12px">No championship data yet.</div>
-    </div>
-    <div class="grid2" style="margin-top:16px">
-      <div class="card">
-        <h2>Current Weekend Summary</h2>
-        <div id="weekendSummaryBox" class="small" style="margin-top:12px">No weekend summary yet.</div>
-      </div>
-      <div class="card">
-        <h2>Latest Results</h2>
-        <div id="latestResultsBox" class="small" style="margin-top:12px">No recent results yet.</div>
-      </div>
-    </div>
-    <div class="grid2" style="margin-top:16px">
-      <div class="card">
-        <h2>Top 3 Leaderboard</h2>
-        <div id="topThreeBox" class="podium"></div>
-      </div>
-      <div class="card">
-        <h2>This Weekend’s Matches</h2>
-        <div id="featuredMatchesBox" class="small">No matches yet.</div>
-      </div>
-    </div>
     <div class="card">
       <h2>League Snapshot</h2>
-      <div id="overviewBox" class="small">No public data loaded yet.</div>
+      <div id="summaryBox" class="small" style="margin-top:12px;">No setup yet.</div>
+      <div class="btns">
+        <button class="amber" onclick="exportAdminJson()">Export Admin JSON</button>
+        <button class="secondary" onclick="exportPublicJs()">Export public-data.js</button>
+      </div>
+      <div class="status">For the public site, keep <b>public.html</b> and <b>public-data.js</b> in the same GitHub Pages repo. After any admin change, export a fresh <b>public-data.js</b> and replace the old file in GitHub.</div>
+    </div>
+  </div>
+
+  <div id="setup" class="section">
+    <div class="card">
+      <h2>League Setup</h2>
+      <div class="row2">
+        <div><label>League title</label><input id="leagueTitle" value="Pouncy Tract Weekend Pickleball League"></div>
+        <div><label>Subtitle</label><input id="leagueSubtitle" value="Short Pump, VA"></div>
+      </div>
+      <div class="grid3">
+        <div><label>Season start</label><input id="seasonStart" type="date" value="2026-04-11"></div>
+        <div><label>Season end</label><input id="seasonEnd" type="date" value="2026-10-03"></div>
+        <div><label>Default courts</label><input id="defaultCourts" type="number" min="1" max="8" value="5"></div>
+      </div>
+      <div class="grid3">
+        <div><label>Default rounds/day</label><input id="defaultRounds" type="number" min="1" max="12" value="8"></div>
+        <div><label>Winning score</label><input id="winScore" type="number" min="1" max="30" value="11"></div>
+        <div><label>Rating K-factor</label><input id="kFactor" type="number" min="1" max="60" value="24"></div>
+      </div>
+      <div class="row2">
+        <div><label>Minimum matches for playoffs</label><input id="minMatchesForPlayoffs" type="number" min="0" value="8"></div>
+        <div><label>Playoff format</label><select id="playoffFormat"><option value="4">Top 4</option><option value="8">Top 8</option><option value="12" selected>Top 12</option></select></div>
+      </div>
+      <div class="small" style="margin-top:10px">Win logic: 11-2 is valid. If either side goes above 11, the winner must lead by at least 2. Example: 13-11 is valid, 12-11 is not.</div>
+      <div class="btns">
+        <button class="primary" onclick="generateWeeks()">Generate Season Weeks</button>
+        <button class="secondary" onclick="saveState()">Save</button>
+        <button class="secondary" onclick="loadState()">Load Saved</button>
+        <button class="secondary" onclick="document.getElementById('importJson').click()">Import JSON</button>
+        <button class="red" onclick="resetAll()">Reset</button>
+        <input id="importJson" type="file" accept=".json,application/json" style="display:none" onchange="importJson(event)">
+      </div>
+      <div id="profileStatus" class="status">Start by importing your player roster.</div>
+    </div>
+
+    <div class="card">
+      <h2>Week Setup</h2>
+      <div class="small">All weeks start unchecked by default. Turn on Saturday only, Sunday only, or both, and adjust courts and rounds separately for each day.</div>
+      <div id="weeksArea" style="margin-top:14px">No weeks generated yet.</div>
+    </div>
+  </div>
+
+  <div id="roster" class="section">
+    <div class="grid2">
+      <div class="card">
+        <h2>Master Roster + Ratings</h2>
+        <div class="small">Paste one player per line in this format: <b>Name, Rating</b>.</div>
+        <textarea id="rosterInput" placeholder="Vivek, 4.02&#10;Vimal, 4.00&#10;Vin, 3.85"></textarea>
+        <div class="btns">
+          <button class="green" onclick="importRoster()">Import Roster</button>
+          <button class="secondary" onclick="loadSampleRoster()">Load Sample</button>
+        </div>
+        <div id="rosterStatus" class="status">No roster imported yet.</div><div id="rosterQuickCount" class="small" style="margin-top:8px"></div>
+      </div>
+
+      <div class="card">
+        <h2>Add / Remove Players Mid-Season</h2>
+        <div class="row2">
+          <div><label>Player name</label><input id="newPlayerName" type="text" placeholder="Enter player name"></div>
+          <div><label>Rating</label><input id="newPlayerRating" type="number" step="0.01" placeholder="3.75"></div>
+        </div>
+        <div class="row2">
+          <div><label>Joined week</label><input id="newPlayerWeek" type="number" min="1" placeholder="1"></div>
+          <div><label>Remove player</label><select id="removePlayerSelect"></select></div>
+        </div>
+        <div class="btns">
+          <button class="green" onclick="addPlayerMidSeason()">Add Player</button>
+          <button class="red" onclick="removeSelectedPlayer()">Remove Selected Player</button>
+        </div>
+        <div id="playerChangeStatus" class="status">Use this area after the season starts to add or remove players.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap desktop-only"><table><thead><tr><th>Seed</th><th>Player</th><th>Rating</th><th>DUPR-style Rating</th><th>Joined Week</th><th>Active</th></tr></thead><tbody id="rosterBody"></tbody></table></div>
+      <div id="rosterMobile" class="mobile-only"></div>
     </div>
   </div>
 
   <div id="schedule" class="section">
     <div class="card">
+      <h2>Generate Day Schedule</h2>
       <div class="row2">
-        <div><label style="display:block;font-weight:700;margin-bottom:6px">Week</label><select id="weekSel"></select></div>
-        <div><label style="display:block;font-weight:700;margin-bottom:6px">Day</label><select id="daySel"><option>Saturday</option><option>Sunday</option></select></div>
+        <div><label>Week</label><select id="pickWeek"></select></div>
+        <div><label>Day</label><select id="pickDay"><option>Saturday</option><option>Sunday</option></select></div>
       </div>
-      <button style="margin-top:12px" onclick="renderSchedule()">Show Schedule</button>
-      <div id="scheduleBox"></div>
+      <div class="small" style="margin-top:10px">Smart scheduling reduces repeat partners and opponents within the selected day.</div>
+      <div class="btns">
+        <button class="primary" onclick="generateDaySchedule()">Generate Schedule</button>
+        <button class="secondary" onclick="copySchedule()">Copy Schedule</button>
+      </div>
+      <div id="scheduleStatus" class="status">Select week and day to build a schedule.</div>
+    </div>
+
+    <div class="card">
+      <h2>Matchup Editor</h2>
+      <div class="row2">
+        <div><label>Week</label><select id="editWeek"></select></div>
+        <div><label>Day</label><select id="editDay"><option>Saturday</option><option>Sunday</option></select></div>
+      </div>
+      <div class="btns"><button class="primary" onclick="renderMatchEditor()">Load Matchups</button></div>
+      <div id="matchEditorStatus" class="status">Choose a week and day to edit matchups.</div>
+      <div id="matchEditorArea" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap desktop-only"><table><thead><tr><th>Round</th><th>Court</th><th>Team 1</th><th>Team 2</th><th>Status</th></tr></thead><tbody id="scheduleBody"></tbody></table></div>
+      <div id="scheduleMobile" class="mobile-only"></div>
     </div>
   </div>
 
-  <div id="leaderboard" class="section">
+  <div id="scores" class="section">
     <div class="card">
-      <h2>Season Leaderboard</h2>
-      <div id="leaderboardBox" class="small">No data loaded yet.</div>
+      <h2>Score Entry</h2><div class="small" style="margin-top:8px">Mobile-friendly score cards are shown below so you can enter results from your phone at the courts.</div>
+      <div class="row2">
+        <div><label>Week</label><select id="scoreWeek"></select></div>
+        <div><label>Day</label><select id="scoreDay"><option>Saturday</option><option>Sunday</option></select></div>
+      </div>
+      <div class="btns"><button class="primary" onclick="renderScoreEntry()">Load Matches</button></div>
+      <div id="scoreStatus" class="status">Select a week and day, then enter scores.</div>
+      <div id="scoreEntryArea" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <div id="rankings" class="section">
+    <div class="grid2">
+      <div class="card">
+        <h2>Weekly Ranking</h2>
+        <div class="row2">
+          <div><label>Week</label><select id="rankWeek"></select></div>
+          <div><label>Day</label><select id="rankDay"><option value="ALL">Whole Week</option><option>Saturday</option><option>Sunday</option></select></div>
+        </div>
+        <div class="btns">
+          <button class="primary" onclick="renderWeeklyRanking()">Load Weekly Ranking</button>
+          <button class="green" onclick="copyWeeklyRanking()">Copy Weekly Ranking</button>
+        </div>
+        <div id="weeklyRankingBox" style="margin-top:12px"></div>
+      </div>
+
+      <div class="card">
+        <h2>Season Leaderboard</h2>
+        <div class="btns">
+          <button class="primary" onclick="renderSeasonLeaderboard()">Load Season Leaderboard</button>
+          <button class="green" onclick="copySeasonSummary()">Copy Season Summary</button>
+        </div>
+        <div id="seasonRankingBox" style="margin-top:12px"></div>
+      </div>
     </div>
   </div>
 
   <div id="history" class="section">
     <div class="card">
-      <h2>History by Week</h2>
-      <div id="historyBox" class="small">No history yet.</div>
+      <h2>Standings History by Week</h2>
+      <div class="btns"><button class="primary" onclick="renderHistory()">Load History</button></div>
+      <div id="historyBox" style="margin-top:12px"></div>
     </div>
   </div>
 
-  <div id="players" class="section">
+  <div id="awards" class="section">
     <div class="card">
-      <h2>Player Profiles</h2>
-      <div id="playersBox" class="players-grid"></div>
-    </div>
-  </div>
-
-  <div id="playoffs" class="section">
-    <div class="card">
-      <h2>Top 12 Playoff View</h2>
-      <div class="small">Seeds 1–4 receive byes. Seeds 5–12 play in. This view is generated automatically from the current season leaderboard.</div>
-      <div id="playoffBox" class="bracket-grid" style="margin-top:12px"></div>
-    </div>
-  </div>
-
-  <div id="hof" class="section">
-    <div class="card">
-      <h2>Hall of Fame</h2>
-      <div class="small">Season honors based on the current league data.</div>
-      <div id="hofBox" style="margin-top:12px"></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2 style="margin-bottom:10px">Testing only</h2>
-    <div class="small">You usually do not need this. The page automatically loads <b>public-data.js</b> from the same folder. Use manual load only if you are testing a downloaded file before uploading it to GitHub.</div>
-    <div class="row2" style="margin-top:12px">
-      <div>
-        <label style="display:block;font-weight:700;margin-bottom:6px">Manual file load</label>
-        <input type="file" id="publicFile" accept=".json,.js,application/json,application/javascript" />
+      <h2>Weekly Awards</h2>
+      <div class="row2">
+        <div><label>Week</label><select id="awardWeek"></select></div>
+        <div><label>Day</label><select id="awardDay"><option value="ALL">Whole Week</option><option>Saturday</option><option>Sunday</option></select></div>
       </div>
-      <div style="display:flex;align-items:end"><button onclick="loadPublicFile()">Load Test File</button></div>
+      <div class="btns"><button class="primary" onclick="renderAwards()">Load Weekly Awards</button></div>
+      <div id="awardsBox" style="margin-top:12px"></div>
     </div>
-    <div id="viewerStatus" class="status">Automatic loading is active. If <b>public-data.js</b> is in this same folder, the latest league data will show automatically.</div>
   </div>
+
+  
+
+
+  <div id="checkin" class="section">
+    <div class="card">
+      <h2>Weekend Player Check-In</h2>
+      <div class="small">Use this only for the current week if some players are out. This is lighter than full absence tracking. Mark who is available before generating schedule.</div>
+      <div class="row2">
+        <div><label>Week</label><select id="checkinWeek"></select></div>
+        <div><label>Day</label><select id="checkinDay"><option>Saturday</option><option>Sunday</option></select></div>
+      </div>
+      <div class="btns">
+        <button class="primary" onclick="loadCheckin()">Load Check-In</button>
+        <button class="green" onclick="saveCheckin()">Save Check-In</button>
+        <button class="secondary" onclick="markAllAvailable()">Mark All Available</button>
+      </div>
+      <div id="checkinStatus" class="status">Choose a week and day, then mark available players.</div>
+      <div id="checkinBox" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <div id="quicktools" class="section">
+    <div class="grid2">
+      <div class="card">
+        <h2>One-Click Schedule Generation</h2>
+        <div class="small">Generate all active Saturday and Sunday schedules for all weeks in one click using current roster, current check-in, and current rules.</div>
+        <div class="btns">
+          <button class="primary" onclick="generateAllSchedules()">Generate All Active Schedules</button>
+        </div>
+        <div id="bulkScheduleStatus" class="status">This is helpful when you want to set up the whole season quickly.</div>
+      </div>
+      <div class="card">
+        <h2>Publish Helper</h2>
+        <div class="small">After updating scores or schedules, click the export button below and replace the public-data.js file in GitHub.</div>
+        <div class="btns">
+          <button class="amber" onclick="exportPublicJs()">Export public-data.js</button>
+        </div>
+        <div class="status">That one file powers the public page, player page, playoffs, and Hall of Fame view.</div>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="playoffmanager" class="section">
+    <div class="card">
+      <h2>Playoff Progression Manager</h2>
+      <div class="small">Create the Top 12 playoff bracket from the current leaderboard. Seeds 1–4 get byes. Choose winners round by round, then export <b>public-data.js</b> to publish the bracket on the public site.</div>
+      <div class="btns">
+        <button class="primary" onclick="seedPlayoffsFromLeaderboard()">Seed Playoffs from Leaderboard</button>
+        <button class="secondary" onclick="renderPlayoffManager()">Refresh Bracket</button>
+      </div>
+      <div id="playoffSeedStatus" class="status">Seed the playoffs first, then select winners for each round.</div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Play-In</h2>
+        <div id="playInManagerBox" class="small">Seed playoffs first.</div>
+      </div>
+      <div class="card">
+        <h2>Quarterfinals</h2>
+        <div id="quarterfinalManagerBox" class="small">Seed playoffs first.</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Semifinals</h2>
+        <div id="semifinalManagerBox" class="small">Seed playoffs first.</div>
+      </div>
+      <div class="card">
+        <h2>Final</h2>
+        <div id="finalManagerBox" class="small">Seed playoffs first.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Champion</h2>
+      <div id="championManagerBox" class="small">No champion yet.</div>
+    </div>
+  </div>
+
+
+  <div id="sheetsync" class="section">
+    <div class="grid2">
+      <div class="card">
+        <h2>Google Sheets Connection</h2>
+        <div class="small">Paste your deployed Google Apps Script Web App URL here. The admin page will save data to Google Sheets, and the public site will read live data from that sheet automatically.</div>
+        <label>Apps Script Web App URL</label>
+        <input id="googleScriptUrl" type="text" placeholder="https://script.google.com/macros/s/.../exec">
+        <div class="btns">
+          <button class="primary" onclick="saveGoogleScriptUrl()">Save URL</button>
+          <button class="secondary" onclick="testGoogleScriptConnection()">Test Connection</button>
+        </div>
+        <div id="googleScriptStatus" class="status">Save your Apps Script URL first.</div>
+      </div>
+      <div class="card">
+        <h2>Live Sync Actions</h2>
+        <div class="small">Save the full league state to Google Sheets, load it back into admin, or reset the sheet so you can start another league later.</div>
+        <div class="btns">
+          <button class="green" onclick="pushStateToGoogleSheets()">Save Entire League to Google Sheets</button>
+          <button class="secondary" onclick="loadStateFromGoogleSheets()">Load League from Google Sheets</button>
+          <button class="red" onclick="resetGoogleSheetsData()">Reset Google Sheets Data</button>
+        </div>
+        <div id="googleSyncStatus" class="status">Reset will clear the stored league in Google Sheets. Scores, schedules, roster imports, player changes, check-ins, and playoff updates now auto-save when a Google Script URL is configured.</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<script src="public-data.js"></script>
 <script>
-let data = window.POUNCY_PUBLIC_DATA || null;
-function showTab(id, btn) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.tabbtn').forEach(b => b.classList.remove('active'));
-  const target = document.getElementById(id);
-  if (target) target.classList.add('active');
-  if (btn) btn.classList.add('active');
-}
-function esc(s) { return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;"); }
-function loadPublicFile() {
-  const file=document.getElementById('publicFile').files[0];
-  if(!file) { viewerStatus.textContent="Choose a file first."; return; }
-  const reader=new FileReader();
-  reader.onload=e=> {
-    try {
-      const raw=e.target.result;
-      if(file.name.endsWith('.js')) {
-        const match=raw.match(/window\.POUNCY_PUBLIC_DATA\s*=\s*([\s\S]*);/);
-        if(!match) throw new Error("Invalid JS format");
-        data=JSON.parse(match[1]);
-      } else {
-        data=JSON.parse(raw);
-      }
-      useData();
-    } catch(err) {
-      viewerStatus.textContent="Could not read the selected file.";
-    }
+const KEY = "pouncy_tract_admin_professional_v1";
+let state = {profile:{leagueTitle:"Pouncy Tract Weekend Pickleball League",leagueSubtitle:"Short Pump, VA",seasonStart:"2026-04-11",seasonEnd:"2026-10-03",defaultCourts:5,defaultRounds:8,winScore:11,kFactor:24,minMatchesForPlayoffs:8,playoffFormat:12,googleScriptUrl:""},roster:[],weeks:[],availability:{},playoffs:{}};
+
+function showTab(id, btn){ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('active')); document.getElementById(id).classList.add('active'); btn.classList.add('active'); }
+function esc(s){ return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;"); }
+function fmtDate(iso){ if(!iso) return ""; const d=new Date(iso+"T12:00:00"); return d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); }
+function addDays(iso,n){ const d=new Date(iso+"T12:00:00"); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+function saturdaysBetween(start,end){ let d=new Date(start+"T12:00:00"); while(d.getDay()!==6) d.setDate(d.getDate()+1); const arr=[]; while(d.toISOString().slice(0,10)<=end){ arr.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+7); } return arr; }
+function syncProfileFromUI(){
+  const googleUrlEl = document.getElementById("googleScriptUrl");
+  const playoffEl = document.getElementById("playoffFormat");
+  const minMatchesEl = document.getElementById("minMatchesForPlayoffs");
+  state.profile = {
+    leagueTitle: leagueTitle.value.trim(),
+    leagueSubtitle: leagueSubtitle.value.trim(),
+    seasonStart: seasonStart.value,
+    seasonEnd: seasonEnd.value,
+    defaultCourts: Number(defaultCourts.value || 5),
+    defaultRounds: Number(defaultRounds.value || 8),
+    winScore: Number(winScore.value || 11),
+    kFactor: Number(kFactor.value || 24),
+    minMatchesForPlayoffs: Number((minMatchesEl && minMatchesEl.value) || state.profile.minMatchesForPlayoffs || 8),
+    playoffFormat: Number((playoffEl && playoffEl.value) || state.profile.playoffFormat || 12),
+    googleScriptUrl: (googleUrlEl && googleUrlEl.value ? googleUrlEl.value.trim() : (state.profile.googleScriptUrl || localStorage.getItem("pouncy_google_script_url") || ""))
   };
-  reader.readAsText(file);
-}
-function buildPlayerStats() {
-  if((data.season||[]).length) return data.season;
-  const stats = {};
-  (data.roster||[]).forEach(p => stats[p.name] = {name:p.name,wins:0,losses:0,pf:0,pa:0,elo:p.elo,active:p.active});
-  (data.weeks||[]).forEach(w => ["saturday","sunday"].forEach(day => (w[day]?.schedule||[]).forEach(m => {
-    if(!m.completed) return;
-    const [a,b,c,d] = [m.team1[0],m.team1[1],m.team2[0],m.team2[1]];
-    [a,b,c,d].forEach(n => { if(!stats[n]) stats[n] = {name:n,wins:0,losses:0,pf:0,pa:0,elo:0,active:true}; });
-    stats[a].pf += m.score1; stats[b].pf += m.score1; stats[c].pf += m.score2; stats[d].pf += m.score2;
-    stats[a].pa += m.score2; stats[b].pa += m.score2; stats[c].pa += m.score1; stats[d].pa += m.score1;
-    if(m.score1 > m.score2) { stats[a].wins++; stats[b].wins++; stats[c].losses++; stats[d].losses++; }
-    else { stats[c].wins++; stats[d].wins++; stats[a].losses++; stats[b].losses++; }
-  })));
-  return Object.values(stats).map(s => {
-    const games = s.wins + s.losses;
-    return {...s, games, pct: games ? s.wins/games : 0, diff: s.pf-s.pa};
-  }).sort((a,b) => b.pct-a.pct || b.diff-a.diff || a.name.localeCompare(b.name));
 }
 
-function getLiveGoogleUrl(){
-  return (window.POUNCY_PUBLIC_DATA && window.POUNCY_PUBLIC_DATA.profile && window.POUNCY_PUBLIC_DATA.profile.googleScriptUrl) || localStorage.getItem("pouncy_google_script_url") || "";
+function pushProfileToUI(){
+  const p = state.profile || {};
+  if (typeof leagueTitle !== "undefined") leagueTitle.value = p.leagueTitle || "";
+  if (typeof leagueSubtitle !== "undefined") leagueSubtitle.value = p.leagueSubtitle || "";
+  if (typeof seasonStart !== "undefined") seasonStart.value = p.seasonStart || "";
+  if (typeof seasonEnd !== "undefined") seasonEnd.value = p.seasonEnd || "";
+  if (typeof defaultCourts !== "undefined") defaultCourts.value = p.defaultCourts || 5;
+  if (typeof defaultRounds !== "undefined") defaultRounds.value = p.defaultRounds || 8;
+  if (typeof winScore !== "undefined") winScore.value = p.winScore || 11;
+  if (typeof kFactor !== "undefined") kFactor.value = p.kFactor || 24;
+  const mm = document.getElementById("minMatchesForPlayoffs");
+  if (mm) mm.value = p.minMatchesForPlayoffs ?? 8;
+  const pf = document.getElementById("playoffFormat");
+  if (pf) pf.value = String(p.playoffFormat ?? 12);
+  const gs = document.getElementById("googleScriptUrl");
+  if (gs) gs.value = p.googleScriptUrl || localStorage.getItem("pouncy_google_script_url") || "";
 }
-async function tryLoadLiveGoogleData(){
-  const url = getLiveGoogleUrl();
-  if(!url) return false;
+function parseRoster(text){
+  return String(text || "")
+    .split(/\n+/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => {
+      const parts = line.split(",");
+      if (parts.length < 2) return null;
+      const name = String(parts[0] || "").trim();
+      const ratingText = String(parts.slice(1).join(",") || "").trim();
+      const rating = Number(ratingText);
+      if (!name || !Number.isFinite(rating)) return null;
+      return {name, rating, seed:0, elo:rating*100, joinedWeek:1, active:true};
+    })
+    .filter(Boolean);
+}
+
+function reseedRoster(){ const active=state.roster.filter(p=>p.active).sort((a,b)=>b.rating-a.rating || a.name.localeCompare(b.name)); active.forEach((p,i)=>p.seed=i+1); state.roster.filter(p=>!p.active).forEach(p=>p.seed='-'); populateRemoveSelect(); }
+function populateRemoveSelect(){ removePlayerSelect.innerHTML=state.roster.filter(p=>p.active).map(p=>`<option value="${p.name}">${p.name}</option>`).join(''); }
+function loadSampleRoster(){ rosterInput.value=["Vivek, 4.02","Vimal, 4.00","Vin, 4.00","Murali, 4.00","Sunil, 4.00","Ravi, 4.00","Sheel, 4.25","Doumit, 3.75","Pavan, 3.70","Rohan, 3.60","Amit, 3.55","Raj, 3.50"].join("\n"); }
+function importRoster(){
   try{
-    const res = await fetch(url + "?action=loadLeagueState", {method:"GET", mode:"cors"});
-    const json = await res.json();
-    if(json.ok && json.data){
-      data = json.data;
-      if(data.profile && data.profile.googleScriptUrl){
-        localStorage.setItem("pouncy_google_script_url", data.profile.googleScriptUrl);
-      }
-      return true;
+    const raw = (typeof rosterInput !== "undefined" && rosterInput ? rosterInput.value : "");
+    const roster = parseRoster(raw);
+    if(!roster.length){
+      if(typeof rosterStatus !== "undefined" && rosterStatus) rosterStatus.textContent = "Could not parse roster. Use one player per line in Name, Rating format.";
+      return;
     }
-  }catch(e){}
-  return false;
-}
-
-function useData() {
-  if(!data) { viewerStatus.textContent="No public data found yet. Add public-data.js next to this page, or load a file manually."; return; }
-  viewerStatus.textContent = getLiveGoogleUrl() ? "Live Google Sheets data loaded. Only current active scheduled matches can be scored here." : "Public data loaded successfully.";
-  weekSel.innerHTML=(data.weeks||[]).map(w=>`<option value="${w.week}">Week ${w.week}</option>`).join('');
-  renderOverview(); renderSchedule(); renderLeaderboard(); renderHistory(); renderPlayers(); renderPlayoffs(); renderHallOfFame();
-}
-
-function renderChampionshipCenter() {
-  const p = data.playoffs || {};
-  const champ = p.champion || '';
-  const fmt = Number(p.format || data.profile?.playoffFormat || 12);
-  let stage = 'Regular Season';
-  if (p.playIn && !p.champion) stage = 'Playoffs In Progress';
-  if (champ) stage = 'Champion Decided';
-
-  const finalistA = p.final?.f1?.a || '';
-  const finalistB = p.final?.f1?.b || '';
-  const finalWinner = p.final?.f1?.winner || '';
-  championshipCenterBox.innerHTML = `
-    <div class="hero-banner">
-      <div class="small">League status</div>
-      <div class="champ-name">${champ ? esc(champ) : 'No champion yet'}</div>
-      <div class="small" style="margin-top:8px">Stage: ${stage}</div>
-      <div style="margin-top:12px">
-        ${champ ? `<span class="pill">Champion: ${esc(champ)}</span>` : `<span class="pill">Champion TBD</span>`}
-        <span class="pill">Playoff Format: Top ${fmt}</span>
-        ${finalistA || finalistB ? `<span class="pill">Final: ${esc(finalistA || 'TBD')} vs ${esc(finalistB || 'TBD')}</span>` : ''}
-        ${finalWinner ? `<span class="pill">Final Winner: ${esc(finalWinner)}</span>` : ''}
-      </div>
-    </div>
-  `;
-}
-function renderLatestResultsWidget() {
-  const matches = [];
-  (data.weeks||[]).forEach(w => ['saturday','sunday'].forEach(day => (w[day]?.schedule||[]).forEach(m => {
-    if(m.completed) matches.push({week:w.week, day, round:m.round, court:m.court, ...m});
-  })));
-  const latest = matches.slice(-5).reverse();
-  latestResultsBox.innerHTML = latest.length ? `<div class="widget-list">${latest.map(m => `
-    <div class="widget-item">
-      <div class="small">Week ${m.week} • ${m.day[0].toUpperCase()+m.day.slice(1)} • Round ${m.round} • Court ${m.court}</div>
-      <div style="margin-top:6px"><strong>${esc(m.team1[0])} & ${esc(m.team1[1])}</strong> vs <strong>${esc(m.team2[0])} & ${esc(m.team2[1])}</strong></div>
-      <div class="small" style="margin-top:6px">Result: ${m.score1}-${m.score2}</div>
-    </div>`).join('')}</div>` : 'No recent results yet.';
-}
-
-
-function isValidPickleballScore(score1, score2){
-  const a = Number(score1), b = Number(score2);
-  if(!Number.isFinite(a) || !Number.isFinite(b)) return {ok:false, message:"Enter numeric scores."};
-  if(a < 0 || b < 0) return {ok:false, message:"Scores cannot be negative."};
-  if(a === b) return {ok:false, message:"Scores cannot be tied."};
-  const hi = Math.max(a,b), lo = Math.min(a,b), diff = hi - lo;
-  if(hi < 11) return {ok:false, message:"Winner must have at least 11 points."};
-  if(hi === 11){
-    if(diff < 2) return {ok:false, message:"11-point wins must be by at least 2."};
-    if(lo > 9) return {ok:false, message:"11-point wins must end 11-0 through 11-9."};
-    return {ok:true};
+    state.roster = roster.map((p)=>({
+      name: p.name,
+      rating: Number(p.rating || 0),
+      seed: 0,
+      elo: Number(p.rating || 0) * 100,
+      joinedWeek: Number(p.joinedWeek || 1),
+      active: p.active !== false
+    }));
+    reseedRoster();
+    recalcElo();
+    renderRoster();
+    try { renderSummary(); } catch(e) {}
+    try { saveState(); } catch(e) {}
+    if(typeof rosterStatus !== "undefined" && rosterStatus) rosterStatus.textContent = `Imported ${state.roster.length} players successfully.`;
+    try { autoPushLeagueToGoogleSheets('roster import'); } catch(e) {}
+  }catch(err){
+    if(typeof rosterStatus !== "undefined" && rosterStatus) rosterStatus.textContent = "Roster import failed: " + err.message;
   }
-  if(hi > 11){
-    if(lo < 10) return {ok:false, message:"Extended games happen only after 10-10."};
-    if(diff !== 2) return {ok:false, message:"Extended games must be won by exactly 2."};
-    return {ok:true};
-  }
-  return {ok:false, message:"Invalid score."};
 }
-async function updateMatchScoreOnGoogle(week, dayKey, round, court, score1, score2){
-  const url = getLiveGoogleUrl();
-  if(!url) throw new Error("Google Sheets live URL is not configured.");
+
+function addPlayerMidSeason(){ const name=newPlayerName.value.trim(), rating=Number(newPlayerRating.value), joinedWeek=Number(newPlayerWeek.value || 1); if(!name || !Number.isFinite(rating)){ playerChangeStatus.textContent="Enter a valid player name and rating."; return; } if(state.roster.some(p=>p.name.toLowerCase()===name.toLowerCase() && p.active)){ playerChangeStatus.textContent="That player is already active."; return; } state.roster.push({name,rating,seed:0,elo:rating*100,joinedWeek:joinedWeek,active:true}); reseedRoster(); recalcElo(); renderRoster(); renderSummary(); saveState(); newPlayerName.value=''; newPlayerRating.value=''; newPlayerWeek.value=''; playerChangeStatus.textContent=`Added ${name} starting Week ${joinedWeek}.`; autoPushLeagueToGoogleSheets('player add'); }
+function removeSelectedPlayer(){ const name=removePlayerSelect.value; const p=state.roster.find(x=>x.name===name && x.active); if(!p){ playerChangeStatus.textContent="Select an active player first."; return; } p.active=false; reseedRoster(); recalcElo(); renderRoster(); renderSummary(); saveState(); playerChangeStatus.textContent=`Removed ${name} from active roster.`; autoPushLeagueToGoogleSheets('player remove'); }
+function renderRoster(){
+  const body = rosterBody, mobile = rosterMobile;
+  const quickCount = document.getElementById("rosterQuickCount");
+  if(!state.roster.length){
+    body.innerHTML = '<tr><td colspan="6" class="small">No players yet.</td></tr>';
+    mobile.innerHTML = '<div class="small">No players yet.</div>';
+    if(quickCount) quickCount.textContent = "Current roster count: 0";
+    populateRemoveSelect();
+    return;
+  }
+  body.innerHTML = state.roster.map(r=>`<tr><td>${r.seed}</td><td><strong>${esc(r.name)}</strong></td><td>${Number(r.rating||0).toFixed(2)}</td><td>${Number(r.elo||0).toFixed(1)}</td><td>${r.joinedWeek || 1}</td><td>${r.active ? 'Yes' : 'No'}</td></tr>`).join("");
+  mobile.innerHTML = state.roster.map(r=>`<div class="mobile-card"><strong>${r.seed} • ${esc(r.name)}</strong><div class="small" style="margin-top:6px">Rating: ${Number(r.rating||0).toFixed(2)} • Current Rating: ${Number(r.elo||0).toFixed(1)} • Joined: Week ${r.joinedWeek || 1} • ${r.active ? 'Active' : 'Inactive'}</div></div>`).join("");
+  if(quickCount) quickCount.textContent = `Current roster count: ${state.roster.length}`;
+  populateRemoveSelect();
+}
+function availabilityKey(weekNum, dayKey){ return `W${weekNum}_${dayKey}`; }
+function checkedInPlayers(weekNum, dayKey){
+  const key = availabilityKey(weekNum, dayKey);
+  const entry = state.availability && state.availability[key];
+  if(!entry || !entry.length) return null;
+  return new Set(entry);
+}
+function activePlayersForWeek(weekNum, dayKey=null){
+  const checked = dayKey ? checkedInPlayers(weekNum, dayKey) : null;
+  return state.roster.filter(p=>p.active && (p.joinedWeek || 1) <= weekNum && (!checked || checked.has(p.name))).sort((a,b)=> (a.seed==='-'?999:a.seed) - (b.seed==='-'?999:b.seed) || a.name.localeCompare(b.name));
+}
+
+
+
+
+function loadCheckin(){
+  const weekNum = Number(document.getElementById("checkinWeek").value || 1);
+  const dayKey = String(document.getElementById("checkinDay").value || "Saturday").toLowerCase();
+  const key = availabilityKey(weekNum, dayKey);
+  const selected = new Set((state.availability && state.availability[key]) || activePlayersForWeek(weekNum).map(p=>p.name));
+  const eligible = state.roster.filter(p=>p.active && (p.joinedWeek || 1) <= weekNum).sort((a,b)=> (a.seed==='-'?999:a.seed) - (b.seed==='-'?999:b.seed) || a.name.localeCompare(b.name));
+  checkinBox.innerHTML = eligible.length ? eligible.map(p => `
+    <label class="mobile-card" style="display:block">
+      <input type="checkbox" data-player-checkin value="${esc(p.name)}" ${selected.has(p.name) ? "checked" : ""}> ${esc(p.name)}
+    </label>
+  `).join("") : '<div class="small">No eligible players for this week.</div>';
+  checkinStatus.textContent = `Loaded check-in for Week ${weekNum} ${dayKey[0].toUpperCase()+dayKey.slice(1)}.`;
+}
+function markAllAvailable(){
+  document.querySelectorAll('[data-player-checkin]').forEach(cb => cb.checked = true);
+}
+function saveCheckin(){
+  const weekNum = Number(document.getElementById("checkinWeek").value || 1);
+  const dayKey = String(document.getElementById("checkinDay").value || "Saturday").toLowerCase();
+  const key = availabilityKey(weekNum, dayKey);
+  const vals = [...document.querySelectorAll('[data-player-checkin]:checked')].map(x => x.value);
+  if(!state.availability) state.availability = {};
+  state.availability[key] = vals;
+  saveState();
+  checkinStatus.textContent = `Saved ${vals.length} available players for Week ${weekNum} ${dayKey[0].toUpperCase()+dayKey.slice(1)}.`;
+  autoPushLeagueToGoogleSheets('check-in save');
+}
+function generateAllSchedules(){
+  let count = 0;
+  state.weeks.forEach(week => {
+    ['saturday','sunday'].forEach(dayKey => {
+      if(!week[dayKey].active) return;
+      const players = activePlayersForWeek(week.week, dayKey).map(p=>p.name);
+      if(players.length >= 4){
+        week[dayKey].schedule = buildSmartSchedule(players, week[dayKey].courts, week[dayKey].rounds);
+        count++;
+      }
+    });
+  });
+  saveState();
+  renderSummary();
+  bulkScheduleStatus.textContent = `Generated ${count} active day schedules across the season.`;
+  autoPushLeagueToGoogleSheets('bulk schedule generation');
+}
+
+
+function getEligiblePlayoffSeeds(){
+  const fmt = Number(state.profile.playoffFormat || 12);
+  return seasonStats().filter(r=>r.playoffEligible).slice(0,fmt);
+}
+function seedPlayoffsFromLeaderboard(){
+  const seeds = getEligiblePlayoffSeeds();
+  const fmt = Number(state.profile.playoffFormat || 12);
+  if(seeds.length < fmt){
+    playoffSeedStatus.textContent = `Need at least ${fmt} playoff-eligible players to seed the Top ${fmt} bracket.`;
+    return;
+  }
+  if(fmt===4){
+    state.playoffs = {format:4,seeds:seeds.map((s,i)=>({seed:i+1,name:s.name})),semifinals:{s1:{a:seeds[0].name,b:seeds[3].name,winner:""},s2:{a:seeds[1].name,b:seeds[2].name,winner:""}},final:{f1:{a:"",b:"",winner:""}},champion:""};
+  } else if(fmt===8){
+    state.playoffs = {format:8,seeds:seeds.map((s,i)=>({seed:i+1,name:s.name})),quarterfinals:{q1:{a:seeds[0].name,b:seeds[7].name,winner:""},q2:{a:seeds[3].name,b:seeds[4].name,winner:""},q3:{a:seeds[2].name,b:seeds[5].name,winner:""},q4:{a:seeds[1].name,b:seeds[6].name,winner:""}},semifinals:{s1:{a:"",b:"",winner:""},s2:{a:"",b:"",winner:""}},final:{f1:{a:"",b:"",winner:""}},champion:""};
+  } else {
+    state.playoffs = {format:12,seeds:seeds.map((s,i)=>({seed:i+1,name:s.name})),playIn:{m1:{a:seeds[4].name,b:seeds[11].name,winner:""},m2:{a:seeds[5].name,b:seeds[10].name,winner:""},m3:{a:seeds[6].name,b:seeds[9].name,winner:""},m4:{a:seeds[7].name,b:seeds[8].name,winner:""}},quarterfinals:{q1:{a:seeds[0].name,b:"",winner:""},q2:{a:seeds[3].name,b:"",winner:""},q3:{a:seeds[2].name,b:"",winner:""},q4:{a:seeds[1].name,b:"",winner:""}},semifinals:{s1:{a:"",b:"",winner:""},s2:{a:"",b:"",winner:""}},final:{f1:{a:"",b:"",winner:""}},champion:""};
+  }
+  recalcPlayoffProgression();
+  renderPlayoffManager();
+  saveState();
+  playoffSeedStatus.textContent = `Playoffs seeded from the current leaderboard using Top ${fmt}.`;
+}
+function recalcPlayoffProgression(){
+  const p = state.playoffs || {};
+  const fmt = Number(p.format || state.profile.playoffFormat || 12);
+  if(fmt===4){
+    if(!p.semifinals || !p.final) return;
+    p.final.f1.a = p.semifinals.s1.winner || "";
+    p.final.f1.b = p.semifinals.s2.winner || "";
+    p.champion = p.final.f1.winner || "";
+    return;
+  }
+  if(fmt===8){
+    if(!p.quarterfinals || !p.semifinals || !p.final) return;
+    p.semifinals.s1.a = p.quarterfinals.q1.winner || "";
+    p.semifinals.s1.b = p.quarterfinals.q2.winner || "";
+    p.semifinals.s2.a = p.quarterfinals.q3.winner || "";
+    p.semifinals.s2.b = p.quarterfinals.q4.winner || "";
+    p.final.f1.a = p.semifinals.s1.winner || "";
+    p.final.f1.b = p.semifinals.s2.winner || "";
+    p.champion = p.final.f1.winner || "";
+    return;
+  }
+  if(!p.playIn || !p.quarterfinals || !p.semifinals || !p.final) return;
+  p.quarterfinals.q1.b = p.playIn.m4.winner || "";
+  p.quarterfinals.q2.b = p.playIn.m1.winner || "";
+  p.quarterfinals.q3.b = p.playIn.m2.winner || "";
+  p.quarterfinals.q4.b = p.playIn.m3.winner || "";
+  p.semifinals.s1.a = p.quarterfinals.q1.winner || "";
+  p.semifinals.s1.b = p.quarterfinals.q2.winner || "";
+  p.semifinals.s2.a = p.quarterfinals.q3.winner || "";
+  p.semifinals.s2.b = p.quarterfinals.q4.winner || "";
+  p.final.f1.a = p.semifinals.s1.winner || "";
+  p.final.f1.b = p.semifinals.s2.winner || "";
+  p.champion = p.final.f1.winner || "";
+}
+function matchupPicker(idPrefix, match, options){
+  const opts = ['<option value="">Select winner</option>'].concat(options.map(n=>`<option value="${esc(n)}" ${match.winner===n ? 'selected' : ''}>${esc(n)}</option>`)).join('');
+  return `<div class="mobile-card"><div><strong>${esc(match.a || "TBD")}</strong> vs <strong>${esc(match.b || "TBD")}</strong></div><div style="margin-top:10px"><select id="${idPrefix}">${opts}</select></div></div>`;
+}
+function savePlayInWinners(){
+  const p = state.playoffs;
+  p.playIn.m1.winner = document.getElementById('pi_m1').value;
+  p.playIn.m2.winner = document.getElementById('pi_m2').value;
+  p.playIn.m3.winner = document.getElementById('pi_m3').value;
+  p.playIn.m4.winner = document.getElementById('pi_m4').value;
+  recalcPlayoffProgression(); saveState(); renderPlayoffManager(); autoPushLeagueToGoogleSheets('playoff update');
+}
+function saveQuarterfinalWinners(){
+  const p = state.playoffs;
+  p.quarterfinals.q1.winner = document.getElementById('qf_q1').value;
+  p.quarterfinals.q2.winner = document.getElementById('qf_q2').value;
+  p.quarterfinals.q3.winner = document.getElementById('qf_q3').value;
+  p.quarterfinals.q4.winner = document.getElementById('qf_q4').value;
+  recalcPlayoffProgression(); saveState(); renderPlayoffManager(); autoPushLeagueToGoogleSheets('playoff update');
+}
+function saveSemifinalWinners(){
+  const p = state.playoffs;
+  p.semifinals.s1.winner = document.getElementById('sf_s1').value;
+  p.semifinals.s2.winner = document.getElementById('sf_s2').value;
+  recalcPlayoffProgression(); saveState(); renderPlayoffManager(); autoPushLeagueToGoogleSheets('playoff update');
+}
+function saveFinalWinner(){
+  const p = state.playoffs;
+  p.final.f1.winner = document.getElementById('fn_f1').value;
+  recalcPlayoffProgression(); saveState(); renderPlayoffManager(); autoPushLeagueToGoogleSheets('playoff update');
+}
+function renderPlayoffManager(){
+  const p = state.playoffs || {};
+  const fmt = Number(p.format || state.profile.playoffFormat || 12);
+  if(fmt===4 && p.semifinals){
+    playInManagerBox.innerHTML = '<div class="small">Top 4 format does not use play-in.</div>';
+    quarterfinalManagerBox.innerHTML = '<div class="small">Top 4 format does not use quarterfinals.</div>';
+    semifinalManagerBox.innerHTML = [
+      matchupPicker('sf_s1', p.semifinals.s1, [p.semifinals.s1.a,p.semifinals.s1.b].filter(Boolean)),
+      matchupPicker('sf_s2', p.semifinals.s2, [p.semifinals.s2.a,p.semifinals.s2.b].filter(Boolean)),
+      '<div class="btns"><button class="green" onclick="saveSemifinalWinners()">Save Semifinal Winners</button></div>'
+    ].join('');
+    finalManagerBox.innerHTML = [
+      matchupPicker('fn_f1', p.final.f1, [p.final.f1.a,p.final.f1.b].filter(Boolean)),
+      '<div class="btns"><button class="green" onclick="saveFinalWinner()">Save Final Winner</button></div>'
+    ].join('');
+    championManagerBox.innerHTML = p.champion ? `<strong>${esc(p.champion)}</strong>` : 'No champion yet.';
+    return;
+  }
+  if(fmt===8 && p.quarterfinals){
+    playInManagerBox.innerHTML = '<div class="small">Top 8 format does not use play-in.</div>';
+    quarterfinalManagerBox.innerHTML = [
+      matchupPicker('qf_q1', p.quarterfinals.q1, [p.quarterfinals.q1.a,p.quarterfinals.q1.b].filter(Boolean)),
+      matchupPicker('qf_q2', p.quarterfinals.q2, [p.quarterfinals.q2.a,p.quarterfinals.q2.b].filter(Boolean)),
+      matchupPicker('qf_q3', p.quarterfinals.q3, [p.quarterfinals.q3.a,p.quarterfinals.q3.b].filter(Boolean)),
+      matchupPicker('qf_q4', p.quarterfinals.q4, [p.quarterfinals.q4.a,p.quarterfinals.q4.b].filter(Boolean)),
+      '<div class="btns"><button class="green" onclick="saveQuarterfinalWinners()">Save Quarterfinal Winners</button></div>'
+    ].join('');
+    semifinalManagerBox.innerHTML = [
+      matchupPicker('sf_s1', p.semifinals.s1, [p.semifinals.s1.a,p.semifinals.s1.b].filter(Boolean)),
+      matchupPicker('sf_s2', p.semifinals.s2, [p.semifinals.s2.a,p.semifinals.s2.b].filter(Boolean)),
+      '<div class="btns"><button class="green" onclick="saveSemifinalWinners()">Save Semifinal Winners</button></div>'
+    ].join('');
+    finalManagerBox.innerHTML = [
+      matchupPicker('fn_f1', p.final.f1, [p.final.f1.a,p.final.f1.b].filter(Boolean)),
+      '<div class="btns"><button class="green" onclick="saveFinalWinner()">Save Final Winner</button></div>'
+    ].join('');
+    championManagerBox.innerHTML = p.champion ? `<strong>${esc(p.champion)}</strong>` : 'No champion yet.';
+    return;
+  }
+  if(!p.playIn){
+    playInManagerBox.innerHTML = '<div class="small">Seed playoffs first.</div>';
+    quarterfinalManagerBox.innerHTML = '<div class="small">Seed playoffs first.</div>';
+    semifinalManagerBox.innerHTML = '<div class="small">Seed playoffs first.</div>';
+    finalManagerBox.innerHTML = '<div class="small">Seed playoffs first.</div>';
+    championManagerBox.innerHTML = 'No champion yet.';
+    return;
+  }
+  playInManagerBox.innerHTML = [
+    matchupPicker('pi_m1', p.playIn.m1, [p.playIn.m1.a,p.playIn.m1.b].filter(Boolean)),
+    matchupPicker('pi_m2', p.playIn.m2, [p.playIn.m2.a,p.playIn.m2.b].filter(Boolean)),
+    matchupPicker('pi_m3', p.playIn.m3, [p.playIn.m3.a,p.playIn.m3.b].filter(Boolean)),
+    matchupPicker('pi_m4', p.playIn.m4, [p.playIn.m4.a,p.playIn.m4.b].filter(Boolean)),
+    '<div class="btns"><button class="green" onclick="savePlayInWinners()">Save Play-In Winners</button></div>'
+  ].join('');
+  quarterfinalManagerBox.innerHTML = [
+    matchupPicker('qf_q1', p.quarterfinals.q1, [p.quarterfinals.q1.a,p.quarterfinals.q1.b].filter(Boolean)),
+    matchupPicker('qf_q2', p.quarterfinals.q2, [p.quarterfinals.q2.a,p.quarterfinals.q2.b].filter(Boolean)),
+    matchupPicker('qf_q3', p.quarterfinals.q3, [p.quarterfinals.q3.a,p.quarterfinals.q3.b].filter(Boolean)),
+    matchupPicker('qf_q4', p.quarterfinals.q4, [p.quarterfinals.q4.a,p.quarterfinals.q4.b].filter(Boolean)),
+    '<div class="btns"><button class="green" onclick="saveQuarterfinalWinners()">Save Quarterfinal Winners</button></div>'
+  ].join('');
+  semifinalManagerBox.innerHTML = [
+    matchupPicker('sf_s1', p.semifinals.s1, [p.semifinals.s1.a,p.semifinals.s1.b].filter(Boolean)),
+    matchupPicker('sf_s2', p.semifinals.s2, [p.semifinals.s2.a,p.semifinals.s2.b].filter(Boolean)),
+    '<div class="btns"><button class="green" onclick="saveSemifinalWinners()">Save Semifinal Winners</button></div>'
+  ].join('');
+  finalManagerBox.innerHTML = [
+    matchupPicker('fn_f1', p.final.f1, [p.final.f1.a,p.final.f1.b].filter(Boolean)),
+    '<div class="btns"><button class="green" onclick="saveFinalWinner()">Save Final Winner</button></div>'
+  ].join('');
+  championManagerBox.innerHTML = p.champion ? `<strong>${esc(p.champion)}</strong>` : 'No champion yet.';
+}
+
+
+async function callGoogleScript(action, payload={}){
+  syncProfileFromUI();
+  const url = state.profile.googleScriptUrl || "";
+  if(!url) throw new Error("Save your Google Apps Script URL first.");
   const res = await fetch(url, {
-    method:"POST",
+    method: "POST",
     headers: {"Content-Type": "text/plain;charset=utf-8"},
-    body: JSON.stringify({
-      action:"updateMatchScore",
-      payload:{week:Number(week), day:String(dayKey), round:Number(round), court:Number(court), score1:Number(score1), score2:Number(score2)}
-    }),
-    mode:"cors"
+    body: JSON.stringify({action, payload}),
+    mode: "cors"
   });
   const text = await res.text();
-  let json;
-  try { json = JSON.parse(text); } catch(e){ throw new Error("Unexpected response while saving score."); }
-  if(!json.ok) throw new Error(json.error || "Unable to save score.");
-  if(json.data) data = json.data;
-  return json;
+  let data;
+  try { data = JSON.parse(text); } catch(e){ throw new Error("Unexpected Apps Script response: " + text.slice(0,200)); }
+  if(!data.ok) throw new Error(data.error || "Apps Script request failed.");
+  return data;
 }
-function scoreEditorMarkup(m){
-  const disabled = m.completed ? "disabled" : "";
-  return `<div class="match-card">
-    <div class="match-head"><strong>Week ${m.week} • ${m.day[0].toUpperCase()+m.day.slice(1)}</strong><span class="small">Round ${m.round} • Court ${m.court}</span></div>
-    <div class="team-row"><div class="team-name">${esc(m.team1[0])} & ${esc(m.team1[1])}</div><div class="team-score">${m.completed ? m.score1 : `<input type="number" min="0" inputmode="numeric" id="s1_${m.week}_${m.day}_${m.round}_${m.court}" style="width:78px;padding:8px;border:1px solid #ccd7e5;border-radius:12px" placeholder="0">`}</div></div>
-    <div class="team-row"><div class="team-name">${esc(m.team2[0])} & ${esc(m.team2[1])}</div><div class="team-score">${m.completed ? m.score2 : `<input type="number" min="0" inputmode="numeric" id="s2_${m.week}_${m.day}_${m.round}_${m.court}" style="width:78px;padding:8px;border:1px solid #ccd7e5;border-radius:12px" placeholder="0">`}</div></div>
-    ${m.completed ? `<div class="small" style="margin-top:10px">Completed result is locked.</div>` : `<div style="margin-top:12px"><button onclick="savePublicScore(${m.week}, '${m.day}', ${m.round}, ${m.court})">Save Score</button><div class="small" id="msg_${m.week}_${m.day}_${m.round}_${m.court}" style="margin-top:8px"></div></div>`}
-  </div>`;
+function saveGoogleScriptUrl(){
+  const el = document.getElementById("googleScriptUrl");
+  const url = (el && el.value ? el.value : "").trim();
+  if(!url){
+    const statusEl = document.getElementById("googleScriptStatus");
+    if(statusEl) statusEl.textContent = "Please enter a valid URL.";
+    return;
+  }
+  if(!state.profile) state.profile = {};
+  state.profile.googleScriptUrl = url;
+  try {
+    localStorage.setItem("pouncy_google_script_url", url);
+  } catch(e) {}
+  saveState();
+  const statusEl = document.getElementById("googleScriptStatus");
+  if(statusEl) statusEl.textContent = "Google Apps Script URL saved.";
 }
-async function saveScheduleScore(week, dayKey, round, court){
-  const s1el = document.getElementById(`sched1_${week}_${dayKey}_${round}_${court}`);
-  const s2el = document.getElementById(`sched2_${week}_${dayKey}_${round}_${court}`);
-  const msgEl = document.getElementById(`schedmsg_${week}_${dayKey}_${round}_${court}`);
-  const s1 = Number(s1el?.value), s2 = Number(s2el?.value);
-  const check = isValidPickleballScore(s1, s2);
-  if(!check.ok){ if(msgEl) msgEl.textContent = check.message; return; }
-  if(msgEl) msgEl.textContent = "Saving...";
+async function testGoogleScriptConnection(){
   try{
-    await updateMatchScoreOnGoogle(week, dayKey, round, court, s1, s2);
-    if(msgEl) msgEl.textContent = "Score saved.";
-    renderOverview(); renderSchedule(); renderLeaderboard(); renderHistory(); renderPlayers(); renderPlayoffs(); renderHallOfFame();
+    const data = await callGoogleScript("ping", {});
+    googleScriptStatus.textContent = data.message || "Connection successful.";
   }catch(err){
-    if(msgEl) msgEl.textContent = err.message;
+    googleScriptStatus.textContent = err.message;
   }
 }
-async function savePublicScore(week, dayKey, round, court){
-  const s1el = document.getElementById(`s1_${week}_${dayKey}_${round}_${court}`);
-  const s2el = document.getElementById(`s2_${week}_${dayKey}_${round}_${court}`);
-  const msgEl = document.getElementById(`msg_${week}_${dayKey}_${round}_${court}`);
-  const s1 = Number(s1el?.value), s2 = Number(s2el?.value);
-  const check = isValidPickleballScore(s1, s2);
-  if(!check.ok){
-    if(msgEl) msgEl.textContent = check.message;
-    return;
-  }
-  if(msgEl) msgEl.textContent = "Saving...";
+async function pushStateToGoogleSheets(){
   try{
-    await updateMatchScoreOnGoogle(week, dayKey, round, court, s1, s2);
-    if(msgEl) msgEl.textContent = "Score saved.";
-    renderOverview(); renderSchedule(); renderLeaderboard(); renderHistory(); renderPlayers(); renderPlayoffs(); renderHallOfFame();
+    syncProfileFromUI();
+    const payload = {profile:state.profile, roster:state.roster, weeks:state.weeks, availability:state.availability||{}, playoffs:state.playoffs||{}};
+    const data = await callGoogleScript("saveLeagueState", payload);
+    googleSyncStatus.textContent = data.message || "League data saved to Google Sheets.";
   }catch(err){
-    if(msgEl) msgEl.textContent = err.message;
+    googleSyncStatus.textContent = err.message;
+  }
+}
+async function loadStateFromGoogleSheets(){
+  try{
+    const data = await callGoogleScript("loadLeagueState", {});
+    const loaded = data.data || {};
+    state.profile = Object.assign({}, state.profile, loaded.profile || {});
+    state.roster = loaded.roster || [];
+    state.weeks = loaded.weeks || [];
+    state.availability = loaded.availability || {};
+    state.playoffs = loaded.playoffs || {};
+    pushProfileToUI();
+    renderRoster(); renderWeeks(); renderWeekOptions(); renderSummary(); renderScheduleTable(state.weeks[0]?.saturday?.schedule || []);
+    populateRemoveSelect();
+    recalcElo();
+    saveState();
+    googleSyncStatus.textContent = "League data loaded from Google Sheets.";
+  }catch(err){
+    googleSyncStatus.textContent = err.message;
+  }
+}
+async function resetGoogleSheetsData(){
+  if(!confirm("Reset Google Sheets data? This will remove the stored league so you can start another league later.")) return;
+  try{
+    const data = await callGoogleScript("resetLeagueState", {});
+    googleSyncStatus.textContent = data.message || "Google Sheets data reset.";
+  }catch(err){
+    googleSyncStatus.textContent = err.message;
   }
 }
 
-function renderOverview() {
-  if(!data) return;
-  renderChampionshipCenter();
-  renderLatestResultsWidget();
-  const activePlayers=(data.roster||[]).filter(p=>p.active!==false).length;
-  const totalPlayers=(data.roster||[]).length;
-  const weeks=(data.weeks||[]).length;
-  const scored=(data.weeks||[]).reduce((n,w)=>n+(w.saturday.schedule||[]).filter(m=>m.completed).length+(w.sunday.schedule||[]).filter(m=>m.completed).length,0);
-  statsGrid.innerHTML = `
-    <div class="stat"><div class="label">Active Players</div><div class="value">${activePlayers}</div></div>
-    <div class="stat"><div class="label">Total Players</div><div class="value">${totalPlayers}</div></div>
-    <div class="stat"><div class="label">Weeks</div><div class="value">${weeks}</div></div>
-    <div class="stat"><div class="label">Scored Matches</div><div class="value">${scored}</div></div>
-  `;
-  overviewBox.innerHTML=`<span class="pill">${esc(data.profile.leagueTitle)}</span><span class="pill">${weeks} weeks</span><span class="pill">${scored} scored matches</span><div style="margin-top:10px"><strong>Subtitle:</strong> ${esc(data.profile.leagueSubtitle || '')}</div>`;
 
-  const top = (data.season||[]).slice(0,3);
-  topThreeBox.innerHTML = top.length ? top.map((r,i)=>`<div class="rank-card rank-${i+1}"><div class="rank-num">${i+1}</div><strong>${esc(r.name)}</strong><div class="small" style="margin-top:8px">${r.wins}-${r.losses} • ${(r.pct*100).toFixed(1)}% • Diff ${r.diff}</div></div>`).join('') : '<div class="small">No leaderboard data yet.</div>';
-
-  const allWeeks = data.weeks || [];
-  const currentWeekObj = [...allWeeks].reverse().find(w => (((w.saturday?.schedule || []).length + (w.sunday?.schedule || []).length) > 0)) || allWeeks[allWeeks.length - 1];
-  const featured = [];
-  if (currentWeekObj) {
-    ["saturday","sunday"].forEach(day => {
-      (currentWeekObj[day]?.schedule || []).forEach(m => featured.push({week: currentWeekObj.week, day: day, ...m}));
-    });
+async function autoPushLeagueToGoogleSheets(reason="update"){
+  try{
+    syncProfileFromUI();
+    const url = (state.profile && state.profile.googleScriptUrl) || "";
+    if(!url) return;
+    const payload = {profile:state.profile, roster:state.roster, weeks:state.weeks, availability:state.availability||{}, playoffs:state.playoffs||{}};
+    const data = await callGoogleScript("saveLeagueState", payload);
+    const syncEl = document.getElementById("googleSyncStatus");
+    if(syncEl) syncEl.textContent = data.message || `League data auto-saved to Google Sheets after ${reason}.`;
+  }catch(err){
+    const syncEl = document.getElementById("googleSyncStatus");
+    if(syncEl) syncEl.textContent = "Auto-save warning: " + err.message;
   }
-  const satCount = currentWeekObj ? (currentWeekObj.saturday?.schedule || []).length : 0;
-  const sunCount = currentWeekObj ? (currentWeekObj.sunday?.schedule || []).length : 0;
-  const completedCount = featured.filter(m => m.completed).length;
-  weekendSummaryBox.innerHTML = currentWeekObj
-    ? `<span class="pill">Week ${currentWeekObj.week}</span><span class="pill">${satCount} Saturday matches</span><span class="pill">${sunCount} Sunday matches</span><span class="pill">${completedCount} completed</span><div style="margin-top:10px"><strong>Weekend view:</strong> This combines Saturday and Sunday for the latest active week. Leaderboard uses win percentage, and playoffs use a minimum matches threshold to keep things fair with lighter admin effort.</div>`
-    : 'No weekend summary yet.';
-
-  featuredMatchesBox.innerHTML = featured.length
-    ? featured.map(m=>scoreEditorMarkup(m)).join('')
-    : 'No matches yet.';
-}
-function renderSchedule() {
-  if(!data) return;
-  const weekNum=Number(weekSel.value || data.weeks?.[0]?.week || 1), day=(daySel.value || 'Saturday').toLowerCase();
-  const week=(data.weeks||[]).find(w=>w.week===weekNum), rows=week?.[day]?.schedule || [];
-  if(!rows.length) { scheduleBox.innerHTML='<div class="status">No schedule found for this selection.</div>'; return; }
-  const latestWeekNum = (data.weeks && data.weeks.length) ? data.weeks[data.weeks.length-1].week : weekNum;
-  const editable = weekNum === latestWeekNum;
-  scheduleBox.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Round</th><th>Court</th><th>Team 1</th><th>Team 2</th><th>Status</th></tr></thead><tbody>${rows.map(m=>{
-    const editor = (!m.completed && editable)
-      ? `<div><input type="number" min="0" inputmode="numeric" id="sched1_${weekNum}_${day}_${m.round}_${m.court}" style="width:64px;padding:6px;border:1px solid #ccd7e5;border-radius:10px" placeholder="0"> <input type="number" min="0" inputmode="numeric" id="sched2_${weekNum}_${day}_${m.round}_${m.court}" style="width:64px;padding:6px;border:1px solid #ccd7e5;border-radius:10px" placeholder="0"> <button style="padding:8px 10px;min-height:auto" onclick="saveScheduleScore(${weekNum}, '${day}', ${m.round}, ${m.court})">Save</button><div class="small" id="schedmsg_${weekNum}_${day}_${m.round}_${m.court}" style="margin-top:4px"></div></div>`
-      : (m.completed ? `${m.score1}-${m.score2}` : 'Pending');
-    return `<tr><td>${m.round}</td><td>${m.court}</td><td>${esc(m.team1[0])} & ${esc(m.team1[1])}</td><td>${esc(m.team2[0])} & ${esc(m.team2[1])}</td><td>${editor}</td></tr>`;
-  }).join('')}</tbody></table></div>`;
-}
-function renderLeaderboard() {
-  if(!data) return;
-  const rows=data.season || [];
-  if(!rows.length) { leaderboardBox.innerHTML='<div class="status">No leaderboard yet.</div>'; return; }
-  leaderboardBox.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Player</th><th>W</th><th>L</th><th>Win %</th><th>Diff</th><th>Rating</th><th>Active</th><th>Playoff Eligible</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.name)}</td><td>${r.wins}</td><td>${r.losses}</td><td>${(r.pct*100).toFixed(1)}%</td><td>${r.diff}</td><td>${r.elo.toFixed(1)}</td><td>${r.active===false ? 'No' : 'Yes'}</td><td>${r.playoffEligible ? 'Yes' : 'No'}</td></tr>`).join('')}</tbody></table></div>`;
-}
-function renderHistory() {
-  if(!data || !data.weeks) return;
-  let html='<div class="table-wrap"><table><thead><tr><th>Week</th><th>Completed Matches</th><th>Top 3 Snapshot</th></tr></thead><tbody>';
-  const playerStats = buildPlayerStats();
-  data.weeks.forEach(w=> {
-    const cnt=(w.saturday.schedule||[]).filter(m=>m.completed).length + (w.sunday.schedule||[]).filter(m=>m.completed).length;
-    const snap = cnt ? playerStats.slice(0,3).map((p,i)=>`${i+1}. ${esc(p.name)}`).join('<br>') : 'No results';
-    html += `<tr><td>Week ${w.week}</td><td>${cnt}</td><td>${snap}</td></tr>`;
-  });
-  html += '</tbody></table></div>';
-  historyBox.innerHTML = html;
-}
-function renderPlayers() {
-  if(!data) return;
-  const stats = buildPlayerStats();
-  playersBox.innerHTML = stats.length ? stats.map(p => {
-    const url = `player.html?id=${encodeURIComponent(p.name)}`;
-    return `<div class="player-card"><a href="${url}">${esc(p.name)}</a><div class="small" style="margin-top:8px">${p.wins}-${p.losses} • ${(p.pct*100).toFixed(1)}% • Diff ${p.diff} • Rating ${(p.elo||0).toFixed(1)} • ${p.playoffEligible ? "Playoff eligible" : "Below playoff threshold"}</div></div>`;
-  }).join('') : '<div class="small">No player data yet.</div>';
-}
-function renderPlayoffs() {
-  const p = data.playoffs || {};
-  const rows = (data.season||[]);
-  const fmt = Number(p.format || data.profile?.playoffFormat || 12);
-  if(fmt===4 && p.semifinals && p.final){
-    const show = m => `${esc(m.a || 'TBD')} vs ${esc(m.b || 'TBD')}${m.winner ? `<br><strong>Winner: ${esc(m.winner)}</strong>` : ''}`;
-    playoffBox.innerHTML = `<div class="bracket-card"><h3>Semifinals</h3><div class="small" style="margin-top:10px">${show(p.semifinals.s1)}<br><br>${show(p.semifinals.s2)}</div></div><div class="bracket-card"><h3>Final</h3><div class="small" style="margin-top:10px">${show(p.final.f1)}<br><br><strong>Champion</strong><br>${esc(p.champion || 'TBD')}</div></div>`;
-    return;
-  }
-  if(fmt===8 && p.quarterfinals && p.semifinals && p.final){
-    const show = m => `${esc(m.a || 'TBD')} vs ${esc(m.b || 'TBD')}${m.winner ? `<br><strong>Winner: ${esc(m.winner)}</strong>` : ''}`;
-    playoffBox.innerHTML = `<div class="bracket-card"><h3>Quarterfinals</h3><div class="small" style="margin-top:10px">${show(p.quarterfinals.q1)}<br><br>${show(p.quarterfinals.q2)}<br><br>${show(p.quarterfinals.q3)}<br><br>${show(p.quarterfinals.q4)}</div></div><div class="bracket-card"><h3>Semifinals</h3><div class="small" style="margin-top:10px">${show(p.semifinals.s1)}<br><br>${show(p.semifinals.s2)}</div></div><div class="bracket-card"><h3>Final</h3><div class="small" style="margin-top:10px">${show(p.final.f1)}<br><br><strong>Champion</strong><br>${esc(p.champion || 'TBD')}</div></div>`;
-    return;
-  }
-  if(p.playIn && p.quarterfinals && p.semifinals && p.final){
-    const show = m => `${esc(m.a || 'TBD')} vs ${esc(m.b || 'TBD')}${m.winner ? `<br><strong>Winner: ${esc(m.winner)}</strong>` : ''}`;
-    playoffBox.innerHTML = `<div class="bracket-card"><h3>Play-In</h3><div class="small" style="margin-top:10px">${show(p.playIn.m1)}<br><br>${show(p.playIn.m2)}<br><br>${show(p.playIn.m3)}<br><br>${show(p.playIn.m4)}</div></div><div class="bracket-card"><h3>Quarterfinals</h3><div class="small" style="margin-top:10px">${show(p.quarterfinals.q1)}<br><br>${show(p.quarterfinals.q2)}<br><br>${show(p.quarterfinals.q3)}<br><br>${show(p.quarterfinals.q4)}</div></div><div class="bracket-card"><h3>Semifinals</h3><div class="small" style="margin-top:10px">${show(p.semifinals.s1)}<br><br>${show(p.semifinals.s2)}</div></div><div class="bracket-card"><h3>Final</h3><div class="small" style="margin-top:10px">${show(p.final.f1)}<br><br><strong>Champion</strong><br>${esc(p.champion || 'TBD')}</div></div>`;
-    return;
-  }
-  let bracketRows = rows.filter(r=>r.playoffEligible).slice(0,fmt);
-  if(bracketRows.length < fmt) bracketRows = rows.slice(0,fmt);
-  if(bracketRows.length < fmt){ playoffBox.innerHTML = `<div class="status">Top ${fmt} playoff view will appear once at least ${fmt} players have season rankings.</div>`; return; }
-  const seed = i => bracketRows[i-1] ? `${i}. ${esc(bracketRows[i-1].name)}` : `Seed ${i} TBD`;
-  if(fmt===4){ playoffBox.innerHTML = `<div class="bracket-card"><h3>Semifinals</h3><div class="small" style="margin-top:10px">${seed(1)} vs ${seed(4)}<br><br>${seed(2)} vs ${seed(3)}</div></div><div class="bracket-card"><h3>Final</h3><div class="small" style="margin-top:10px">Winner SF1 vs Winner SF2<br><br><strong>Champion</strong><br>TBD</div></div>`; return; }
-  if(fmt===8){ playoffBox.innerHTML = `<div class="bracket-card"><h3>Quarterfinals</h3><div class="small" style="margin-top:10px">${seed(1)} vs ${seed(8)}<br><br>${seed(4)} vs ${seed(5)}<br><br>${seed(3)} vs ${seed(6)}<br><br>${seed(2)} vs ${seed(7)}</div></div><div class="bracket-card"><h3>Semifinals</h3><div class="small" style="margin-top:10px">Winner QF1 vs Winner QF2<br><br>Winner QF3 vs Winner QF4</div></div><div class="bracket-card"><h3>Final</h3><div class="small" style="margin-top:10px">Winner SF1 vs Winner SF2<br><br><strong>Champion</strong><br>TBD</div></div>`; return; }
-  playoffBox.innerHTML = `<div class="bracket-card"><h3>Play-In</h3><div class="small" style="margin-top:10px">5 vs 12<br>${seed(5)}<br>${seed(12)}<br><br>6 vs 11<br>${seed(6)}<br>${seed(11)}<br><br>7 vs 10<br>${seed(7)}<br>${seed(10)}<br><br>8 vs 9<br>${seed(8)}<br>${seed(9)}</div></div><div class="bracket-card"><h3>Quarterfinals</h3><div class="small" style="margin-top:10px">QF1<br>${seed(1)} vs Winner 8/9<br><br>QF2<br>${seed(4)} vs Winner 5/12<br><br>QF3<br>${seed(3)} vs Winner 6/11<br><br>QF4<br>${seed(2)} vs Winner 7/10</div></div><div class="bracket-card"><h3>Semifinals</h3><div class="small" style="margin-top:10px">SF1<br>Winner QF1 vs Winner QF2<br><br>SF2<br>Winner QF3 vs Winner QF4</div></div><div class="bracket-card"><h3>Final</h3><div class="small" style="margin-top:10px">Winner SF1 vs Winner SF2<br><br><strong>Champion</strong><br>TBD</div></div>`;
 }
 
-function renderHallOfFame() {
-  const rows = buildPlayerStats();
-  if(!rows.length){ hofBox.innerHTML = '<div class="status">No Hall of Fame data yet.</div>'; return; }
-  const champ = rows[0];
-  const mostWins = [...rows].sort((a,b)=>b.wins-a.wins || b.pct-a.pct)[0];
-  const bestDiff = [...rows].sort((a,b)=>b.diff-a.diff || b.pct-a.pct)[0];
-  const iron = [...rows].sort((a,b)=>b.games-a.games || b.wins-a.wins)[0];
-  hofBox.innerHTML = `
-    <div class="players-grid">
-      <div class="player-card"><strong>League Leader</strong><div class="small" style="margin-top:8px">${esc(champ.name)} • ${(champ.pct*100).toFixed(1)}% • Rating ${(champ.elo||0).toFixed(1)}</div></div>
-      <div class="player-card"><strong>Most Wins</strong><div class="small" style="margin-top:8px">${esc(mostWins.name)} • ${mostWins.wins} wins</div></div>
-      <div class="player-card"><strong>Best Point Differential</strong><div class="small" style="margin-top:8px">${esc(bestDiff.name)} • Diff ${bestDiff.diff}</div></div>
-      <div class="player-card"><strong>Iron Player</strong><div class="small" style="margin-top:8px">${esc(iron.name)} • ${iron.games} matches played</div></div>
+function generateWeeks(){ syncProfileFromUI(); if(!state.profile.seasonStart || !state.profile.seasonEnd || state.profile.seasonEnd < state.profile.seasonStart){ profileStatus.textContent="Please enter a valid season start and end date."; return; } const sats=saturdaysBetween(state.profile.seasonStart,state.profile.seasonEnd); state.weeks=sats.map((sat,i)=>({week:i+1,saturday:{date:sat,active:false,courts:state.profile.defaultCourts,rounds:state.profile.defaultRounds,schedule:[]},sunday:{date:addDays(sat,1),active:false,courts:state.profile.defaultCourts,rounds:state.profile.defaultRounds,schedule:[]}})); renderWeeks(); renderWeekOptions(); renderSummary(); profileStatus.textContent=`Generated ${state.weeks.length} weeks successfully.`; saveState(); }
+function renderWeeks(){ if(!state.weeks.length){ weeksArea.innerHTML="No weeks generated yet."; return; } weeksArea.innerHTML=state.weeks.map(w=>`
+  <div class="week-box">
+    <div class="week-title"><div><strong>Week ${w.week}</strong></div><div class="small">Sat ${fmtDate(w.saturday.date)} • Sun ${fmtDate(w.sunday.date)}</div></div>
+    <div class="row2">
+      <div class="day-panel">
+        <div class="badge">Saturday</div>
+        <label><input type="checkbox" ${w.saturday.active?"checked":""} onchange="toggleDay(${w.week},'saturday',this.checked)">Active</label>
+        <div class="row2">
+          <div><label>Courts</label><input type="number" min="1" max="8" value="${w.saturday.courts}" onchange="updateDayField(${w.week},'saturday','courts',this.value)"></div>
+          <div><label>Rounds</label><input type="number" min="1" max="12" value="${w.saturday.rounds}" onchange="updateDayField(${w.week},'saturday','rounds',this.value)"></div>
+        </div>
+      </div>
+      <div class="day-panel">
+        <div class="badge">Sunday</div>
+        <label><input type="checkbox" ${w.sunday.active?"checked":""} onchange="toggleDay(${w.week},'sunday',this.checked)">Active</label>
+        <div class="row2">
+          <div><label>Courts</label><input type="number" min="1" max="8" value="${w.sunday.courts}" onchange="updateDayField(${w.week},'sunday','courts',this.value)"></div>
+          <div><label>Rounds</label><input type="number" min="1" max="12" value="${w.sunday.rounds}" onchange="updateDayField(${w.week},'sunday','rounds',this.value)"></div>
+        </div>
+      </div>
     </div>
-  `;
-}
+  </div>`).join(""); }
+function renderWeekOptions(){ const options=state.weeks.map(w=>`<option value="${w.week}">Week ${w.week}</option>`).join(""); pickWeek.innerHTML=options; scoreWeek.innerHTML=options; rankWeek.innerHTML=options; awardWeek.innerHTML=options; editWeek.innerHTML=options; const cw=document.getElementById("checkinWeek"); if(cw) cw.innerHTML=options; }
+function toggleDay(week,day,val){ const w=state.weeks.find(x=>x.week===week); if(!w) return; w[day].active=val; saveState(); renderSummary(); }
+function updateDayField(week,day,field,val){ const w=state.weeks.find(x=>x.week===week); if(!w) return; w[day][field]=Number(val||0); saveState(); renderSummary(); }
 
-window.addEventListener('load', async () => { await tryLoadLiveGoogleData(); useData(); });
+function buildSmartSchedule(players, courts, rounds){
+  const playerNames = players.slice();
+  let pairCount = {}, oppCount = {}, playedCount = {}, lastRoundPlayed = {}, matches = [];
+  playerNames.forEach(n => { playedCount[n]=0; lastRoundPlayed[n]=0; });
+  const pairKey=(a,b)=>[a,b].sort().join('|');
+  const oppKey=(a,b)=>[a,b].sort().join('|');
+  function combos(arr){
+    const out=[]; for(let i=0;i<arr.length;i++) for(let j=i+1;j<arr.length;j++) out.push([arr[i],arr[j]]); return out;
+  }
+  function bestGrouping(group, roundNo){
+    const pairings=[]; const ps=combos(group);
+    for(let i=0;i<ps.length;i++) for(let j=i+1;j<ps.length;j++){ const used=new Set([...ps[i],...ps[j]]); if(used.size===4) pairings.push([ps[i],ps[j]]); }
+    let best=null,bestScore=Infinity;
+    pairings.forEach(([team1,team2])=>{
+      let score=0;
+      score += (pairCount[pairKey(team1[0],team1[1])] || 0) * 20;
+      score += (pairCount[pairKey(team2[0],team2[1])] || 0) * 20;
+      [team1[0],team1[1]].forEach(a=>[team2[0],team2[1]].forEach(b=> score += (oppCount[oppKey(a,b)] || 0) * 5));
+      [...team1,...team2].forEach(p=>{ score += playedCount[p]*0.25; if(lastRoundPlayed[p]===roundNo-1) score += 1.5; });
+      if(score < bestScore){ bestScore=score; best={team1,team2}; }
+    });
+    return best;
+  }
+  for(let r=1;r<=rounds;r++){
+    const sorted = playerNames.slice().sort((a,b)=>(playedCount[a]-playedCount[b]) || (lastRoundPlayed[a]-lastRoundPlayed[b]) || a.localeCompare(b));
+    const active = sorted.slice(0, Math.min(sorted.length, courts*4));
+    for(let c=0;c<Math.floor(active.length/4);c++){
+      const group = active.slice(c*4,c*4+4);
+      const best = bestGrouping(group, r);
+      if(!best) continue;
+      const {team1,team2} = best;
+      pairCount[pairKey(team1[0],team1[1])] = (pairCount[pairKey(team1[0],team1[1])] || 0) + 1;
+      pairCount[pairKey(team2[0],team2[1])] = (pairCount[pairKey(team2[0],team2[1])] || 0) + 1;
+      [team1[0],team1[1]].forEach(a=>[team2[0],team2[1]].forEach(b=> oppCount[oppKey(a,b)] = (oppCount[oppKey(a,b)] || 0) + 1));
+      [...team1,...team2].forEach(p => { playedCount[p] += 1; lastRoundPlayed[p] = r; });
+      matches.push({id:`R${r}C${c+1}`,round:r,court:c+1,team1,team2,score1:null,score2:null,completed:false});
+    }
+  }
+  return matches;
+}
+function generateDaySchedule(){
+  const weekNum=Number(pickWeek.value), dayLabel=pickDay.value, dayKey=dayLabel.toLowerCase(), week=state.weeks.find(w=>w.week===weekNum), players=activePlayersForWeek(weekNum, dayKey).map(p=>p.name);
+  if(players.length < 4){ scheduleStatus.textContent="Need at least 4 active players available for this week."; return; }
+  if(!week){ scheduleStatus.textContent="Week not found."; return; }
+  if(!week[dayKey].active){ scheduleStatus.textContent=`${dayLabel} is not active for Week ${weekNum}.`; return; }
+  week[dayKey].schedule=buildSmartSchedule(players, week[dayKey].courts, week[dayKey].rounds);
+  renderScheduleTable(week[dayKey].schedule); scheduleStatus.textContent=`Generated ${week[dayKey].schedule.length} matches for Week ${weekNum} ${dayLabel} with repeat reduction.`; saveState(); autoPushLeagueToGoogleSheets('schedule generation');
+}
+function renderScheduleTable(rows){ if(!rows || !rows.length){ scheduleBody.innerHTML='<tr><td colspan="5" class="small">No schedule generated yet.</td></tr>'; scheduleMobile.innerHTML='<div class="small">No schedule generated yet.</div>'; return; } scheduleBody.innerHTML=rows.map(m=>`<tr><td>${m.round}</td><td>${m.court}</td><td>${esc(m.team1[0])} & ${esc(m.team1[1])}</td><td>${esc(m.team2[0])} & ${esc(m.team2[1])}</td><td>${m.completed ? `${m.score1}-${m.score2}` : 'Pending'}</td></tr>`).join(""); scheduleMobile.innerHTML=rows.map(m=>`<div class="mobile-card"><strong>Round ${m.round} • Court ${m.court}</strong><div class="small" style="margin-top:8px"><strong>Team 1:</strong> ${esc(m.team1[0])} & ${esc(m.team1[1])}</div><div class="small" style="margin-top:4px"><strong>Team 2:</strong> ${esc(m.team2[0])} & ${esc(m.team2[1])}</div><div class="small" style="margin-top:6px"><strong>Status:</strong> ${m.completed ? `${m.score1}-${m.score2}` : 'Pending'}</div></div>`).join(""); }
+function copySchedule(){ const weekNum=Number(pickWeek.value), dayLabel=pickDay.value, dayKey=dayLabel.toLowerCase(), week=state.weeks.find(w=>w.week===weekNum); if(!week || !week[dayKey].schedule.length){ alert("Generate a schedule first."); return; } let txt=`*${state.profile.leagueTitle}*\nWeek ${weekNum} • ${dayLabel}\n\n`, currentRound=null; week[dayKey].schedule.forEach(m=>{ if(currentRound!==m.round){ currentRound=m.round; txt += `*Round ${m.round}*\n`; } txt += `Court ${m.court}: ${m.team1[0]} & ${m.team1[1]} vs ${m.team2[0]} & ${m.team2[1]}${m.completed ? ` | ${m.score1}-${m.score2}` : ''}\n`; }); navigator.clipboard.writeText(txt.trim()).then(()=>alert("Schedule copied.")); }
+
+function renderMatchEditor(){
+  const weekNum=Number(editWeek.value), dayKey=editDay.value.toLowerCase(), week=state.weeks.find(w=>w.week===weekNum), rows=week?.[dayKey]?.schedule || [];
+  if(!rows.length){ matchEditorArea.innerHTML='<div class="small">No schedule found for this week/day.</div>'; return; }
+  const options = activePlayersForWeek(weekNum, dayKey).map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('');
+  matchEditorArea.innerHTML=rows.map((m,idx)=>`
+    <div class="mobile-card">
+      <div><strong>Round ${m.round} • Court ${m.court}</strong></div>
+      <div class="row2" style="margin-top:10px">
+        <div><label>Team 1 Player 1</label><select id="e_${idx}_t1a">${options}</select></div>
+        <div><label>Team 1 Player 2</label><select id="e_${idx}_t1b">${options}</select></div>
+      </div>
+      <div class="row2">
+        <div><label>Team 2 Player 1</label><select id="e_${idx}_t2a">${options}</select></div>
+        <div><label>Team 2 Player 2</label><select id="e_${idx}_t2b">${options}</select></div>
+      </div>
+      <div class="btns"><button class="green" onclick="saveEditedMatch(${weekNum}, '${dayKey}', ${idx})">Save Matchup</button></div>
+    </div>`).join("");
+  rows.forEach((m,idx)=>{ document.getElementById(`e_${idx}_t1a`).value=m.team1[0]; document.getElementById(`e_${idx}_t1b`).value=m.team1[1]; document.getElementById(`e_${idx}_t2a`).value=m.team2[0]; document.getElementById(`e_${idx}_t2b`).value=m.team2[1]; });
+}
+function saveEditedMatch(weekNum, dayKey, idx){ const week=state.weeks.find(w=>w.week===weekNum), match=week?.[dayKey]?.schedule?.[idx]; if(!match){ matchEditorStatus.textContent="Could not find matchup."; return; } const picks=[document.getElementById(`e_${idx}_t1a`).value,document.getElementById(`e_${idx}_t1b`).value,document.getElementById(`e_${idx}_t2a`).value,document.getElementById(`e_${idx}_t2b`).value]; if(new Set(picks).size < 4){ matchEditorStatus.textContent="All four spots must be different players."; return; } match.team1=[picks[0],picks[1]]; match.team2=[picks[2],picks[3]]; renderScheduleTable(week[dayKey].schedule); matchEditorStatus.textContent=`Saved manual matchup for Round ${match.round}, Court ${match.court}.`; saveState(); }
+
+function isValidFinalScore(s1,s2){ s1=Number(s1); s2=Number(s2); if(!Number.isFinite(s1)||!Number.isFinite(s2)||s1===s2) return false; const hi=Math.max(s1,s2), lo=Math.min(s1,s2); if(hi<11) return false; if(hi===11) return lo<=10; return hi-lo>=2; }
+function renderScoreEntry(){
+  const weekNum=Number(scoreWeek.value), dayLabel=scoreDay.value, dayKey=dayLabel.toLowerCase(), week=state.weeks.find(w=>w.week===weekNum), rows=week?.[dayKey]?.schedule || [];
+  if(!rows.length){ scoreEntryArea.innerHTML='<div class="small">No schedule found for this week/day.</div>'; return; }
+  scoreEntryArea.innerHTML=rows.map((m,idx)=>`
+    <div class="mobile-card">
+      <div><strong>Round ${m.round} • Court ${m.court}</strong></div>
+      <div class="small" style="margin-top:8px"><strong>Team 1:</strong> ${esc(m.team1[0])} & ${esc(m.team1[1])}</div>
+      <div class="small" style="margin-top:4px"><strong>Team 2:</strong> ${esc(m.team2[0])} & ${esc(m.team2[1])}</div>
+      <div class="score-grid" style="margin-top:10px">
+        <div></div>
+        <div><label>Score 1</label><input type="number" min="0" value="${m.score1 ?? ''}" id="s1_${idx}"></div>
+        <div><label>Score 2</label><input type="number" min="0" value="${m.score2 ?? ''}" id="s2_${idx}"></div>
+        <div style="display:flex;align-items:end"><button class="green" onclick="saveScore(${weekNum}, '${dayKey}', ${idx})">Save</button></div>
+      </div>
+      <div class="small" style="margin-top:8px">Current status: ${m.completed ? `${m.score1}-${m.score2}` : 'Pending'}</div>
+    </div>`).join("");
+}
+function saveScore(weekNum, dayKey, idx){ const week=state.weeks.find(w=>w.week===weekNum); if(!week) return; const match=week[dayKey].schedule[idx]; if(!match) return; const s1=Number(document.getElementById(`s1_${idx}`).value), s2=Number(document.getElementById(`s2_${idx}`).value); if(!isValidFinalScore(s1,s2)){ scoreStatus.textContent="Invalid score. 11-2 is valid. If above 11, the lead must be at least 2."; return; } match.score1=s1; match.score2=s2; match.completed=true; recalcElo(); renderScoreEntry(); renderScheduleTable(week[dayKey].schedule); scoreStatus.textContent=`Saved score ${s1}-${s2}. Rankings updated.`; saveState(); autoPushLeagueToGoogleSheets('score save'); }
+
+function ratingMap(){ const map={}; state.roster.forEach(p=>map[p.name]=p); return map; }
+function recalcElo(){
+  state.roster.forEach(p=>p.elo=p.rating*100);
+  const map=ratingMap(), K=state.profile.kFactor || 24, allMatches=[];
+  state.weeks.forEach(w=>['saturday','sunday'].forEach(day=>(w[day].schedule||[]).forEach(m=>{ if(m.completed) allMatches.push(m); })));
+  allMatches.forEach(m=>{
+    if(!map[m.team1[0]] || !map[m.team1[1]] || !map[m.team2[0]] || !map[m.team2[1]]) return;
+    const t1=(map[m.team1[0]].elo + map[m.team1[1]].elo)/2;
+    const t2=(map[m.team2[0]].elo + map[m.team2[1]].elo)/2;
+    const expected1=1/(1+Math.pow(10,(t2-t1)/400));
+    const expected2=1-expected1;
+    const totalPts=Math.max(1,(m.score1||0)+(m.score2||0));
+    const margin=Math.abs((m.score1||0)-(m.score2||0));
+    const marginFactor=Math.max(0.6, Math.min(1.4, 1 + (margin/Math.max(11,totalPts))));
+    const actual1=(m.score1||0)/totalPts;
+    const actual2=(m.score2||0)/totalPts;
+    const d1=K*(actual1-expected1)*marginFactor;
+    const d2=K*(actual2-expected2)*marginFactor;
+    map[m.team1[0]].elo += d1; map[m.team1[1]].elo += d1;
+    map[m.team2[0]].elo += d2; map[m.team2[1]].elo += d2;
+  });
+  renderRoster();
+}
+function weeklyStats(weekNum, day){
+  const stats={}; state.roster.forEach(p=>stats[p.name]={name:p.name,wins:0,losses:0,pf:0,pa:0});
+  const week=state.weeks.find(w=>w.week===weekNum); if(!week) return [];
+  const days = day==="ALL" ? ['saturday','sunday'] : [day.toLowerCase()];
+  days.forEach(d=>(week[d].schedule||[]).forEach(m=>{ if(!m.completed) return; const [a,b,c,e]=[m.team1[0],m.team1[1],m.team2[0],m.team2[1]]; [a,b,c,e].forEach(n=>{ if(!stats[n]) stats[n]={name:n,wins:0,losses:0,pf:0,pa:0}; }); stats[a].pf+=m.score1; stats[a].pa+=m.score2; stats[b].pf+=m.score1; stats[b].pa+=m.score2; stats[c].pf+=m.score2; stats[c].pa+=m.score1; stats[e].pf+=m.score2; stats[e].pa+=m.score1; if(m.score1>m.score2){ stats[a].wins++; stats[b].wins++; stats[c].losses++; stats[e].losses++; } else { stats[c].wins++; stats[e].wins++; stats[a].losses++; stats[b].losses++; } }));
+  return Object.values(stats).map(s=>{ const g=s.wins+s.losses; return {...s,games:g,pct:g? s.wins/g:0,diff:s.pf-s.pa}; }).filter(s=>s.games>0).sort((x,y)=>y.pct-x.pct || y.diff-x.diff || x.name.localeCompare(y.name));
+}
+function renderWeeklyRanking(){ const rows=weeklyStats(Number(rankWeek.value), rankDay.value); if(!rows.length){ weeklyRankingBox.innerHTML='<div class="small">No completed matches yet.</div>'; return; } weeklyRankingBox.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Player</th><th>W</th><th>L</th><th>Win %</th><th>Diff</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.name)}</td><td>${r.wins}</td><td>${r.losses}</td><td>${(r.pct*100).toFixed(1)}%</td><td>${r.diff}</td></tr>`).join('')}</tbody></table></div>`; }
+function seasonStats(){
+  const totals={}; state.roster.forEach(p=>totals[p.name]={name:p.name,wins:0,losses:0,pf:0,pa:0,elo:p.elo,active:p.active});
+  state.weeks.forEach(w=>['saturday','sunday'].forEach(d=>(w[d].schedule||[]).forEach(m=>{ if(!m.completed) return; const [a,b,c,e]=[m.team1[0],m.team1[1],m.team2[0],m.team2[1]]; [a,b,c,e].forEach(n=>{ if(!totals[n]) totals[n]={name:n,wins:0,losses:0,pf:0,pa:0,elo:0,active:true}; }); totals[a].pf+=m.score1; totals[a].pa+=m.score2; totals[b].pf+=m.score1; totals[b].pa+=m.score2; totals[c].pf+=m.score2; totals[c].pa+=m.score1; totals[e].pf+=m.score2; totals[e].pa+=m.score1; if(m.score1>m.score2){ totals[a].wins++; totals[b].wins++; totals[c].losses++; totals[e].losses++; } else { totals[c].wins++; totals[e].wins++; totals[a].losses++; totals[b].losses++; } })));
+  state.roster.forEach(p=>totals[p.name].elo=p.elo);
+  return Object.values(totals).map(s=>{
+    const g=s.wins+s.losses;
+    const playoffEligible = g >= (state.profile.minMatchesForPlayoffs||8);
+    return {...s,games:g,pct:g? s.wins/g:0,diff:s.pf-s.pa,playoffEligible};
+  }).sort((x,y)=>y.pct-x.pct || y.diff-x.diff || y.elo-x.elo || x.name.localeCompare(y.name));
+}
+function renderSeasonLeaderboard(){ const rows=seasonStats(); if(!rows.length){ seasonRankingBox.innerHTML='<div class="small">No players yet.</div>'; return; } seasonRankingBox.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Player</th><th>W</th><th>L</th><th>Win %</th><th>Diff</th><th>DUPR-style Rating</th><th>Active</th><th>Playoff Eligible</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.name)}</td><td>${r.wins}</td><td>${r.losses}</td><td>${(r.pct*100).toFixed(1)}%</td><td>${r.diff}</td><td>${r.elo.toFixed(1)}</td><td>${r.active ? 'Yes' : 'No'}</td><td>${r.playoffEligible ? 'Yes' : 'No'}</td></tr>`).join('')}</tbody></table></div>`; }
+function renderHistory(){ if(!state.weeks.length){ historyBox.innerHTML='<div class="small">No weeks available yet.</div>'; return; } let html = '<div class="table-wrap"><table><thead><tr><th>Week</th><th>Top 3</th></tr></thead><tbody>'; state.weeks.forEach(w=>{ const rows = weeklyStats(w.week, "ALL").slice(0,3); const summary = rows.length ? rows.map((r,i)=>`${i+1}. ${esc(r.name)} (${(r.pct*100).toFixed(0)}%, diff ${r.diff})`).join('<br>') : 'No completed matches'; html += `<tr><td>Week ${w.week}</td><td>${summary}</td></tr>`; }); html += '</tbody></table></div>'; historyBox.innerHTML = html; }
+function renderAwards(){ const weekNum=Number(awardWeek.value), day=awardDay.value, weekly=weeklyStats(weekNum, day); if(!weekly.length){ awardsBox.innerHTML='<div class="small">No completed matches yet for this selection.</div>'; return; } const best=weekly[0]; const matches=[]; const week=state.weeks.find(w=>w.week===weekNum); const days=day==="ALL" ? ['saturday','sunday'] : [day.toLowerCase()]; days.forEach(d=>(week[d].schedule||[]).forEach(m=>{ if(m.completed) matches.push(m); })); let matchOfDay=null, closest=999; matches.forEach(m=>{ const diff=Math.abs(m.score1-m.score2); if(diff<closest){ closest=diff; matchOfDay=m; } }); awardsBox.innerHTML=`<div class="award-box"><h3>Player of the Period</h3><div class="small" style="margin-top:8px"><strong>${esc(best.name)}</strong> • ${best.wins}-${best.losses} • ${(best.pct*100).toFixed(1)}% win rate • Diff ${best.diff}</div></div><div class="award-box"><h3>Match of the Period</h3><div class="small" style="margin-top:8px">${matchOfDay ? `Round ${matchOfDay.round}, Court ${matchOfDay.court}: ${esc(matchOfDay.team1[0])} & ${esc(matchOfDay.team1[1])} vs ${esc(matchOfDay.team2[0])} & ${esc(matchOfDay.team2[1])} • ${matchOfDay.score1}-${matchOfDay.score2}` : 'No completed match found.'}</div></div>`; }
+function renderSummary(){ const activeSat=state.weeks.filter(w=>w.saturday.active).length, activeSun=state.weeks.filter(w=>w.sunday.active).length; const generated=state.weeks.reduce((n,w)=>n+(w.saturday.schedule.length?1:0)+(w.sunday.schedule.length?1:0),0); const scored=state.weeks.reduce((n,w)=>n+(w.saturday.schedule||[]).filter(m=>m.completed).length+(w.sunday.schedule||[]).filter(m=>m.completed).length,0); const activePlayers=state.roster.filter(p=>p.active).length; summaryBox.innerHTML=`<span class="pill">${esc(state.profile.leagueTitle || "League")}</span><span class="pill">${activePlayers} active players</span><span class="pill">${state.roster.length} total players</span><span class="pill">${state.weeks.length} weeks</span><span class="pill">${activeSat} Saturdays active</span><span class="pill">${activeSun} Sundays active</span><span class="pill">${generated} schedules generated</span><span class="pill">${scored} scored matches</span><div style="margin-top:10px"><strong>Format:</strong> First to ${state.profile.winScore} • ${state.profile.defaultCourts} default courts • ${state.profile.defaultRounds} default rounds/day • Minimum playoff matches: ${state.profile.minMatchesForPlayoffs || 8} • Playoff format: Top ${state.profile.playoffFormat || 12}</div>`; }
+function weeklyText(weekNum, day){ const rows=weeklyStats(weekNum, day); if(!rows.length) return 'No completed matches yet.'; return rows.map((r,i)=>`${i+1}. ${r.name}  ${r.wins}-${r.losses}  ${(r.pct*100).toFixed(1)}%  Diff ${r.diff}`).join('\n'); }
+function copyWeeklyRanking(){ const weekNum=Number(rankWeek.value), day=rankDay.value, label=day==="ALL" ? "Whole Week" : day; const txt=`*${state.profile.leagueTitle}*\nWeek ${weekNum} • ${label} Ranking\n\n${weeklyText(weekNum, day)}`; navigator.clipboard.writeText(txt).then(()=>alert("Weekly ranking copied.")); }
+function copySeasonSummary(){ const rows=seasonStats().slice(0,10); let txt=`*${state.profile.leagueTitle}*\nSeason Leaderboard\n\n`; rows.forEach((r,i)=>{ txt += `${i+1}. ${r.name}  ${r.wins}-${r.losses}  ${(r.pct*100).toFixed(1)}%  Diff ${r.diff}  ELO ${r.elo.toFixed(1)}\n`; }); navigator.clipboard.writeText(txt.trim()).then(()=>alert("Season summary copied.")); }
+function exportAdminJson(){ const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="pouncy_tract_admin_professional.json"; a.click(); URL.revokeObjectURL(a.href); }
+function exportPublicJs(){ const payload={profile:state.profile, roster:state.roster.map(p=>({name:p.name,rating:p.rating,seed:p.seed,elo:p.elo,joinedWeek:p.joinedWeek,active:p.active})), weeks:state.weeks, availability:state.availability||{}, playoffs:state.playoffs||{}, season:seasonStats()}; const content="window.POUNCY_PUBLIC_DATA = " + JSON.stringify(payload, null, 2) + ";\n"; const blob=new Blob([content],{type:"application/javascript"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="public-data.js"; a.click(); URL.revokeObjectURL(a.href); }
+function saveState(){ syncProfileFromUI(); localStorage.setItem(KEY, JSON.stringify(state)); }
+function loadState(){ const raw=localStorage.getItem(KEY); if(!raw){ alert("No saved state found."); return; } state=JSON.parse(raw); state.roster.forEach(p=>{ if(typeof p.joinedWeek === 'undefined') p.joinedWeek=1; if(typeof p.active === 'undefined') p.active=true; if(typeof p.elo === 'undefined') p.elo=p.rating*100; }); if(!state.availability) state.availability={}; if(!state.playoffs) state.playoffs={}; reseedRoster(); recalcElo(); pushProfileToUI(); renderRoster(); renderWeeks(); renderWeekOptions(); renderSummary(); renderScheduleTable(state.weeks[0]?.saturday?.schedule || []); profileStatus.textContent="Saved state loaded."; }
+function importJson(event){ const file=event.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=e=>{ try{ state=JSON.parse(e.target.result); state.roster.forEach(p=>{ if(typeof p.joinedWeek === 'undefined') p.joinedWeek=1; if(typeof p.active === 'undefined') p.active=true; if(typeof p.elo === 'undefined') p.elo=p.rating*100; }); if(!state.availability) state.availability={}; if(!state.playoffs) state.playoffs={}; reseedRoster(); recalcElo(); pushProfileToUI(); renderRoster(); renderWeeks(); renderWeekOptions(); renderSummary(); renderScheduleTable(state.weeks[0]?.saturday?.schedule || []); profileStatus.textContent="Backup imported successfully."; saveState(); }catch(err){ alert("Could not import backup."); } }; reader.readAsText(file); }
+function resetAll(){ if(!confirm("Reset everything?")) return; localStorage.removeItem(KEY); state={profile:{leagueTitle:"Pouncy Tract Weekend Pickleball League",leagueSubtitle:"Short Pump, VA",seasonStart:"2026-04-11",seasonEnd:"2026-10-03",defaultCourts:5,defaultRounds:8,winScore:11,kFactor:24,minMatchesForPlayoffs:8,googleScriptUrl:""},roster:[],weeks:[],availability:{},playoffs:{}}; pushProfileToUI(); rosterInput.value=""; renderRoster(); renderWeeks(); renderWeekOptions(); renderScheduleTable([]); renderSummary(); profileStatus.textContent="Reset complete."; rosterStatus.textContent="No roster imported yet."; scheduleStatus.textContent="Select week and day to build a schedule."; scoreStatus.textContent="Select a week and day, then enter scores."; matchEditorStatus.textContent="Choose a week and day to edit matchups."; awardsBox.innerHTML=''; historyBox.innerHTML=''; playerChangeStatus.textContent='Use this area after the season starts to add or remove players.'; }
+window.addEventListener("load", ()=>{ if(!state.profile.googleScriptUrl){ try{ state.profile.googleScriptUrl = localStorage.getItem("pouncy_google_script_url") || ""; }catch(e){} } if (typeof pushProfileToUI === "function") pushProfileToUI(); renderRoster(); renderWeeks(); renderWeekOptions(); renderScheduleTable([]); renderSummary(); populateRemoveSelect(); if(localStorage.getItem(KEY)) loadState(); });
 </script>
 
 <script>

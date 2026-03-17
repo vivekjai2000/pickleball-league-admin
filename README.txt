@@ -185,3 +185,10 @@ v30:
 - Fixed Master Roster import function.
 - Redesigned the top hero tile across admin.html, public.html, and player.html to match the reference style with left logo, location, and tagline.
 - Kept logo fallback behavior.
+
+
+v32:
+- Reverted dark background changes and restored a clean light hero header so button labels are visible again.
+- Kept the redesigned left-logo hero layout across admin.html, public.html, and player.html.
+- Fixed admin JavaScript so buttons work.
+- Hid the testing/manual load tile from public.html.
