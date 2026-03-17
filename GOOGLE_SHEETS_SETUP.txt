@@ -54,3 +54,8 @@ After redeploying, Save Score on public.html will update Google Sheets successfu
 Admin auto-refresh
 
 This version refreshes admin.html from Google Sheets every 15 seconds when a valid Apps Script URL is configured. That means scores saved from public.html will appear in admin automatically after a short delay.
+
+
+Public week sign-up
+
+This version adds a Week Sign-Up tile to public.html. Players can sign up for the current active week separately for Saturday and Sunday. The sign-up is saved into Google Sheets availability, and admin schedule generation uses the same availability list.

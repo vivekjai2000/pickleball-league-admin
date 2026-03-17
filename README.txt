@@ -207,3 +207,16 @@ v34:
 v35:
 - Added admin auto-refresh from Google Sheets every 15 seconds when a Google Script URL is configured.
 - Admin now picks up score changes saved from public.html without needing a manual reload.
+
+
+v36:
+- Moved Championship Center tile to the bottom of public.html.
+- Moved This Weekend’s Matches tile to the original Championship Center position.
+- Removed the Testing only / manual load tile from public.html.
+
+
+v37:
+- Added Week Sign-Up feature to public.html for the active week.
+- Players can sign up separately for Saturday and Sunday from the public page.
+- Public sign-up writes to Google Sheets availability.
+- Admin schedule generation uses the same availability list for active week/day round robin generation.
