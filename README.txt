@@ -4,6 +4,7 @@ Production-ready structure
 - /admin/   Admin panel
 - /league/  Member-facing league page
 - /player/  Player profile page
+- /assets/pouncey-logo.jpeg  Shared production logo
 - /public-data.js  Shared client data fallback file
 - /Code.gs  Google Apps Script backend
 
@@ -13,6 +14,7 @@ Recommended GitHub Pages URLs
 - Player: https://<your-site>/player/
 
 Branding status
+- New Pouncey logo applied across admin, league, and player pages
 - Pouncey spelling standardized across frontend and backend
 - Admin password gate enabled
 - League and player routes cleaned up
