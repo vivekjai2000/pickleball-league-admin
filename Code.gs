@@ -1,5 +1,5 @@
 /**
- * Pouncy Tract League Google Apps Script
+ * Pouncey Tract League Google Apps Script
  * Deploy as Web App:
  * - Execute as: Me
  * - Who has access: Anyone with the link
@@ -106,7 +106,7 @@ function getLeaderboardSheet_(){
 function defaultLeagueState_(){
   return {
     profile:{
-      leagueTitle:"Pouncy Tract Weekend Pickleball League",
+      leagueTitle:"Pouncey Tract Weekend Pickleball League",
       leagueSubtitle:"Short Pump, VA",
       seasonStart:"",
       seasonEnd:"",
