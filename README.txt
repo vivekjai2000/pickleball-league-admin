@@ -33,3 +33,9 @@ Change admin password
 - Open /admin/index.html
 - Find ADMIN_PASSWORD
 - Replace it with your own value
+
+
+Current matches update:
+- Renamed 'This Weekend’s Matches' tile to 'Current Matches'.
+- Current Matches now shows only incomplete matches where scores are still pending.
+- Completed matches for the week are hidden from the Current Matches tile.
