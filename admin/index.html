@@ -553,6 +553,7 @@ th { background:#f8fbff; }
         <div class="small">Save the full league state to Google Sheets, load it back into admin, or reset the sheet so you can start another league later.</div>
         <div class="btns">
           <button class="green" onclick="pushStateToGoogleSheets()">Save Entire League to Google Sheets</button>
+          <button class="secondary" onclick="shareLeagueLink()">Share League Link</button>
           <button class="secondary" onclick="loadStateFromGoogleSheets()">Load League from Google Sheets</button>
           <button class="red" onclick="resetGoogleSheetsData()">Reset Google Sheets Data</button>
         </div>
@@ -566,7 +567,7 @@ th { background:#f8fbff; }
 <script src="../public-data.js"></script>
 <script>
 const KEY = "pouncey_tract_admin_professional_v1";
-let state = {profile:{leagueTitle:"Pouncey Tract Weekend Pickleball League",leagueSubtitle:"Short Pump, VA",seasonStart:"2026-04-11",seasonEnd:"2026-10-03",defaultCourts:5,defaultRounds:8,winScore:11,kFactor:24,minMatchesForPlayoffs:8,playoffFormat:12,googleScriptUrl:"",currentSignupWeek:""},roster:[],weeks:[],availability:{},playoffs:{}};
+let state = {profile:{leagueTitle:"Pouncey Tract Weekend Pickleball League",leagueSubtitle:"Short Pump, VA",seasonStart:"2026-04-11",seasonEnd:"2026-10-03",defaultCourts:5,defaultRounds:8,winScore:11,kFactor:24,minMatchesForPlayoffs:8,playoffFormat:12,googleScriptUrl:"https://script.google.com/macros/s/AKfycbx8q6te2Id-CWSAELOSWMBoLDL5uUNpMKEdcgpd2H8yvHDK7QMVT0Dw0UvkPjDu6kVf/exec",currentSignupWeek:""},roster:[],weeks:[],availability:{},playoffs:{}};
 
 function showTab(id, btn){ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('active')); document.getElementById(id).classList.add('active'); btn.classList.add('active'); }
 function esc(s){ return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;"); }
@@ -1056,6 +1057,20 @@ async function callGoogleScript(action, payload={}){
   if(!data.ok) throw new Error(data.error || "Apps Script request failed.");
   return data;
 }
+
+function shareLeagueLink(){
+  const base = window.location.origin;
+  const path = window.location.pathname.includes('/admin/')
+    ? window.location.pathname.replace('/admin/', '/league/')
+    : window.location.pathname.replace('/admin', '/league');
+  const leagueUrl = base + path;
+  navigator.clipboard.writeText(leagueUrl).then(()=>{
+    alert("League link copied:\n\n" + leagueUrl);
+  }).catch(()=>{
+    prompt("Copy this League link:", leagueUrl);
+  });
+}
+
 function saveGoogleScriptUrl(){
   const el = document.getElementById("googleScriptUrl");
   const url = (el && el.value ? el.value : "").trim();
@@ -1491,6 +1506,7 @@ window.addEventListener("load", async ()=>{
       const embedded = (window.POUNCEY_PUBLIC_DATA || window.POUNCY_PUBLIC_DATA || null);
       if(embedded && embedded.profile && embedded.profile.googleScriptUrl){
         state.profile.googleScriptUrl = embedded.profile.googleScriptUrl;
+        try{ localStorage.setItem("pouncey_google_script_url", embedded.profile.googleScriptUrl); }catch(e){}
       }
     }catch(e){}
   }
