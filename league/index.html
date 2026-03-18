@@ -82,6 +82,42 @@ th { background:#f8fbff; }
   .logo { width:146px; max-width:58vw; }
   .tabbtn { min-width:0; flex:1 1 calc(50% - 10px); }
 }
+
+.player-profile-card{
+  border:1px solid var(--line); border-radius:22px; overflow:hidden; background:#fff;
+  box-shadow:0 8px 20px rgba(15,23,42,.06);
+}
+.player-profile-hero{
+  padding:18px; background:linear-gradient(135deg,#e0f2fe 0%, #f8fbff 100%);
+  border-bottom:1px solid var(--line);
+}
+.player-profile-name{ font-size:30px; font-weight:900; color:#0f172a; }
+.player-profile-rating{ margin-top:8px; font-size:18px; font-weight:800; color:#1f2937; }
+.player-profile-sections{ padding:18px; }
+.player-mini-grid{
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:14px;
+}
+.player-mini-card{
+  border:1px solid var(--line); border-radius:16px; padding:14px; background:#fff;
+}
+.player-mini-label{ font-size:13px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.02em; }
+.player-mini-value{ margin-top:6px; font-size:18px; font-weight:900; color:#111827; }
+.player-record-grid{
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-top:14px;
+}
+.player-record-box{
+  border:1px solid var(--line); border-radius:16px; padding:14px; text-align:center; background:#fff;
+}
+.player-record-box.win{ border-color:#86efac; }
+.player-record-box.loss{ border-color:#fecaca; }
+.player-record-box.tie{ border-color:#d1d5db; }
+.player-record-value{ font-size:28px; font-weight:900; margin-top:6px; }
+.player-subtitle{ font-size:16px; font-weight:800; color:#0ea5e9; margin-top:18px; }
+@media (max-width:700px){
+  .player-profile-name{ font-size:24px; }
+  .player-mini-grid,.player-record-grid{ grid-template-columns:1fr; }
+}
+
 </style>
 </head>
 <body>
@@ -699,14 +735,103 @@ function renderHistory() {
   html += '</tbody></table></div>';
   historyBox.innerHTML = html;
 }
+
+function buildPlayerDeepStats(){
+  const base = {};
+  (data.roster || []).forEach(p => {
+    base[p.name] = {
+      name:p.name, rating:Number(p.rating || 0), elo:Number(p.elo || 0), wins:0, losses:0, ties:0,
+      sessions:new Set(), lastPlayedWeek:0, lastPlayedDay:"", bestWeekSessions:0, weekSessionCounts:{},
+      pf:0, pa:0
+    };
+  });
+  (data.weeks || []).forEach(w => {
+    ["saturday","sunday"].forEach(dayKey => {
+      const rows = (w[dayKey] && Array.isArray(w[dayKey].schedule)) ? w[dayKey].schedule : [];
+      rows.forEach(m => {
+        if(!m.completed) return;
+        const players = [...(m.team1 || []), ...(m.team2 || [])];
+        players.forEach(name => {
+          if(!base[name]) base[name] = {name, rating:0, elo:0, wins:0, losses:0, ties:0, sessions:new Set(), lastPlayedWeek:0, lastPlayedDay:"", bestWeekSessions:0, weekSessionCounts:{}, pf:0, pa:0};
+          base[name].sessions.add(`W${w.week}-${dayKey}`);
+          base[name].lastPlayedWeek = Math.max(base[name].lastPlayedWeek, Number(w.week || 0));
+          if(base[name].lastPlayedWeek === Number(w.week || 0)) base[name].lastPlayedDay = dayKey;
+          base[name].weekSessionCounts[w.week] = (base[name].weekSessionCounts[w.week] || 0) + 1;
+          base[name].bestWeekSessions = Math.max(base[name].bestWeekSessions, base[name].weekSessionCounts[w.week]);
+        });
+        const s1 = Number(m.score1 || 0), s2 = Number(m.score2 || 0);
+        (m.team1 || []).forEach(name => {
+          base[name].pf += s1; base[name].pa += s2;
+          if(s1 > s2) base[name].wins++; else if(s2 > s1) base[name].losses++; else base[name].ties++;
+        });
+        (m.team2 || []).forEach(name => {
+          base[name].pf += s2; base[name].pa += s1;
+          if(s2 > s1) base[name].wins++; else if(s1 > s2) base[name].losses++; else base[name].ties++;
+        });
+      });
+    });
+  });
+  const totalWeeks = Math.max(1, (data.weeks || []).length);
+  return Object.values(base).map(p => {
+    const totalSessions = p.sessions.size;
+    const freq = totalSessions / totalWeeks;
+    const diff = p.pf - p.pa;
+    const pct = (p.wins + p.losses) ? p.wins / (p.wins + p.losses) : 0;
+    return {...p, totalSessions, freq, diff, pct};
+  }).sort((a,b) => b.elo - a.elo || b.pct - a.pct || a.name.localeCompare(b.name));
+}
+
 function renderPlayers() {
   if(!data) return;
-  const stats = buildPlayerStats();
+  const stats = buildPlayerDeepStats();
   playersBox.innerHTML = stats.length ? stats.map(p => {
-    const url = `player.html?id=${encodeURIComponent(p.name)}`;
-    return `<div class="player-card"><a href="${url}">${esc(p.name)}</a><div class="small" style="margin-top:8px">${p.wins}-${p.losses} • ${(p.pct*100).toFixed(1)}% • Diff ${p.diff} • Rating ${(p.elo||0).toFixed(1)} • ${p.playoffEligible ? "Playoff eligible" : "Below playoff threshold"}</div></div>`;
+    return `
+      <div class="player-profile-card">
+        <div class="player-profile-hero">
+          <div class="player-profile-name">${esc(p.name)}</div>
+          <div class="player-profile-rating">🏆 ${(p.elo ? p.elo/100 : p.rating).toFixed(2)} Rating</div>
+        </div>
+        <div class="player-profile-sections">
+          <div class="player-subtitle">Activity</div>
+          <div class="player-mini-grid">
+            <div class="player-mini-card">
+              <div class="player-mini-label">Last Played</div>
+              <div class="player-mini-value">${p.lastPlayedWeek ? `Week ${p.lastPlayedWeek}${p.lastPlayedDay ? " • " + p.lastPlayedDay[0].toUpperCase() + p.lastPlayedDay.slice(1) : ""}` : "No matches yet"}</div>
+            </div>
+            <div class="player-mini-card">
+              <div class="player-mini-label">Played</div>
+              <div class="player-mini-value">${p.totalSessions} sessions</div>
+            </div>
+            <div class="player-mini-card">
+              <div class="player-mini-label">Frequency</div>
+              <div class="player-mini-value">${p.freq.toFixed(1)} per week</div>
+            </div>
+            <div class="player-mini-card">
+              <div class="player-mini-label">Best Week</div>
+              <div class="player-mini-value">${p.bestWeekSessions} session${p.bestWeekSessions === 1 ? "" : "s"}</div>
+            </div>
+          </div>
+          <div class="player-subtitle">Record</div>
+          <div class="player-record-grid">
+            <div class="player-record-box win">
+              <div class="player-mini-label">W</div>
+              <div class="player-record-value">${p.wins}</div>
+            </div>
+            <div class="player-record-box loss">
+              <div class="player-mini-label">L</div>
+              <div class="player-record-value">${p.losses}</div>
+            </div>
+            <div class="player-record-box tie">
+              <div class="player-mini-label">Diff</div>
+              <div class="player-record-value">${p.diff}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
   }).join('') : '<div class="small">No player data yet.</div>';
 }
+
 function renderPlayoffs() {
   const p = data.playoffs || {};
   const rows = (data.season || []);
