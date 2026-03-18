@@ -89,3 +89,15 @@ Leaderboard + playoffs eligibility update:
 Rules banners embedded:
 - Added professional rules banners with icons/colors to public Rankings and Playoffs tabs.
 - Added matching season leaderboard rules banner to admin.
+
+
+Roster mid-season fix:
+- Import Roster now merges/appends instead of replacing the existing roster.
+- Add Player now reactivates existing inactive players instead of creating deletion-like behavior.
+- Remove Selected Player now deactivates the player and removes them from pending availability and uncompleted schedules.
+- Roster count now shows active and total players.
+
+
+Latest results + history update:
+- Latest Results tile is now full-width and shows all completed results.
+- History tab now shows all completed match results inside each week card, while keeping the Top Snapshot.
