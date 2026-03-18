@@ -585,7 +585,25 @@ function resolveGoogleScriptUrl(){
   if(SHARED_GOOGLE_SCRIPT_URL && SHARED_GOOGLE_SCRIPT_URL !== "PASTE_YOUR_DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE") return SHARED_GOOGLE_SCRIPT_URL;
   return "";
 }
+function getLiveGoogleUrl() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const qs = params.get("gs");
+    if (qs) return qs;
+  } catch (e) {}
 
+  // ✅ Primary source (works on all devices)
+  if (window.POUNCEY_PUBLIC_DATA?.profile?.googleScriptUrl) {
+    return window.POUNCEY_PUBLIC_DATA.profile.googleScriptUrl;
+  }
+
+  // fallback only
+  try {
+    return localStorage.getItem("pouncey_google_script_url") || "";
+  } catch (e) {
+    return "";
+  }
+}
 
 function showTab(id, btn){ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('active')); document.getElementById(id).classList.add('active'); btn.classList.add('active'); }
 function esc(s){ return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;"); }
