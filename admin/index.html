@@ -611,54 +611,173 @@ function parseRoster(text){
     .filter(Boolean);
 }
 
-function reseedRoster(){ const active=state.roster.filter(p=>p.active).sort((a,b)=>b.rating-a.rating || a.name.localeCompare(b.name)); active.forEach((p,i)=>p.seed=i+1); state.roster.filter(p=>!p.active).forEach(p=>p.seed='-'); populateRemoveSelect(); }
-function populateRemoveSelect(){ removePlayerSelect.innerHTML=state.roster.filter(p=>p.active).map(p=>`<option value="${p.name}">${p.name}</option>`).join(''); }
-function loadSampleRoster(){ rosterInput.value=["Vivek, 4.02","Vimal, 4.00","Vin, 4.00","Murali, 4.00","Sunil, 4.00","Ravi, 4.00","Sheel, 4.25","Doumit, 3.75","Pavan, 3.70","Rohan, 3.60","Amit, 3.55","Raj, 3.50"].join("\n"); }
+
+function reseedRoster(){
+  const active = state.roster
+    .filter(p => p.active)
+    .sort((a,b)=>Number(b.rating||0)-Number(a.rating||0) || a.name.localeCompare(b.name));
+  active.forEach((p,i)=>p.seed=i+1);
+  state.roster.filter(p=>!p.active).forEach(p=>p.seed='-');
+  populateRemoveSelect();
+}
+
+function populateRemoveSelect(){
+  const opts = state.roster
+    .filter(p=>p.active)
+    .sort((a,b)=>a.name.localeCompare(b.name))
+    .map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`)
+    .join('');
+  removePlayerSelect.innerHTML = `<option value="">Select player</option>` + opts;
+}
+
+function loadSampleRoster(){
+  rosterInput.value=["Vivek, 4.02","Vimal, 4.00","Vin, 4.00","Murali, 4.00","Sunil, 4.00","Ravi, 4.00","Sheel, 4.25","Doumit, 3.75","Pavan, 3.70","Rohan, 3.60","Amit, 3.55","Raj, 3.50"].join("\n");
+}
+
 function importRoster(){
   try{
     const raw = (typeof rosterInput !== "undefined" && rosterInput ? rosterInput.value : "");
-    const roster = parseRoster(raw);
-    if(!roster.length){
+    const incoming = parseRoster(raw);
+    if(!incoming.length){
       if(typeof rosterStatus !== "undefined" && rosterStatus) rosterStatus.textContent = "Could not parse roster. Use one player per line in Name, Rating format.";
       return;
     }
-    state.roster = roster.map((p)=>({
-      name: p.name,
-      rating: Number(p.rating || 0),
-      seed: 0,
-      elo: Number(p.rating || 0) * 100,
-      joinedWeek: Number(p.joinedWeek || 1),
-      active: p.active !== false
-    }));
+
+    let added = 0, updated = 0, reactivated = 0;
+    incoming.forEach(p => {
+      const existing = state.roster.find(x => x.name.trim().toLowerCase() === p.name.trim().toLowerCase());
+      if(existing){
+        existing.rating = Number(p.rating || existing.rating || 0);
+        if(!Number.isFinite(existing.elo) || existing.elo === 0) existing.elo = Number(existing.rating || 0) * 100;
+        if(typeof existing.joinedWeek === 'undefined' || !existing.joinedWeek) existing.joinedWeek = 1;
+        if(existing.active === false){
+          existing.active = true;
+          reactivated++;
+        } else {
+          updated++;
+        }
+      } else {
+        state.roster.push({
+          name: p.name,
+          rating: Number(p.rating || 0),
+          seed: 0,
+          elo: Number(p.rating || 0) * 100,
+          joinedWeek: 1,
+          active: true
+        });
+        added++;
+      }
+    });
+
     reseedRoster();
     recalcElo();
     renderRoster();
     try { renderSummary(); } catch(e) {}
     try { saveState(); } catch(e) {}
-    if(typeof rosterStatus !== "undefined" && rosterStatus) rosterStatus.textContent = `Imported ${state.roster.length} players successfully.`;
-    try { autoPushLeagueToGoogleSheets('roster import'); } catch(e) {}
+    if(typeof rosterStatus !== "undefined" && rosterStatus){
+      rosterStatus.textContent = `Roster merged successfully. Added ${added}, updated ${updated}, reactivated ${reactivated}. Active roster now has ${state.roster.filter(p=>p.active).length} players.`;
+    }
+    try { autoPushLeagueToGoogleSheets('roster import merge'); } catch(e) {}
   }catch(err){
     if(typeof rosterStatus !== "undefined" && rosterStatus) rosterStatus.textContent = "Roster import failed: " + err.message;
   }
 }
 
-function addPlayerMidSeason(){ const name=newPlayerName.value.trim(), rating=Number(newPlayerRating.value), joinedWeek=Number(newPlayerWeek.value || 1); if(!name || !Number.isFinite(rating)){ playerChangeStatus.textContent="Enter a valid player name and rating."; return; } if(state.roster.some(p=>p.name.toLowerCase()===name.toLowerCase() && p.active)){ playerChangeStatus.textContent="That player is already active."; return; } state.roster.push({name,rating,seed:0,elo:rating*100,joinedWeek:joinedWeek,active:true}); reseedRoster(); recalcElo(); renderRoster(); renderSummary(); saveState(); newPlayerName.value=''; newPlayerRating.value=''; newPlayerWeek.value=''; playerChangeStatus.textContent=`Added ${name} starting Week ${joinedWeek}.`; autoPushLeagueToGoogleSheets('player add'); }
-function removeSelectedPlayer(){ const name=removePlayerSelect.value; const p=state.roster.find(x=>x.name===name && x.active); if(!p){ playerChangeStatus.textContent="Select an active player first."; return; } p.active=false; reseedRoster(); recalcElo(); renderRoster(); renderSummary(); saveState(); playerChangeStatus.textContent=`Removed ${name} from active roster.`; autoPushLeagueToGoogleSheets('player remove'); }
+function addPlayerMidSeason(){
+  const name = String(newPlayerName.value || '').trim();
+  const rating = Number(newPlayerRating.value);
+  const joinedWeek = Number(newPlayerWeek.value || 1);
+
+  if(!name || !Number.isFinite(rating)){
+    playerChangeStatus.textContent = "Enter a valid player name and rating.";
+    return;
+  }
+
+  const existing = state.roster.find(p => p.name.trim().toLowerCase() === name.toLowerCase());
+  if(existing){
+    existing.rating = rating;
+    if(!Number.isFinite(existing.elo) || existing.elo === 0) existing.elo = rating * 100;
+    existing.joinedWeek = joinedWeek || existing.joinedWeek || 1;
+    existing.active = true;
+    playerChangeStatus.textContent = `Reactivated/updated ${name} starting Week ${existing.joinedWeek}.`;
+  } else {
+    state.roster.push({name, rating, seed:0, elo:rating*100, joinedWeek:joinedWeek || 1, active:true});
+    playerChangeStatus.textContent = `Added ${name} starting Week ${joinedWeek || 1}.`;
+  }
+
+  reseedRoster();
+  recalcElo();
+  renderRoster();
+  renderSummary();
+  saveState();
+  newPlayerName.value='';
+  newPlayerRating.value='';
+  newPlayerWeek.value='';
+  autoPushLeagueToGoogleSheets('player add');
+}
+
+function removeSelectedPlayer(){
+  const name = String(removePlayerSelect.value || '').trim();
+  const p = state.roster.find(x => x.name === name && x.active);
+  if(!p){
+    playerChangeStatus.textContent = "Select an active player first.";
+    return;
+  }
+
+  p.active = false;
+
+  Object.keys(state.availability || {}).forEach(key => {
+    const arr = Array.isArray(state.availability[key]) ? state.availability[key] : [];
+    state.availability[key] = arr.filter(n => n !== name);
+  });
+
+  (state.weeks || []).forEach(w => {
+    ['saturday','sunday'].forEach(dayKey => {
+      const day = w[dayKey];
+      if(!day || !Array.isArray(day.schedule)) return;
+      day.schedule = day.schedule.filter(m => {
+        const players = [...(m.team1 || []), ...(m.team2 || [])];
+        if(m.completed) return true;
+        return !players.includes(name);
+      });
+    });
+  });
+
+  reseedRoster();
+  recalcElo();
+  renderRoster();
+  renderWeeks();
+  renderWeekOptions();
+  try { refreshSignupWeekOptions(); } catch(e) {}
+  renderSummary();
+  saveState();
+  playerChangeStatus.textContent = `Removed ${name} from the active roster and cleared them from pending availability and uncompleted schedules.`;
+  autoPushLeagueToGoogleSheets('player remove');
+}
+
 function renderRoster(){
   const body = rosterBody, mobile = rosterMobile;
   const quickCount = document.getElementById("rosterQuickCount");
   if(!state.roster.length){
     body.innerHTML = '<tr><td colspan="6" class="small">No players yet.</td></tr>';
     mobile.innerHTML = '<div class="small">No players yet.</div>';
-    if(quickCount) quickCount.textContent = "Current roster count: 0";
+    if(quickCount) quickCount.textContent = "Current roster count: 0 active / 0 total";
     populateRemoveSelect();
     return;
   }
-  body.innerHTML = state.roster.map(r=>`<tr><td>${r.seed}</td><td><strong>${esc(r.name)}</strong></td><td>${Number(r.rating||0).toFixed(2)}</td><td>${Number(r.elo||0).toFixed(1)}</td><td>${r.joinedWeek || 1}</td><td>${r.active ? 'Yes' : 'No'}</td></tr>`).join("");
-  mobile.innerHTML = state.roster.map(r=>`<div class="mobile-card"><strong>${r.seed} • ${esc(r.name)}</strong><div class="small" style="margin-top:6px">Rating: ${Number(r.rating||0).toFixed(2)} • Current Rating: ${Number(r.elo||0).toFixed(1)} • Joined: Week ${r.joinedWeek || 1} • ${r.active ? 'Active' : 'Inactive'}</div></div>`).join("");
-  if(quickCount) quickCount.textContent = `Current roster count: ${state.roster.length}`;
+
+  const sorted = [...state.roster].sort((a,b)=>{
+    const aSeed = a.seed === '-' ? 999 : Number(a.seed || 999);
+    const bSeed = b.seed === '-' ? 999 : Number(b.seed || 999);
+    return aSeed - bSeed || a.name.localeCompare(b.name);
+  });
+
+  body.innerHTML = sorted.map(r=>`<tr><td>${r.seed}</td><td><strong>${esc(r.name)}</strong></td><td>${Number(r.rating||0).toFixed(2)}</td><td>${Number(r.elo||0).toFixed(1)}</td><td>${r.joinedWeek || 1}</td><td>${r.active ? 'Yes' : 'No'}</td></tr>`).join("");
+  mobile.innerHTML = sorted.map(r=>`<div class="mobile-card"><strong>${r.seed} • ${esc(r.name)}</strong><div class="small" style="margin-top:6px">Rating: ${Number(r.rating||0).toFixed(2)} • Current Rating: ${Number(r.elo||0).toFixed(1)} • Joined: Week ${r.joinedWeek || 1} • ${r.active ? 'Active' : 'Inactive'}</div></div>`).join("");
+  if(quickCount) quickCount.textContent = `Current roster count: ${state.roster.filter(p=>p.active).length} active / ${state.roster.length} total`;
   populateRemoveSelect();
 }
+
 function availabilityKey(weekNum, dayKey){ return `W${weekNum}_${dayKey}`; }
 function checkedInPlayers(weekNum, dayKey){
   const key = availabilityKey(weekNum, dayKey);
