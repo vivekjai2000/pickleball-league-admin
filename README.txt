@@ -101,3 +101,11 @@ Roster mid-season fix:
 Latest results + history update:
 - Latest Results tile is now full-width and shows all completed results.
 - History tab now shows all completed match results inside each week card, while keeping the Top Snapshot.
+
+
+Final mobile + UX updates:
+- Hall of Fame now includes a Weekly Awards tile on the public page.
+- Overview tab styling now matches the Players tab look and feel more closely without changing functionality.
+- Added responsive/mobile CSS for admin and league pages.
+- Added stronger mobile/browser Google data loading fallbacks for admin and league, including public-data and query-string support.
+- Schedule generation is now blocked when all matches for the selected week/day are already completed.
