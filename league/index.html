@@ -819,12 +819,30 @@ async function updateMatchScoreOnGoogle(week, dayKey, round, court, score1, scor
   if(json.data) data = json.data;
   return json;
 }
+
+function getByePlayersForRound(weekNum, dayKey, round){
+  const week = (data.weeks || []).find(w => Number(w.week) === Number(weekNum));
+  const rows = week && week[dayKey] && Array.isArray(week[dayKey].schedule) ? week[dayKey].schedule : [];
+  if(!rows.length) return [];
+  const allDayPlayers = [...new Set(rows.flatMap(m => [...(m.team1 || []), ...(m.team2 || [])]).filter(Boolean))];
+  const playingThisRound = [...new Set(rows.filter(m => Number(m.round) === Number(round)).flatMap(m => [...(m.team1 || []), ...(m.team2 || [])]).filter(Boolean))];
+  return allDayPlayers.filter(name => !playingThisRound.includes(name)).sort((a,b)=>a.localeCompare(b));
+}
+
+function byeMarkup(weekNum, dayKey, round){
+  const byes = getByePlayersForRound(weekNum, dayKey, round);
+  return byes.length
+    ? `<div class="small" style="margin-top:10px"><strong>Bye this round:</strong> ${esc(byes.join(", "))}</div>`
+    : `<div class="small" style="margin-top:10px"><strong>Bye this round:</strong> None</div>`;
+}
+
 function scoreEditorMarkup(m){
   const disabled = m.completed ? "disabled" : "";
   return `<div class="match-card">
     <div class="match-head"><strong>Week ${m.week} • ${m.day[0].toUpperCase()+m.day.slice(1)}</strong><span class="small">Round ${m.round} • Court ${m.court}</span></div>
     <div class="team-row"><div class="team-name">${esc(m.team1[0])} & ${esc(m.team1[1])}</div><div class="team-score">${m.completed ? m.score1 : `<input type="number" min="0" inputmode="numeric" id="s1_${m.week}_${m.day}_${m.round}_${m.court}" style="width:78px;padding:8px;border:1px solid #ccd7e5;border-radius:12px" placeholder="0">`}</div></div>
     <div class="team-row"><div class="team-name">${esc(m.team2[0])} & ${esc(m.team2[1])}</div><div class="team-score">${m.completed ? m.score2 : `<input type="number" min="0" inputmode="numeric" id="s2_${m.week}_${m.day}_${m.round}_${m.court}" style="width:78px;padding:8px;border:1px solid #ccd7e5;border-radius:12px" placeholder="0">`}</div></div>
+    ${byeMarkup(m.week, m.day, m.round)}
     ${m.completed ? `<div class="small" style="margin-top:10px">Completed result is locked.</div>` : `<div style="margin-top:12px"><button onclick="savePublicScore(${m.week}, '${m.day}', ${m.round}, ${m.court})">Save Score</button><div class="small" id="msg_${m.week}_${m.day}_${m.round}_${m.court}" style="margin-top:8px"></div></div>`}
   </div>`;
 }
@@ -957,6 +975,7 @@ function renderSchedule() {
             <div class="info-card"><div class="info-label">Team 1</div><div class="info-value">${esc(m.team1[0])} & ${esc(m.team1[1])}</div></div>
             <div class="info-card"><div class="info-label">Team 2</div><div class="info-value">${esc(m.team2[0])} & ${esc(m.team2[1])}</div></div>
           </div>
+          <div class="info-card" style="margin-top:12px"><div class="info-label">Bye This Round</div><div class="info-value">${(() => { const byes = getByePlayersForRound(weekNum, day, m.round); return byes.length ? esc(byes.join(", ")) : "None"; })()}</div></div>
           ${editor}
         </div>
       </div>
