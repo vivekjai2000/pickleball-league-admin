@@ -237,6 +237,14 @@ th { background:#f8fbff; }
   color:#92400e;
 }
 
+
+#latestResultsBox .match-card{
+  margin-top:12px;
+}
+.history-results-list .info-card{
+  margin-top:12px;
+}
+
 </style>
 </head>
 <body>
@@ -272,15 +280,13 @@ th { background:#f8fbff; }
       <h2>Current Matches</h2>
       <div id="featuredMatchesBox" class="small">No current matches yet.</div>
     </div>
-    <div class="grid2" style="margin-top:16px">
-      <div class="card">
-        <h2>This Week Progress</h2>
-        <div id="weekendSummaryBox" class="small" style="margin-top:12px">No week progress yet.</div>
-      </div>
-      <div class="card">
-        <h2>Latest Results</h2>
-        <div id="latestResultsBox" class="small" style="margin-top:12px">No recent results yet.</div>
-      </div>
+    <div class="card" style="margin-top:16px">
+      <h2>This Week Progress</h2>
+      <div id="weekendSummaryBox" class="small" style="margin-top:12px">No week progress yet.</div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h2>Latest Results</h2>
+      <div id="latestResultsBox" class="small" style="margin-top:12px">No recent results yet.</div>
     </div>
     <div class="card" style="margin-top:16px">
       <h2>Top 3 Leaderboard</h2>
@@ -702,19 +708,20 @@ function renderChampionshipCenter() {
   `;
 }
 function renderLatestResultsWidget() {
-  const matches = [];
+  const completed = [];
   (data.weeks||[]).forEach(w => ['saturday','sunday'].forEach(day => (w[day]?.schedule||[]).forEach(m => {
-    if(m.completed) matches.push({week:w.week, day, round:m.round, court:m.court, ...m});
+    if(m.completed) completed.push({week:w.week, day, round:m.round, court:m.court, ...m});
   })));
-  const latest = matches.slice(-5).reverse();
-  latestResultsBox.innerHTML = latest.length ? `<div class="widget-list">${latest.map(m => `
-    <div class="widget-item">
-      <div class="small">Week ${m.week} • ${m.day[0].toUpperCase()+m.day.slice(1)} • Round ${m.round} • Court ${m.court}</div>
-      <div style="margin-top:6px"><strong>${esc(m.team1[0])} & ${esc(m.team1[1])}</strong> vs <strong>${esc(m.team2[0])} & ${esc(m.team2[1])}</strong></div>
-      <div class="small" style="margin-top:6px">Result: ${m.score1}-${m.score2}</div>
-    </div>`).join('')}</div>` : 'No recent results yet.';
-}
+  completed.sort((a,b) => a.week - b.week || a.day.localeCompare(b.day) || Number(a.round||0)-Number(b.round||0) || Number(a.court||0)-Number(b.court||0));
 
+  latestResultsBox.innerHTML = completed.length ? completed.map(m => `
+    <div class="match-card">
+      <div class="match-meta">Week ${m.week} • ${m.day[0].toUpperCase()+m.day.slice(1)} • Round ${m.round} • Court ${m.court}</div>
+      <div style="margin-top:8px"><strong>${esc((m.team1||[]).join(' & '))}</strong> vs <strong>${esc((m.team2||[]).join(' & '))}</strong></div>
+      <div class="small" style="margin-top:6px">Result: ${m.score1}-${m.score2}</div>
+    </div>
+  `).join('') : 'No recent results yet.';
+}
 
 function isValidPickleballScore(score1, score2){
   const a = Number(score1), b = Number(score2);
@@ -896,29 +903,63 @@ function renderLeaderboard() {
 }
 function renderHistory() {
   if(!data || !data.weeks) return;
-  const playerStats = buildPlayerStats();
-  const cards = data.weeks.map(w=> {
-    const cnt=(w.saturday.schedule||[]).filter(m=>m.completed).length + (w.sunday.schedule||[]).filter(m=>m.completed).length;
-    const snap = cnt ? playerStats.slice(0,3).map((p,i)=>`${i+1}. ${esc(p.name)}`).join('<br>') : 'No results';
+
+  const cards = data.weeks.map(w => {
+    const completed = [];
+    ['saturday','sunday'].forEach(dayKey => {
+      (w[dayKey]?.schedule || []).forEach(m => {
+        if(m.completed){
+          completed.push({
+            day: dayKey,
+            round: m.round,
+            court: m.court,
+            team1: m.team1 || [],
+            team2: m.team2 || [],
+            score1: Number(m.score1 || 0),
+            score2: Number(m.score2 || 0)
+          });
+        }
+      });
+    });
+
+    completed.sort((a,b) => a.day.localeCompare(b.day) || Number(a.round||0)-Number(b.round||0) || Number(a.court||0)-Number(b.court||0));
+
+    const weekly = weeklyStatsPublic(w.week, "ALL").slice(0,3);
+    const leaders = weekly.length
+      ? weekly.map((p,i)=>`${i+1}. ${esc(p.name)} (${p.wins}-${p.losses}, diff ${p.diff})`).join('<br>')
+      : 'No results';
+
+    const resultsHtml = completed.length
+      ? `<div class="history-results-list">${completed.map(m => `
+          <div class="info-card">
+            <div class="info-label">${m.day[0].toUpperCase()+m.day.slice(1)} • Round ${m.round} • Court ${m.court}</div>
+            <div class="info-value">${esc(m.team1.join(' & '))} vs ${esc(m.team2.join(' & '))}</div>
+            <div class="small" style="margin-top:6px">Result: ${m.score1}-${m.score2}</div>
+          </div>
+        `).join('')}</div>`
+      : '<div class="small" style="margin-top:12px">No completed match results yet for this week.</div>';
+
     return `
       <div class="player-profile-card" style="margin-top:12px">
         <div class="player-profile-hero">
           <div class="player-profile-name" style="font-size:24px">Week ${w.week}</div>
-          <div class="player-profile-rating">${cnt} completed matches</div>
+          <div class="player-profile-rating">${completed.length} completed match${completed.length === 1 ? '' : 'es'}</div>
         </div>
         <div class="player-profile-sections">
           <div class="section-hero-title">Top Snapshot</div>
           <div class="info-card" style="margin-top:12px">
             <div class="info-label">Leaders</div>
-            <div class="info-value">${snap}</div>
+            <div class="info-value">${leaders}</div>
           </div>
+          <div class="section-hero-title">Match Results</div>
+          ${resultsHtml}
         </div>
       </div>
     `;
   }).join('');
+
   historyBox.innerHTML = cards || '<div class="status">No history yet.</div>';
 }
-
 
 function buildPlayerDeepStats(){
   const base = {};
