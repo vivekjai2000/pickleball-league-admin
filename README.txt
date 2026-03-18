@@ -44,3 +44,48 @@ Current matches update:
 Players tab enhancement:
 - Updated Players tab to show richer stat cards similar to the shared Pickleheads-style reference.
 - Each player card now includes rating, last played, sessions played, frequency, best week, and record summary.
+
+
+Consistent tab styling update:
+- Applied the same profile-card style across Hall of Fame, Playoffs, History, Rankings, and Schedule tabs.
+- Tabs now feel visually consistent with the new Players tab design.
+
+
+Current matches layout update:
+- Made Current Matches a full-width tile so it can comfortably scale to more records.
+- Moved Current Weekend Summary, Latest Results, and Top 3 Leaderboard below it.
+
+
+This Week Progress update:
+- Renamed Current Weekend Summary to This Week Progress.
+- Replaced confusing summary text with total matches, completed, remaining, and clearer status messaging.
+- Added progress bar for visual completion tracking.
+
+
+Playoff progress clarity update:
+- Renamed Playoffs tab card to Playoff Progress.
+- Added clearer summary cards for format, stages, completed series, remaining series, and a progress bar.
+- Reworked bracket sections to use the same player-profile-card visual style used elsewhere.
+
+
+Public cleanup + players fix:
+- League Snapshot and Championship Center now remain only on the Overview tab.
+- Removed any stray duplicates from other tabs.
+- Fixed Players tab rendering so player cards populate again.
+
+
+v2 cleanup:
+- Fixed section markup so Overview-only cards stay only in Overview.
+- Players tab rendering restored.
+- League Snapshot and Championship Center remain only in Overview.
+
+
+Leaderboard + playoffs eligibility update:
+- Added Matches Played to season leaderboard in admin and public league pages.
+- Auto-highlighted playoff-eligible rows in the leaderboard.
+- Playoffs tab now uses only playoff-eligible players and auto-seeds directly from the season leaderboard ranking.
+
+
+Rules banners embedded:
+- Added professional rules banners with icons/colors to public Rankings and Playoffs tabs.
+- Added matching season leaderboard rules banner to admin.
