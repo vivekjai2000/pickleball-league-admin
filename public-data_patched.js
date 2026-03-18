@@ -10,7 +10,7 @@ window.POUNCEY_PUBLIC_DATA = {
     "winScore": 11,
     "kFactor": 24,
     "minMatchesForPlayoffs": 8,
-    "googleScriptUrl": "PASTE_YOUR_DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE"
+    "googleScriptUrl": "https://script.google.com/macros/s/AKfycbx8q6te2Id-CWSAELOSWMBoLDL5uUNpMKEdcgpd2H8yvHDK7QMVT0Dw0UvkPjDu6kVf/exec"
   },
   "roster": [],
   "weeks": [],
