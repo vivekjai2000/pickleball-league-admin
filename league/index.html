@@ -115,7 +115,7 @@ th { background:#f8fbff; }
     <div class="grid2" style="margin-top:16px">
       <div>
         <div class="card">
-          <h2>This Weekend’s Matches</h2>
+          <h2>Current Matches</h2>
           <div id="featuredMatchesBox" class="small">No matches yet.</div>
         </div>
         <div class="card" style="margin-top:16px">
@@ -647,19 +647,23 @@ function renderOverview() {
   const featured = [];
   if (currentWeekObj) {
     ["saturday","sunday"].forEach(day => {
-      (currentWeekObj[day]?.schedule || []).forEach(m => featured.push({week: currentWeekObj.week, day: day, ...m}));
+      (currentWeekObj[day]?.schedule || [])
+        .filter(m => !m.completed)
+        .forEach(m => featured.push({week: currentWeekObj.week, day: day, ...m}));
     });
   }
   const satCount = currentWeekObj ? (currentWeekObj.saturday?.schedule || []).length : 0;
   const sunCount = currentWeekObj ? (currentWeekObj.sunday?.schedule || []).length : 0;
-  const completedCount = featured.filter(m => m.completed).length;
+  const completedCount = currentWeekObj
+    ? ((currentWeekObj.saturday?.schedule || []).filter(m=>m.completed).length + (currentWeekObj.sunday?.schedule || []).filter(m=>m.completed).length)
+    : 0;
   weekendSummaryBox.innerHTML = currentWeekObj
     ? `<span class="pill">Week ${currentWeekObj.week}</span><span class="pill">${satCount} Saturday matches</span><span class="pill">${sunCount} Sunday matches</span><span class="pill">${completedCount} completed</span><div style="margin-top:10px"><strong>Weekend view:</strong> This combines Saturday and Sunday for the latest active week. Leaderboard uses win percentage, and playoffs use a minimum matches threshold to keep things fair with lighter admin effort.</div>`
     : 'No weekend summary yet.';
 
   featuredMatchesBox.innerHTML = featured.length
     ? featured.map(m=>scoreEditorMarkup(m)).join('')
-    : 'No matches yet.';
+    : 'No current matches waiting for scores.';
 }
 function renderSchedule() {
   if(!data) return;
