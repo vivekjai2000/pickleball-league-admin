@@ -109,3 +109,13 @@ Final mobile + UX updates:
 - Added responsive/mobile CSS for admin and league pages.
 - Added stronger mobile/browser Google data loading fallbacks for admin and league, including public-data and query-string support.
 - Schedule generation is now blocked when all matches for the selected week/day are already completed.
+
+
+Bye display update:
+- Overview Current Matches cards now show the bye players for that round.
+- Schedule tab match cards now show the bye players for that round.
+
+
+Admin bye display update:
+- Added bye player display for each round in the Schedule tab table and mobile cards.
+- Added bye player display in Score Entry cards as well.
