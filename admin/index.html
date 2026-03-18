@@ -116,6 +116,72 @@ th { background:#f8fbff; }
 .admin-lock-input:focus { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.12); }
 .admin-lock-status { margin-top:10px; color:#b91c1c; min-height:20px; font-size:14px; }
 
+
+.leaderboard-row-eligible{
+  background: linear-gradient(180deg,#f0fdf4,#ffffff);
+}
+.leaderboard-row-eligible td{
+  font-weight:700;
+}
+.eligible-badge{
+  display:inline-block; padding:4px 8px; border-radius:999px;
+  background:#ecfdf3; color:#166534; border:1px solid #bbf7d0; font-size:12px; font-weight:800;
+}
+.ineligible-badge{
+  display:inline-block; padding:4px 8px; border-radius:999px;
+  background:#fff7ed; color:#9a3412; border:1px solid #fed7aa; font-size:12px; font-weight:800;
+}
+
+
+.rules-banner{
+  margin-top:12px;
+  border:1px solid #dbeafe;
+  background:linear-gradient(180deg,#f8fbff,#eef6ff);
+  border-radius:18px;
+  padding:14px 16px;
+}
+.rules-banner-title{
+  font-weight:900;
+  color:#1d4ed8;
+  font-size:14px;
+  margin-bottom:8px;
+}
+.rules-banner-list{
+  display:grid;
+  gap:8px;
+}
+.rules-line{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  color:#334155;
+  font-size:14px;
+  line-height:1.45;
+}
+.rules-icon{
+  flex:0 0 auto;
+  width:22px;
+  height:22px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+}
+.rules-icon.blue{
+  background:#dbeafe;
+  color:#1d4ed8;
+}
+.rules-icon.green{
+  background:#dcfce7;
+  color:#166534;
+}
+.rules-icon.gold{
+  background:#fef3c7;
+  color:#92400e;
+}
+
 </style>
 </head>
 <body>
@@ -336,6 +402,15 @@ th { background:#f8fbff; }
         <div class="btns">
           <button class="primary" onclick="renderSeasonLeaderboard()">Load Season Leaderboard</button>
           <button class="green" onclick="copySeasonSummary()">Copy Season Summary</button>
+        </div>
+        <div class="rules-banner">
+          <div class="rules-banner-title">🏆 Season leaderboard rules</div>
+          <div class="rules-banner-list">
+            <div class="rules-line"><span class="rules-icon blue">1</span><span>All players remain on the season leaderboard.</span></div>
+            <div class="rules-line"><span class="rules-icon blue">2</span><span>Ranking order is <strong>Win %</strong>, then <strong>Point Difference</strong>, then <strong>Rating</strong>.</span></div>
+            <div class="rules-line"><span class="rules-icon blue">3</span><span><strong>Matches Played</strong> shows total completed games.</span></div>
+            <div class="rules-line"><span class="rules-icon green">✓</span><span>Highlighted rows are playoff-eligible based on the minimum matches setting.</span></div>
+          </div>
         </div>
         <div id="seasonRankingBox" style="margin-top:12px"></div>
       </div>
@@ -1229,7 +1304,7 @@ function seasonStats(){
     return {...s,games:g,pct:g? s.wins/g:0,diff:s.pf-s.pa,playoffEligible};
   }).sort((x,y)=>y.pct-x.pct || y.diff-x.diff || y.elo-x.elo || x.name.localeCompare(y.name));
 }
-function renderSeasonLeaderboard(){ const rows=seasonStats(); if(!rows.length){ seasonRankingBox.innerHTML='<div class="small">No players yet.</div>'; return; } seasonRankingBox.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Player</th><th>W</th><th>L</th><th>Win %</th><th>Diff</th><th>DUPR-style Rating</th><th>Active</th><th>Playoff Eligible</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.name)}</td><td>${r.wins}</td><td>${r.losses}</td><td>${(r.pct*100).toFixed(1)}%</td><td>${r.diff}</td><td>${r.elo.toFixed(1)}</td><td>${r.active ? 'Yes' : 'No'}</td><td>${r.playoffEligible ? 'Yes' : 'No'}</td></tr>`).join('')}</tbody></table></div>`; }
+function renderSeasonLeaderboard(){ const rows=seasonStats(); if(!rows.length){ seasonRankingBox.innerHTML='<div class="small">No players yet.</div>'; return; } seasonRankingBox.innerHTML=`<div class="small" style="margin-bottom:10px">Playoff qualification requires at least ${Number(state.profile.minMatchesForPlayoffs||8)} matches played. Eligible players are auto-highlighted.</div><div class="table-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Matches</th><th>W</th><th>L</th><th>Win %</th><th>Diff</th><th>DUPR-style Rating</th><th>Active</th><th>Playoff Eligible</th></tr></thead><tbody>${rows.map((r,i)=>`<tr class="${r.playoffEligible ? 'leaderboard-row-eligible' : ''}"><td>${i+1}</td><td>${esc(r.name)}</td><td>${r.games}</td><td>${r.wins}</td><td>${r.losses}</td><td>${(r.pct*100).toFixed(1)}%</td><td>${r.diff}</td><td>${r.elo.toFixed(1)}</td><td>${r.active ? 'Yes' : 'No'}</td><td>${r.playoffEligible ? '<span class="eligible-badge">Yes</span>' : '<span class="ineligible-badge">No</span>'}</td></tr>`).join('')}</tbody></table></div>`; }
 function renderHistory(){ if(!state.weeks.length){ historyBox.innerHTML='<div class="small">No weeks available yet.</div>'; return; } let html = '<div class="table-wrap"><table><thead><tr><th>Week</th><th>Top 3</th></tr></thead><tbody>'; state.weeks.forEach(w=>{ const rows = weeklyStats(w.week, "ALL").slice(0,3); const summary = rows.length ? rows.map((r,i)=>`${i+1}. ${esc(r.name)} (${(r.pct*100).toFixed(0)}%, diff ${r.diff})`).join('<br>') : 'No completed matches'; html += `<tr><td>Week ${w.week}</td><td>${summary}</td></tr>`; }); html += '</tbody></table></div>'; historyBox.innerHTML = html; }
 function renderAwards(){ const weekNum=Number(awardWeek.value), day=awardDay.value, weekly=weeklyStats(weekNum, day); if(!weekly.length){ awardsBox.innerHTML='<div class="small">No completed matches yet for this selection.</div>'; return; } const best=weekly[0]; const matches=[]; const week=state.weeks.find(w=>w.week===weekNum); const days=day==="ALL" ? ['saturday','sunday'] : [day.toLowerCase()]; days.forEach(d=>(week[d].schedule||[]).forEach(m=>{ if(m.completed) matches.push(m); })); let matchOfDay=null, closest=999; matches.forEach(m=>{ const diff=Math.abs(m.score1-m.score2); if(diff<closest){ closest=diff; matchOfDay=m; } }); awardsBox.innerHTML=`<div class="award-box"><h3>Player of the Period</h3><div class="small" style="margin-top:8px"><strong>${esc(best.name)}</strong> • ${best.wins}-${best.losses} • ${(best.pct*100).toFixed(1)}% win rate • Diff ${best.diff}</div></div><div class="award-box"><h3>Match of the Period</h3><div class="small" style="margin-top:8px">${matchOfDay ? `Round ${matchOfDay.round}, Court ${matchOfDay.court}: ${esc(matchOfDay.team1[0])} & ${esc(matchOfDay.team1[1])} vs ${esc(matchOfDay.team2[0])} & ${esc(matchOfDay.team2[1])} • ${matchOfDay.score1}-${matchOfDay.score2}` : 'No completed match found.'}</div></div>`; }
 function renderSummary(){ const activeSat=state.weeks.filter(w=>w.saturday.active).length, activeSun=state.weeks.filter(w=>w.sunday.active).length; const generated=state.weeks.reduce((n,w)=>n+(w.saturday.schedule.length?1:0)+(w.sunday.schedule.length?1:0),0); const scored=state.weeks.reduce((n,w)=>n+(w.saturday.schedule||[]).filter(m=>m.completed).length+(w.sunday.schedule||[]).filter(m=>m.completed).length,0); const activePlayers=state.roster.filter(p=>p.active).length; summaryBox.innerHTML=`<span class="pill">${esc(state.profile.leagueTitle || "League")}</span><span class="pill">${activePlayers} active players</span><span class="pill">${state.roster.length} total players</span><span class="pill">${state.weeks.length} weeks</span><span class="pill">${activeSat} Saturdays active</span><span class="pill">${activeSun} Sundays active</span><span class="pill">${generated} schedules generated</span><span class="pill">${scored} scored matches</span><div style="margin-top:10px"><strong>Format:</strong> First to ${state.profile.winScore} • ${state.profile.defaultCourts} default courts • ${state.profile.defaultRounds} default rounds/day • Minimum playoff matches: ${state.profile.minMatchesForPlayoffs || 8} • Playoff format: Top ${state.profile.playoffFormat || 12}</div>`; }
