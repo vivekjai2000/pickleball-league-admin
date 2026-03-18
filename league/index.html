@@ -171,6 +171,72 @@ th { background:#f8fbff; }
   margin-top:12px;
 }
 
+
+.leaderboard-row-eligible{
+  background: linear-gradient(180deg,#f0fdf4,#ffffff);
+}
+.leaderboard-row-eligible td{
+  font-weight:700;
+}
+.eligible-badge{
+  display:inline-block; padding:4px 8px; border-radius:999px;
+  background:#ecfdf3; color:#166534; border:1px solid #bbf7d0; font-size:12px; font-weight:800;
+}
+.ineligible-badge{
+  display:inline-block; padding:4px 8px; border-radius:999px;
+  background:#fff7ed; color:#9a3412; border:1px solid #fed7aa; font-size:12px; font-weight:800;
+}
+
+
+.rules-banner{
+  margin-top:12px;
+  border:1px solid #dbeafe;
+  background:linear-gradient(180deg,#f8fbff,#eef6ff);
+  border-radius:18px;
+  padding:14px 16px;
+}
+.rules-banner-title{
+  font-weight:900;
+  color:#1d4ed8;
+  font-size:14px;
+  margin-bottom:8px;
+}
+.rules-banner-list{
+  display:grid;
+  gap:8px;
+}
+.rules-line{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  color:#334155;
+  font-size:14px;
+  line-height:1.45;
+}
+.rules-icon{
+  flex:0 0 auto;
+  width:22px;
+  height:22px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+}
+.rules-icon.blue{
+  background:#dbeafe;
+  color:#1d4ed8;
+}
+.rules-icon.green{
+  background:#dcfce7;
+  color:#166534;
+}
+.rules-icon.gold{
+  background:#fef3c7;
+  color:#92400e;
+}
+
 </style>
 </head>
 <body>
@@ -254,6 +320,15 @@ th { background:#f8fbff; }
       <button style="margin-top:12px" onclick="renderWeeklyRankingTab()">Show Weekly Ranking</button>
       <div id="weeklyRankingBox" class="small" style="margin-top:12px">No weekly ranking available yet.</div>
       <div class="section-hero-title">Season Leaderboard</div>
+      <div class="rules-banner">
+        <div class="rules-banner-title">🏆 How season standings work</div>
+        <div class="rules-banner-list">
+          <div class="rules-line"><span class="rules-icon blue">1</span><span>All players appear in the season leaderboard once they start playing.</span></div>
+          <div class="rules-line"><span class="rules-icon blue">2</span><span>Standings are ranked by <strong>Win %</strong>, then <strong>Point Difference</strong>, then <strong>Rating</strong>.</span></div>
+          <div class="rules-line"><span class="rules-icon blue">3</span><span><strong>Matches Played</strong> means total completed games played.</span></div>
+          <div class="rules-line"><span class="rules-icon green">✓</span><span>Highlighted rows mean the player has met the minimum matches required for playoff qualification.</span></div>
+        </div>
+      </div>
       <div id="seasonRankingBox" class="small" style="margin-top:12px">No data loaded yet.</div>
     </div>
   </div>
@@ -278,6 +353,15 @@ th { background:#f8fbff; }
       <h2>Playoff Progress</h2>
       <div class="section-hero-title" id="playoffHeaderTitle">Top 12 Playoff View</div>
       <div id="playoffHeaderSubtitle" class="small" style="margin-top:10px">Seeds 1–4 receive byes. Seeds 5–12 play in. This view is generated automatically from the current season leaderboard.</div>
+      <div class="rules-banner">
+        <div class="rules-banner-title">🏅 How playoff qualification works</div>
+        <div class="rules-banner-list">
+          <div class="rules-line"><span class="rules-icon gold">1</span><span>You must meet the <strong>minimum matches for playoffs</strong> to qualify.</span></div>
+          <div class="rules-line"><span class="rules-icon gold">2</span><span>Only <strong>playoff-eligible</strong> players are considered for the bracket.</span></div>
+          <div class="rules-line"><span class="rules-icon gold">3</span><span>Seeds are assigned automatically using the <strong>season leaderboard ranking</strong>.</span></div>
+          <div class="rules-line"><span class="rules-icon green">✓</span><span>The top eligible players fill the playoff bracket based on your selected playoff format.</span></div>
+        </div>
+      </div>
       <div id="playoffSummaryBox" style="margin-top:12px"></div>
       <div id="playoffBox" class="bracket-grid" style="margin-top:12px"></div>
     </div>
@@ -326,22 +410,22 @@ function loadPublicFile() {
   reader.readAsText(file);
 }
 function buildPlayerStats() {
-  if((data.season||[]).length) return data.season;
   const stats = {};
-  (data.roster||[]).forEach(p => stats[p.name] = {name:p.name,wins:0,losses:0,pf:0,pa:0,elo:p.elo,active:p.active});
+  (data.roster||[]).forEach(p => stats[p.name] = {name:p.name,wins:0,losses:0,pf:0,pa:0,elo:Number(p.elo||0),active:p.active!==false});
   (data.weeks||[]).forEach(w => ["saturday","sunday"].forEach(day => (w[day]?.schedule||[]).forEach(m => {
     if(!m.completed) return;
     const [a,b,c,d] = [m.team1[0],m.team1[1],m.team2[0],m.team2[1]];
     [a,b,c,d].forEach(n => { if(!stats[n]) stats[n] = {name:n,wins:0,losses:0,pf:0,pa:0,elo:0,active:true}; });
-    stats[a].pf += m.score1; stats[b].pf += m.score1; stats[c].pf += m.score2; stats[d].pf += m.score2;
-    stats[a].pa += m.score2; stats[b].pa += m.score2; stats[c].pa += m.score1; stats[d].pa += m.score1;
-    if(m.score1 > m.score2) { stats[a].wins++; stats[b].wins++; stats[c].losses++; stats[d].losses++; }
+    stats[a].pf += Number(m.score1||0); stats[b].pf += Number(m.score1||0); stats[c].pf += Number(m.score2||0); stats[d].pf += Number(m.score2||0);
+    stats[a].pa += Number(m.score2||0); stats[b].pa += Number(m.score2||0); stats[c].pa += Number(m.score1||0); stats[d].pa += Number(m.score1||0);
+    if(Number(m.score1||0) > Number(m.score2||0)) { stats[a].wins++; stats[b].wins++; stats[c].losses++; stats[d].losses++; }
     else { stats[c].wins++; stats[d].wins++; stats[a].losses++; stats[b].losses++; }
   })));
+  const minMatches = Number(data.profile?.minMatchesForPlayoffs || 8);
   return Object.values(stats).map(s => {
     const games = s.wins + s.losses;
-    return {...s, games, pct: games ? s.wins/games : 0, diff: s.pf-s.pa};
-  }).sort((a,b) => b.pct-a.pct || b.diff-a.diff || a.name.localeCompare(b.name));
+    return {...s, games, pct: games ? s.wins/games : 0, diff: s.pf-s.pa, playoffEligible: games >= minMatches};
+  }).sort((a,b) => b.pct-a.pct || b.diff-a.diff || b.elo-a.elo || a.name.localeCompare(b.name));
 }
 
 function getLiveGoogleUrl(){
@@ -804,11 +888,11 @@ function renderSchedule() {
 
 function renderLeaderboard() {
   if(!data) return;
-  const rows = data.season || [];
+  const rows = buildPlayerStats();
   const box = document.getElementById("seasonRankingBox");
   if(!box) return;
   if(!rows.length) { box.innerHTML = '<div class="status">No leaderboard yet.</div>'; return; }
-  box.innerHTML = `<div class="table-wrap"><table><thead><tr><th>#</th><th>Player</th><th>W</th><th>L</th><th>Win %</th><th>Diff</th><th>Rating</th><th>Active</th><th>Playoff Eligible</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.name)}</td><td>${r.wins}</td><td>${r.losses}</td><td>${(r.pct*100).toFixed(1)}%</td><td>${r.diff}</td><td>${Number(r.elo||0).toFixed(1)}</td><td>${r.active===false ? 'No' : 'Yes'}</td><td>${r.playoffEligible ? 'Yes' : 'No'}</td></tr>`).join('')}</tbody></table></div>`;
+  box.innerHTML = `<div class="small" style="margin-bottom:10px">Playoff qualification requires at least ${Number(data.profile?.minMatchesForPlayoffs || 8)} matches played. Eligible players are auto-highlighted.</div><div class="table-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Matches</th><th>W</th><th>L</th><th>Win %</th><th>Diff</th><th>Rating</th><th>Active</th><th>Playoff Eligible</th></tr></thead><tbody>${rows.map((r,i)=>`<tr class="${r.playoffEligible ? 'leaderboard-row-eligible' : ''}"><td>${i+1}</td><td>${esc(r.name)}</td><td>${r.games}</td><td>${r.wins}</td><td>${r.losses}</td><td>${(r.pct*100).toFixed(1)}%</td><td>${r.diff}</td><td>${Number(r.elo||0).toFixed(1)}</td><td>${r.active===false ? 'No' : 'Yes'}</td><td>${r.playoffEligible ? '<span class="eligible-badge">Yes</span>' : '<span class="ineligible-badge">No</span>'}</td></tr>`).join('')}</tbody></table></div>`;
 }
 function renderHistory() {
   if(!data || !data.weeks) return;
@@ -922,9 +1006,9 @@ function renderPlayers() {
     `).join('') : '<div class="small">No player data yet.</div>';
 }
 function renderPlayoffs() {
-  const p = data.playoffs || {};
-  const rows = (data.season || []);
-  const fmt = Number(data.profile?.playoffFormat || p.format || 12);
+  const rows = buildPlayerStats();
+  const eligibleRows = rows.filter(r => r.playoffEligible);
+  const fmt = Number(data.profile?.playoffFormat || data.playoffs?.format || 12);
 
   const headerTitle = `Top ${fmt} Playoff View`;
   const headerSubtitle = fmt === 4
@@ -938,102 +1022,44 @@ function renderPlayoffs() {
   const summaryEl = document.getElementById("playoffSummaryBox");
 
   if(titleEl) titleEl.textContent = headerTitle;
-  if(subEl) subEl.textContent = headerSubtitle + ' This view is generated automatically from the current season leaderboard.';
+  if(subEl) subEl.textContent = headerSubtitle + ` Only playoff-eligible players (minimum ${Number(data.profile?.minMatchesForPlayoffs || 8)} matches) are shown and seeded automatically from the season leaderboard.`;
 
-  const stages = fmt === 4 ? ["Semifinals","Final"]
-               : fmt === 8 ? ["Quarterfinals","Semifinals","Final"]
-               : ["Play-In","Quarterfinals","Semifinals","Final"];
-
-  const show = m => `${esc(m.a || 'TBD')} vs ${esc(m.b || 'TBD')}${m.winner ? `<br><strong>Winner:</strong> ${esc(m.winner)}` : ''}`;
-
-  let completedSeries = 0;
-  let totalSeries = 0;
-
-  if (fmt === 4) {
-    totalSeries = 3;
-    completedSeries =
-      (p.semifinals?.s1?.winner ? 1 : 0) +
-      (p.semifinals?.s2?.winner ? 1 : 0) +
-      (p.final?.f1?.winner ? 1 : 0);
-  } else if (fmt === 8) {
-    totalSeries = 7;
-    completedSeries =
-      (p.quarterfinals?.q1?.winner ? 1 : 0) +
-      (p.quarterfinals?.q2?.winner ? 1 : 0) +
-      (p.quarterfinals?.q3?.winner ? 1 : 0) +
-      (p.quarterfinals?.q4?.winner ? 1 : 0) +
-      (p.semifinals?.s1?.winner ? 1 : 0) +
-      (p.semifinals?.s2?.winner ? 1 : 0) +
-      (p.final?.f1?.winner ? 1 : 0);
-  } else {
-    totalSeries = 11;
-    completedSeries =
-      (p.playIn?.m1?.winner ? 1 : 0) +
-      (p.playIn?.m2?.winner ? 1 : 0) +
-      (p.playIn?.m3?.winner ? 1 : 0) +
-      (p.playIn?.m4?.winner ? 1 : 0) +
-      (p.quarterfinals?.q1?.winner ? 1 : 0) +
-      (p.quarterfinals?.q2?.winner ? 1 : 0) +
-      (p.quarterfinals?.q3?.winner ? 1 : 0) +
-      (p.quarterfinals?.q4?.winner ? 1 : 0) +
-      (p.semifinals?.s1?.winner ? 1 : 0) +
-      (p.semifinals?.s2?.winner ? 1 : 0) +
-      (p.final?.f1?.winner ? 1 : 0);
-  }
-
-  const remainingSeries = Math.max(0, totalSeries - completedSeries);
-  const completionPct = totalSeries ? Math.round((completedSeries / totalSeries) * 100) : 0;
+  const stages = fmt === 4 ? ["Semifinals","Final"] : fmt === 8 ? ["Quarterfinals","Semifinals","Final"] : ["Play-In","Quarterfinals","Semifinals","Final"];
+  const seed = i => eligibleRows[i-1] ? `${i}. ${esc(eligibleRows[i-1].name)}` : `Seed ${i} TBD`;
 
   if(summaryEl){
+    const seededNames = eligibleRows.slice(0, fmt).map((r,i)=>`${i+1}. ${esc(r.name)} (${r.games} matches)`).join('<br>') || 'No eligible players yet.';
     summaryEl.innerHTML = `
       <div class="info-grid-2">
         <div class="info-card"><div class="info-label">Format</div><div class="info-value">Top ${fmt}</div></div>
+        <div class="info-card"><div class="info-label">Minimum Matches</div><div class="info-value">${Number(data.profile?.minMatchesForPlayoffs || 8)}</div></div>
+        <div class="info-card"><div class="info-label">Eligible Players</div><div class="info-value">${eligibleRows.length}</div></div>
         <div class="info-card"><div class="info-label">Stages</div><div class="info-value">${stages.join(" • ")}</div></div>
-        <div class="info-card"><div class="info-label">Series Completed</div><div class="info-value">${completedSeries}</div></div>
-        <div class="info-card"><div class="info-label">Series Remaining</div><div class="info-value">${remainingSeries}</div></div>
       </div>
-      <div class="progress-wrap playoff-note">
-        <div class="progress-bar"><div class="progress-fill" style="width:${completionPct}%"></div></div>
-        <div class="progress-caption">${completionPct}% playoff progress</div>
+      <div class="info-card" style="margin-top:12px">
+        <div class="info-label">Auto-Seeded From Leaderboard</div>
+        <div class="info-value">${seededNames}</div>
       </div>
     `;
   }
 
+  if(eligibleRows.length < fmt){
+    playoffBox.innerHTML = `<div class="status">Need at least ${fmt} playoff-eligible players to build the Top ${fmt} bracket. Currently eligible: ${eligibleRows.length}.</div>`;
+    return;
+  }
+
   if(fmt === 4){
-    if(p.semifinals && p.final){
-      playoffBox.innerHTML = `<div class="player-profile-card"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Semifinals</div><div class="player-profile-rating">Final four stage</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">SF1</div><div class="info-value">${show(p.semifinals.s1)}</div></div><div class="info-card"><div class="info-label">SF2</div><div class="info-value">${show(p.semifinals.s2)}</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Final</div><div class="player-profile-rating">Championship stage</div></div><div class="player-profile-sections"><div class="info-card"><div class="info-label">Championship Match</div><div class="info-value">${show(p.final.f1)}<br><br><strong>Champion:</strong> ${esc(p.champion || 'TBD')}</div></div></div></div>`;
-      return;
-    }
-    const bracketRows = rows.filter(r=>r.playoffEligible).slice(0,4).length >= 4 ? rows.filter(r=>r.playoffEligible).slice(0,4) : rows.slice(0,4);
-    if(bracketRows.length < 4){ playoffBox.innerHTML = `<div class="status">Top 4 playoff view will appear once at least 4 players have season rankings.</div>`; return; }
-    const seed = i => bracketRows[i-1] ? `${i}. ${esc(bracketRows[i-1].name)}` : `Seed ${i} TBD`;
-    playoffBox.innerHTML = `<div class="player-profile-card"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Semifinals</div><div class="player-profile-rating">Projected bracket</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">SF1</div><div class="info-value">${seed(1)} vs ${seed(4)}</div></div><div class="info-card"><div class="info-label">SF2</div><div class="info-value">${seed(2)} vs ${seed(3)}</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Final</div><div class="player-profile-rating">Championship stage</div></div><div class="player-profile-sections"><div class="info-card"><div class="info-label">Championship Match</div><div class="info-value">Winner SF1 vs Winner SF2<br><br><strong>Champion:</strong> TBD</div></div></div></div>`;
+    playoffBox.innerHTML = `<div class="player-profile-card"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Semifinals</div><div class="player-profile-rating">Auto-seeded from eligible rankings</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">SF1</div><div class="info-value">${seed(1)} vs ${seed(4)}</div></div><div class="info-card"><div class="info-label">SF2</div><div class="info-value">${seed(2)} vs ${seed(3)}</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Final</div><div class="player-profile-rating">Championship stage</div></div><div class="player-profile-sections"><div class="info-card"><div class="info-label">Championship Match</div><div class="info-value">Winner SF1 vs Winner SF2<br><br><strong>Champion:</strong> TBD</div></div></div></div>`;
     return;
   }
 
   if(fmt === 8){
-    if(p.quarterfinals && p.semifinals && p.final){
-      playoffBox.innerHTML = `<div class="player-profile-card"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Quarterfinals</div><div class="player-profile-rating">Round of 8</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">QF1</div><div class="info-value">${show(p.quarterfinals.q1)}</div></div><div class="info-card"><div class="info-label">QF2</div><div class="info-value">${show(p.quarterfinals.q2)}</div></div><div class="info-card"><div class="info-label">QF3</div><div class="info-value">${show(p.quarterfinals.q3)}</div></div><div class="info-card"><div class="info-label">QF4</div><div class="info-value">${show(p.quarterfinals.q4)}</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Semifinals</div><div class="player-profile-rating">Final four stage</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">SF1</div><div class="info-value">${show(p.semifinals.s1)}</div></div><div class="info-card"><div class="info-label">SF2</div><div class="info-value">${show(p.semifinals.s2)}</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Final</div><div class="player-profile-rating">Championship stage</div></div><div class="player-profile-sections"><div class="info-card"><div class="info-label">Championship Match</div><div class="info-value">${show(p.final.f1)}<br><br><strong>Champion:</strong> ${esc(p.champion || 'TBD')}</div></div></div></div>`;
-      return;
-    }
-    const bracketRows = rows.filter(r=>r.playoffEligible).slice(0,8).length >= 8 ? rows.filter(r=>r.playoffEligible).slice(0,8) : rows.slice(0,8);
-    if(bracketRows.length < 8){ playoffBox.innerHTML = `<div class="status">Top 8 playoff view will appear once at least 8 players have season rankings.</div>`; return; }
-    const seed = i => bracketRows[i-1] ? `${i}. ${esc(bracketRows[i-1].name)}` : `Seed ${i} TBD`;
-    playoffBox.innerHTML = `<div class="player-profile-card"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Quarterfinals</div><div class="player-profile-rating">Projected bracket</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">QF1</div><div class="info-value">${seed(1)} vs ${seed(8)}</div></div><div class="info-card"><div class="info-label">QF2</div><div class="info-value">${seed(4)} vs ${seed(5)}</div></div><div class="info-card"><div class="info-label">QF3</div><div class="info-value">${seed(3)} vs ${seed(6)}</div></div><div class="info-card"><div class="info-label">QF4</div><div class="info-value">${seed(2)} vs ${seed(7)}</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Semifinals</div><div class="player-profile-rating">Final four stage</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">SF1</div><div class="info-value">Winner QF1 vs Winner QF2</div></div><div class="info-card"><div class="info-label">SF2</div><div class="info-value">Winner QF3 vs Winner QF4</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Final</div><div class="player-profile-rating">Championship stage</div></div><div class="player-profile-sections"><div class="info-card"><div class="info-label">Championship Match</div><div class="info-value">Winner SF1 vs Winner SF2<br><br><strong>Champion:</strong> TBD</div></div></div></div>`;
+    playoffBox.innerHTML = `<div class="player-profile-card"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Quarterfinals</div><div class="player-profile-rating">Auto-seeded from eligible rankings</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">QF1</div><div class="info-value">${seed(1)} vs ${seed(8)}</div></div><div class="info-card"><div class="info-label">QF2</div><div class="info-value">${seed(4)} vs ${seed(5)}</div></div><div class="info-card"><div class="info-label">QF3</div><div class="info-value">${seed(3)} vs ${seed(6)}</div></div><div class="info-card"><div class="info-label">QF4</div><div class="info-value">${seed(2)} vs ${seed(7)}</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Semifinals</div><div class="player-profile-rating">Final four stage</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">SF1</div><div class="info-value">Winner QF1 vs Winner QF2</div></div><div class="info-card"><div class="info-label">SF2</div><div class="info-value">Winner QF3 vs Winner QF4</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Final</div><div class="player-profile-rating">Championship stage</div></div><div class="player-profile-sections"><div class="info-card"><div class="info-label">Championship Match</div><div class="info-value">Winner SF1 vs Winner SF2<br><br><strong>Champion:</strong> TBD</div></div></div></div>`;
     return;
   }
 
-  if(p.playIn && p.quarterfinals && p.semifinals && p.final){
-    playoffBox.innerHTML = `<div class="player-profile-card"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Play-In</div><div class="player-profile-rating">Opening stage</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">M1</div><div class="info-value">${show(p.playIn.m1)}</div></div><div class="info-card"><div class="info-label">M2</div><div class="info-value">${show(p.playIn.m2)}</div></div><div class="info-card"><div class="info-label">M3</div><div class="info-value">${show(p.playIn.m3)}</div></div><div class="info-card"><div class="info-label">M4</div><div class="info-value">${show(p.playIn.m4)}</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Quarterfinals</div><div class="player-profile-rating">Round of 8</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">QF1</div><div class="info-value">${show(p.quarterfinals.q1)}</div></div><div class="info-card"><div class="info-label">QF2</div><div class="info-value">${show(p.quarterfinals.q2)}</div></div><div class="info-card"><div class="info-label">QF3</div><div class="info-value">${show(p.quarterfinals.q3)}</div></div><div class="info-card"><div class="info-label">QF4</div><div class="info-value">${show(p.quarterfinals.q4)}</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Semifinals</div><div class="player-profile-rating">Final four stage</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">SF1</div><div class="info-value">${show(p.semifinals.s1)}</div></div><div class="info-card"><div class="info-label">SF2</div><div class="info-value">${show(p.semifinals.s2)}</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Final</div><div class="player-profile-rating">Championship stage</div></div><div class="player-profile-sections"><div class="info-card"><div class="info-label">Championship Match</div><div class="info-value">${show(p.final.f1)}<br><br><strong>Champion:</strong> ${esc(p.champion || 'TBD')}</div></div></div></div>`;
-    return;
-  }
-
-  const bracketRows = rows.filter(r=>r.playoffEligible).slice(0,12).length >= 12 ? rows.filter(r=>r.playoffEligible).slice(0,12) : rows.slice(0,12);
-  if(bracketRows.length < 12){ playoffBox.innerHTML = `<div class="status">Top 12 playoff view will appear once at least 12 players have season rankings.</div>`; return; }
-  const seed = i => bracketRows[i-1] ? `${i}. ${esc(bracketRows[i-1].name)}` : `Seed ${i} TBD`;
-  playoffBox.innerHTML = `<div class="player-profile-card"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Play-In</div><div class="player-profile-rating">Projected opening stage</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">M1</div><div class="info-value">${seed(5)} vs ${seed(12)}</div></div><div class="info-card"><div class="info-label">M2</div><div class="info-value">${seed(6)} vs ${seed(11)}</div></div><div class="info-card"><div class="info-label">M3</div><div class="info-value">${seed(7)} vs ${seed(10)}</div></div><div class="info-card"><div class="info-label">M4</div><div class="info-value">${seed(8)} vs ${seed(9)}</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Quarterfinals</div><div class="player-profile-rating">Projected round of 8</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">QF1</div><div class="info-value">${seed(1)} vs Winner 8/9</div></div><div class="info-card"><div class="info-label">QF2</div><div class="info-value">${seed(4)} vs Winner 5/12</div></div><div class="info-card"><div class="info-label">QF3</div><div class="info-value">${seed(3)} vs Winner 6/11</div></div><div class="info-card"><div class="info-label">QF4</div><div class="info-value">${seed(2)} vs Winner 7/10</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Semifinals</div><div class="player-profile-rating">Projected final four stage</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">SF1</div><div class="info-value">Winner QF1 vs Winner QF2</div></div><div class="info-card"><div class="info-label">SF2</div><div class="info-value">Winner QF3 vs Winner QF4</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Final</div><div class="player-profile-rating">Projected championship stage</div></div><div class="player-profile-sections"><div class="info-card"><div class="info-label">Championship Match</div><div class="info-value">Winner SF1 vs Winner SF2<br><br><strong>Champion:</strong> TBD</div></div></div></div>`;
+  playoffBox.innerHTML = `<div class="player-profile-card"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Play-In</div><div class="player-profile-rating">Eligible seeds 5–12 enter play-in</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">M1</div><div class="info-value">${seed(5)} vs ${seed(12)}</div></div><div class="info-card"><div class="info-label">M2</div><div class="info-value">${seed(6)} vs ${seed(11)}</div></div><div class="info-card"><div class="info-label">M3</div><div class="info-value">${seed(7)} vs ${seed(10)}</div></div><div class="info-card"><div class="info-label">M4</div><div class="info-value">${seed(8)} vs ${seed(9)}</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Quarterfinals</div><div class="player-profile-rating">Top seeds enter here</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">QF1</div><div class="info-value">${seed(1)} vs Winner 8/9</div></div><div class="info-card"><div class="info-label">QF2</div><div class="info-value">${seed(4)} vs Winner 5/12</div></div><div class="info-card"><div class="info-label">QF3</div><div class="info-value">${seed(3)} vs Winner 6/11</div></div><div class="info-card"><div class="info-label">QF4</div><div class="info-value">${seed(2)} vs Winner 7/10</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Semifinals</div><div class="player-profile-rating">Final four stage</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">SF1</div><div class="info-value">Winner QF1 vs Winner QF2</div></div><div class="info-card"><div class="info-label">SF2</div><div class="info-value">Winner QF3 vs Winner QF4</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Final</div><div class="player-profile-rating">Championship stage</div></div><div class="player-profile-sections"><div class="info-card"><div class="info-label">Championship Match</div><div class="info-value">Winner SF1 vs Winner SF2<br><br><strong>Champion:</strong> TBD</div></div></div></div>`;
 }
-
 function renderHallOfFame() {
   const rows = buildPlayerStats();
   if(!rows.length){ hofBox.innerHTML = '<div class="status">No Hall of Fame data yet.</div>'; return; }
