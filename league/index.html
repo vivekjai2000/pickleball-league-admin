@@ -245,6 +245,47 @@ th { background:#f8fbff; }
   margin-top:12px;
 }
 
+
+/* Mobile + overview polish */
+@media (max-width: 900px){
+  .wrap{padding:12px;}
+  .hero{padding:18px;}
+  .hero-layout{flex-direction:column; align-items:flex-start; gap:14px;}
+  .logo{width:96px; height:96px; border-radius:18px;}
+  h1{font-size:22px; line-height:1.2;}
+  .hero-location{font-size:16px;}
+  .tabs{overflow-x:auto; flex-wrap:nowrap; padding-bottom:4px; -webkit-overflow-scrolling:touch;}
+  .tabbtn{flex:0 0 auto;}
+  .grid2,.grid3,.grid4,.players-grid,.podium,.bracket-grid,.row2{grid-template-columns:1fr !important;}
+  .card,.player-profile-card{border-radius:18px;}
+  .table-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+  input,select,button,textarea{font-size:16px !important;}
+}
+#overview .card{
+  background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);
+  border:1px solid var(--line);
+  box-shadow:0 8px 20px rgba(15,23,42,.06);
+}
+#overview .stat{
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:16px;
+  background:linear-gradient(135deg,#e0f2fe 0%, #f8fbff 100%);
+  box-shadow:0 8px 20px rgba(15,23,42,.06);
+}
+#overview .stat .label{
+  font-size:13px;
+  color:var(--muted);
+  font-weight:700;
+  text-transform:uppercase;
+}
+#overview .stat .value{
+  margin-top:6px;
+  font-size:28px;
+  font-weight:900;
+  color:#111827;
+}
+
 </style>
 </head>
 <body>
@@ -376,6 +417,9 @@ th { background:#f8fbff; }
   <div id="hof" class="section">
     <div class="card">
       <h2>Hall of Fame</h2>
+      <div class="section-hero-title">Weekly Awards</div>
+      <div class="small" style="margin-top:8px">Weekly recognition is calculated automatically from the current week and completed results.</div>
+      <div id="weeklyAwardsBox" style="margin-top:12px"></div>
       <div class="section-hero-title">Season Honors</div>
       <div class="small" style="margin-top:8px">Season honors based on the current league data.</div>
       <div id="hofBox" style="margin-top:12px"></div>
@@ -435,17 +479,31 @@ function buildPlayerStats() {
 }
 
 function getLiveGoogleUrl(){
-  return (window.POUNCEY_PUBLIC_DATA && window.POUNCEY_PUBLIC_DATA.profile && window.POUNCEY_PUBLIC_DATA.profile.googleScriptUrl) || localStorage.getItem("pouncey_google_script_url") || "";
+  try{
+    const params = new URLSearchParams(window.location.search);
+    const qs = params.get("gs") || params.get("googleScriptUrl");
+    if(qs) return qs;
+  }catch(e){}
+  try{
+    const embedded = (window.POUNCEY_PUBLIC_DATA || window.POUNCY_PUBLIC_DATA || null);
+    if(embedded && embedded.profile && embedded.profile.googleScriptUrl) return embedded.profile.googleScriptUrl;
+  }catch(e){}
+  try{
+    return localStorage.getItem("pouncey_google_script_url") || localStorage.getItem("pouncy_google_script_url") || "";
+  }catch(e){}
+  return "";
 }
 async function tryLoadLiveGoogleData(){
   const url = getLiveGoogleUrl();
   if(!url) return false;
   try{
-    const res = await fetch(url + "?action=loadLeagueState&ts=" + Date.now(), {
+    let res = await fetch(url + "?action=loadLeagueState&ts=" + Date.now(), {
       method:"GET",
       mode:"cors",
-      cache:"no-store"
+      cache:"no-store",
+      credentials:"omit"
     });
+    if(!res.ok) return false;
     const text = await res.text();
     let json = null;
     try { json = JSON.parse(text); } catch(e) { return false; }
@@ -821,10 +879,23 @@ function renderOverview() {
     <div class="stat"><div class="label">Weeks</div><div class="value">${weeks}</div></div>
     <div class="stat"><div class="label">Scored Matches</div><div class="value">${scored}</div></div>
   `;
-  overviewBox.innerHTML=`<span class="pill">${esc(data.profile.leagueTitle)}</span><span class="pill">${weeks} weeks</span><span class="pill">${scored} scored matches</span><div style="margin-top:10px"><strong>Subtitle:</strong> ${esc(data.profile.leagueSubtitle || '')}</div>`;
+  overviewBox.innerHTML=`
+    <div class="player-profile-card">
+      <div class="player-profile-hero">
+        <div class="player-profile-name" style="font-size:24px">${esc(data.profile.leagueTitle || 'League')}</div>
+        <div class="player-profile-rating">${esc(data.profile.leagueSubtitle || '')}</div>
+      </div>
+      <div class="player-profile-sections">
+        <div class="info-grid-3">
+          <div class="info-card"><div class="info-label">Season Weeks</div><div class="info-value">${weeks}</div></div>
+          <div class="info-card"><div class="info-label">Scored Matches</div><div class="info-value">${scored}</div></div>
+          <div class="info-card"><div class="info-label">Format</div><div class="info-value">Top ${Number(data.profile.playoffFormat || 12)} playoffs</div></div>
+        </div>
+      </div>
+    </div>`;
 
-  const top = (data.season||[]).slice(0,3);
-  topThreeBox.innerHTML = top.length ? top.map((r,i)=>`<div class="rank-card rank-${i+1}"><div class="rank-num">${i+1}</div><strong>${esc(r.name)}</strong><div class="small" style="margin-top:8px">${r.wins}-${r.losses} • ${(r.pct*100).toFixed(1)}% • Diff ${r.diff}</div></div>`).join('') : '<div class="small">No leaderboard data yet.</div>';
+  const top = buildPlayerStats().slice(0,3);
+  topThreeBox.innerHTML = top.length ? top.map((r,i)=>`<div class="rank-card rank-${i+1}"><div class="rank-num">${i+1}</div><strong>${esc(r.name)}</strong><div class="small" style="margin-top:8px">${r.games} matches • ${(r.pct*100).toFixed(1)}% • Diff ${r.diff}</div></div>`).join('') : '<div class="small">No leaderboard data yet.</div>';
 
   const allWeeks = data.weeks || [];
   const currentWeekObj = [...allWeeks].reverse().find(w => (((w.saturday?.schedule || []).length + (w.sunday?.schedule || []).length) > 0)) || allWeeks[allWeeks.length - 1];
@@ -1101,7 +1172,46 @@ function renderPlayoffs() {
 
   playoffBox.innerHTML = `<div class="player-profile-card"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Play-In</div><div class="player-profile-rating">Eligible seeds 5–12 enter play-in</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">M1</div><div class="info-value">${seed(5)} vs ${seed(12)}</div></div><div class="info-card"><div class="info-label">M2</div><div class="info-value">${seed(6)} vs ${seed(11)}</div></div><div class="info-card"><div class="info-label">M3</div><div class="info-value">${seed(7)} vs ${seed(10)}</div></div><div class="info-card"><div class="info-label">M4</div><div class="info-value">${seed(8)} vs ${seed(9)}</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Quarterfinals</div><div class="player-profile-rating">Top seeds enter here</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">QF1</div><div class="info-value">${seed(1)} vs Winner 8/9</div></div><div class="info-card"><div class="info-label">QF2</div><div class="info-value">${seed(4)} vs Winner 5/12</div></div><div class="info-card"><div class="info-label">QF3</div><div class="info-value">${seed(3)} vs Winner 6/11</div></div><div class="info-card"><div class="info-label">QF4</div><div class="info-value">${seed(2)} vs Winner 7/10</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Semifinals</div><div class="player-profile-rating">Final four stage</div></div><div class="player-profile-sections"><div class="info-grid-2"><div class="info-card"><div class="info-label">SF1</div><div class="info-value">Winner QF1 vs Winner QF2</div></div><div class="info-card"><div class="info-label">SF2</div><div class="info-value">Winner QF3 vs Winner QF4</div></div></div></div></div><div class="player-profile-card" style="margin-top:12px"><div class="player-profile-hero"><div class="player-profile-name" style="font-size:24px">Final</div><div class="player-profile-rating">Championship stage</div></div><div class="player-profile-sections"><div class="info-card"><div class="info-label">Championship Match</div><div class="info-value">Winner SF1 vs Winner SF2<br><br><strong>Champion:</strong> TBD</div></div></div></div>`;
 }
+
+function renderWeeklyAwardsPublic(){
+  const box = document.getElementById("weeklyAwardsBox");
+  if(!box) return;
+  const weeks = data.weeks || [];
+  const activeWeek = (data.profile && data.profile.currentSignupWeek)
+    ? weeks.find(w => String(w.week) === String(data.profile.currentSignupWeek))
+    : ([...weeks].reverse().find(w => ((w.saturday?.schedule||[]).some(m=>m.completed) || (w.sunday?.schedule||[]).some(m=>m.completed))) || weeks[weeks.length-1]);
+
+  if(!activeWeek){
+    box.innerHTML = '<div class="small">No weekly awards yet.</div>';
+    return;
+  }
+
+  const weekly = weeklyStatsPublic(activeWeek.week, "ALL");
+  const matches = [];
+  ['saturday','sunday'].forEach(d => (activeWeek[d]?.schedule || []).forEach(m => { if(m.completed) matches.push({...m, day:d}); }));
+  let matchOfWeek = null, closest = 999;
+  matches.forEach(m => {
+    const diff = Math.abs(Number(m.score1||0) - Number(m.score2||0));
+    if(diff < closest){ closest = diff; matchOfWeek = m; }
+  });
+
+  const best = weekly[0] || null;
+  box.innerHTML = best || matchOfWeek ? `
+    <div class="info-grid-2">
+      <div class="info-card">
+        <div class="info-label">Player of the Week</div>
+        <div class="info-value">${best ? `${esc(best.name)} • ${best.wins}-${best.losses} • ${(best.pct*100).toFixed(1)}% • Diff ${best.diff}` : 'No completed results yet.'}</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Match of the Week</div>
+        <div class="info-value">${matchOfWeek ? `${esc(matchOfWeek.team1[0])} & ${esc(matchOfWeek.team1[1])} vs ${esc(matchOfWeek.team2[0])} & ${esc(matchOfWeek.team2[1])}<br><span class="small">Week ${activeWeek.week} • ${matchOfWeek.day[0].toUpperCase()+matchOfWeek.day.slice(1)} • Round ${matchOfWeek.round} • Court ${matchOfWeek.court} • ${matchOfWeek.score1}-${matchOfWeek.score2}</span>` : 'No completed match found.'}</div>
+      </div>
+    </div>
+  ` : '<div class="small">No weekly awards yet.</div>';
+}
+
 function renderHallOfFame() {
+  renderWeeklyAwardsPublic();
   const rows = buildPlayerStats();
   if(!rows.length){ hofBox.innerHTML = '<div class="status">No Hall of Fame data yet.</div>'; return; }
   const champ = rows[0];
