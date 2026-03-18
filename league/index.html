@@ -194,6 +194,7 @@ th { background:#f8fbff; }
       <button class="tabbtn" onclick="showTab('hof', this)">Hall of Fame</button>
     </div>
 
+  
   <div id="overview" class="section active">
     <div class="grid4" id="statsGrid"></div>
     <div class="card" style="margin-top:16px">
@@ -208,7 +209,7 @@ th { background:#f8fbff; }
     <div class="grid2" style="margin-top:16px">
       <div class="card">
         <h2>This Week Progress</h2>
-        <div id="weekendSummaryBox" class="small" style="margin-top:12px">No weekend summary yet.</div>
+        <div id="weekendSummaryBox" class="small" style="margin-top:12px">No week progress yet.</div>
       </div>
       <div class="card">
         <h2>Latest Results</h2>
@@ -218,7 +219,6 @@ th { background:#f8fbff; }
     <div class="card" style="margin-top:16px">
       <h2>Top 3 Leaderboard</h2>
       <div id="topThreeBox" class="podium"></div>
-    </div>
     </div>
     <div class="card" style="margin-top:16px">
       <h2>League Snapshot</h2>
@@ -253,7 +253,6 @@ th { background:#f8fbff; }
       </div>
       <button style="margin-top:12px" onclick="renderWeeklyRankingTab()">Show Weekly Ranking</button>
       <div id="weeklyRankingBox" class="small" style="margin-top:12px">No weekly ranking available yet.</div>
-
       <div class="section-hero-title">Season Leaderboard</div>
       <div id="seasonRankingBox" class="small" style="margin-top:12px">No data loaded yet.</div>
     </div>
@@ -291,8 +290,6 @@ th { background:#f8fbff; }
       <div class="small" style="margin-top:8px">Season honors based on the current league data.</div>
       <div id="hofBox" style="margin-top:12px"></div>
     </div>
-  </div>
-</div>
   </div>
 </div>
 
@@ -836,6 +833,42 @@ function renderHistory() {
     `;
   }).join('');
   historyBox.innerHTML = cards || '<div class="status">No history yet.</div>';
+}
+
+
+function buildPlayerDeepStats(){
+  const base = {};
+  (data.roster || []).forEach(p => {
+    base[p.name] = {name:p.name,rating:Number(p.rating||0),elo:Number(p.elo||0),wins:0,losses:0,ties:0,sessions:new Set(),lastPlayedWeek:0,lastPlayedDay:"",bestWeekSessions:0,weekSessionCounts:{},pf:0,pa:0};
+  });
+  (data.weeks || []).forEach(w => {
+    ["saturday","sunday"].forEach(dayKey => {
+      const rows = (w[dayKey] && Array.isArray(w[dayKey].schedule)) ? w[dayKey].schedule : [];
+      rows.forEach(m => {
+        if(!m.completed) return;
+        const players = [...(m.team1 || []), ...(m.team2 || [])];
+        players.forEach(name => {
+          if(!base[name]) base[name] = {name,rating:0,elo:0,wins:0,losses:0,ties:0,sessions:new Set(),lastPlayedWeek:0,lastPlayedDay:"",bestWeekSessions:0,weekSessionCounts:{},pf:0,pa:0};
+          base[name].sessions.add(`W${w.week}-${dayKey}`);
+          if(Number(w.week||0) >= base[name].lastPlayedWeek){ base[name].lastPlayedWeek = Number(w.week||0); base[name].lastPlayedDay = dayKey; }
+          base[name].weekSessionCounts[w.week] = (base[name].weekSessionCounts[w.week] || 0) + 1;
+          base[name].bestWeekSessions = Math.max(base[name].bestWeekSessions, base[name].weekSessionCounts[w.week]);
+        });
+        const s1 = Number(m.score1||0), s2 = Number(m.score2||0);
+        (m.team1 || []).forEach(name => { base[name].pf += s1; base[name].pa += s2; if(s1>s2) base[name].wins++; else if(s2>s1) base[name].losses++; else base[name].ties++; });
+        (m.team2 || []).forEach(name => { base[name].pf += s2; base[name].pa += s1; if(s2>s1) base[name].wins++; else if(s1>s2) base[name].losses++; else base[name].ties++; });
+      });
+    });
+  });
+  const totalWeeks = Math.max(1, (data.weeks || []).length);
+  return Object.values(base).map(p => {
+    const totalSessions = p.sessions.size;
+    const freq = totalSessions / totalWeeks;
+    const diff = p.pf - p.pa;
+    const pct = (p.wins + p.losses) ? p.wins / (p.wins + p.losses) : 0;
+    const displayRating = p.elo ? p.elo / 100 : p.rating;
+    return {...p,totalSessions,freq,diff,pct,displayRating};
+  }).sort((a,b) => b.displayRating-a.displayRating || b.pct-a.pct || a.name.localeCompare(b.name));
 }
 
 function renderPlayers() {
