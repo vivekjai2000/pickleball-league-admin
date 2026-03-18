@@ -39,3 +39,8 @@ Current matches update:
 - Renamed 'This Weekend’s Matches' tile to 'Current Matches'.
 - Current Matches now shows only incomplete matches where scores are still pending.
 - Completed matches for the week are hidden from the Current Matches tile.
+
+
+Players tab enhancement:
+- Updated Players tab to show richer stat cards similar to the shared Pickleheads-style reference.
+- Each player card now includes rating, last played, sessions played, frequency, best week, and record summary.
