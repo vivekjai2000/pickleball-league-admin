@@ -379,7 +379,7 @@ th { background:#f8fbff; }
     </div>
 
     <div class="card">
-      <div class="table-wrap desktop-only"><table><thead><tr><th>Round</th><th>Court</th><th>Team 1</th><th>Team 2</th><th>Status</th></tr></thead><tbody id="scheduleBody"></tbody></table></div>
+      <div class="table-wrap desktop-only"><table><thead><tr><th>Round</th><th>Court</th><th>Team 1</th><th>Team 2</th><th>Bye This Round</th><th>Status</th></tr></thead><tbody id="scheduleBody"></tbody></table></div>
       <div id="scheduleMobile" class="mobile-only"></div>
     </div>
   </div>
@@ -1376,27 +1376,26 @@ function generateDaySchedule(){
   saveState();
   autoPushLeagueToGoogleSheets('schedule generation');
 }
-function renderScheduleTable(rows){ if(!rows || !rows.length){ scheduleBody.innerHTML='<tr><td colspan="5" class="small">No schedule generated yet.</td></tr>'; scheduleMobile.innerHTML='<div class="small">No schedule generated yet.</div>'; return; } scheduleBody.innerHTML=rows.map(m=>`<tr><td>${m.round}</td><td>${m.court}</td><td>${esc(m.team1[0])} & ${esc(m.team1[1])}</td><td>${esc(m.team2[0])} & ${esc(m.team2[1])}</td><td>${m.completed ? `${m.score1}-${m.score2}` : 'Pending'}</td></tr>`).join(""); scheduleMobile.innerHTML=rows.map(m=>`<div class="mobile-card"><strong>Round ${m.round} • Court ${m.court}</strong><div class="small" style="margin-top:8px"><strong>Team 1:</strong> ${esc(m.team1[0])} & ${esc(m.team1[1])}</div><div class="small" style="margin-top:4px"><strong>Team 2:</strong> ${esc(m.team2[0])} & ${esc(m.team2[1])}</div><div class="small" style="margin-top:6px"><strong>Status:</strong> ${m.completed ? `${m.score1}-${m.score2}` : 'Pending'}</div></div>`).join(""); }
-function copySchedule(){ const weekNum=Number(pickWeek.value), dayLabel=pickDay.value, dayKey=dayLabel.toLowerCase(), week=state.weeks.find(w=>w.week===weekNum); if(!week || !week[dayKey].schedule.length){ alert("Generate a schedule first."); return; } let txt=`*${state.profile.leagueTitle}*\nWeek ${weekNum} • ${dayLabel}\n\n`, currentRound=null; week[dayKey].schedule.forEach(m=>{ if(currentRound!==m.round){ currentRound=m.round; txt += `*Round ${m.round}*\n`; } txt += `Court ${m.court}: ${m.team1[0]} & ${m.team1[1]} vs ${m.team2[0]} & ${m.team2[1]}${m.completed ? ` | ${m.score1}-${m.score2}` : ''}\n`; }); navigator.clipboard.writeText(txt.trim()).then(()=>alert("Schedule copied.")); }
 
-function renderMatchEditor(){
-  const weekNum=Number(editWeek.value), dayKey=editDay.value.toLowerCase(), week=state.weeks.find(w=>w.week===weekNum), rows=week?.[dayKey]?.schedule || [];
-  if(!rows.length){ matchEditorArea.innerHTML='<div class="small">No schedule found for this week/day.</div>'; return; }
-  const options = activePlayersForWeek(weekNum, dayKey).map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('');
-  matchEditorArea.innerHTML=rows.map((m,idx)=>`
-    <div class="mobile-card">
-      <div><strong>Round ${m.round} • Court ${m.court}</strong></div>
-      <div class="row2" style="margin-top:10px">
-        <div><label>Team 1 Player 1</label><select id="e_${idx}_t1a">${options}</select></div>
-        <div><label>Team 1 Player 2</label><select id="e_${idx}_t1b">${options}</select></div>
-      </div>
-      <div class="row2">
-        <div><label>Team 2 Player 1</label><select id="e_${idx}_t2a">${options}</select></div>
-        <div><label>Team 2 Player 2</label><select id="e_${idx}_t2b">${options}</select></div>
-      </div>
-      <div class="btns"><button class="green" onclick="saveEditedMatch(${weekNum}, '${dayKey}', ${idx})">Save Matchup</button></div>
-    </div>`).join("");
-  rows.forEach((m,idx)=>{ document.getElementById(`e_${idx}_t1a`).value=m.team1[0]; document.getElementById(`e_${idx}_t1b`).value=m.team1[1]; document.getElementById(`e_${idx}_t2a`).value=m.team2[0]; document.getElementById(`e_${idx}_t2b`).value=m.team2[1]; });
+function getAdminByePlayersForRound(weekNum, dayKey, round){
+  const week = (state.weeks || []).find(w => Number(w.week) === Number(weekNum));
+  const rows = week && week[dayKey] && Array.isArray(week[dayKey].schedule) ? week[dayKey].schedule : [];
+  if(!rows.length) return [];
+  const allDayPlayers = [...new Set(rows.flatMap(m => [...(m.team1 || []), ...(m.team2 || [])]).filter(Boolean))];
+  const playingThisRound = [...new Set(rows.filter(m => Number(m.round) === Number(round)).flatMap(m => [...(m.team1 || []), ...(m.team2 || [])]).filter(Boolean))];
+  return allDayPlayers.filter(name => !playingThisRound.includes(name)).sort((a,b)=>a.localeCompare(b));
+}
+
+function renderScheduleTable(rows){
+  const weekNum = Number(pickWeek.value);
+  const dayKey = String(pickDay.value || '').toLowerCase();
+  if(!rows || !rows.length){
+    scheduleBody.innerHTML='<tr><td colspan="6" class="small">No schedule generated yet.</td></tr>';
+    scheduleMobile.innerHTML='<div class="small">No schedule generated yet.</div>';
+    return;
+  }
+  scheduleBody.innerHTML=rows.map(m=>`<tr><td>${m.round}</td><td>${m.court}</td><td>${esc(m.team1[0])} & ${esc(m.team1[1])}</td><td>${esc(m.team2[0])} & ${esc(m.team2[1])}</td><td>${(() => { const byes = getAdminByePlayersForRound(weekNum, dayKey, m.round); return byes.length ? esc(byes.join(", ")) : "None"; })()}</td><td>${m.completed ? `${m.score1}-${m.score2}` : 'Pending'}</td></tr>`).join("");
+  scheduleMobile.innerHTML=rows.map(m=>`<div class="mobile-card"><strong>Round ${m.round} • Court ${m.court}</strong><div class="small" style="margin-top:8px"><strong>Team 1:</strong> ${esc(m.team1[0])} & ${esc(m.team1[1])}</div><div class="small" style="margin-top:4px"><strong>Team 2:</strong> ${esc(m.team2[0])} & ${esc(m.team2[1])}</div><div class="small" style="margin-top:6px"><strong>Bye this round:</strong> ${(() => { const byes = getAdminByePlayersForRound(weekNum, dayKey, m.round); return byes.length ? esc(byes.join(", ")) : "None"; })()}</div><div class="small" style="margin-top:6px"><strong>Status:</strong> ${m.completed ? `${m.score1}-${m.score2}` : 'Pending'}</div></div>`).join("");
 }
 function saveEditedMatch(weekNum, dayKey, idx){ const week=state.weeks.find(w=>w.week===weekNum), match=week?.[dayKey]?.schedule?.[idx]; if(!match){ matchEditorStatus.textContent="Could not find matchup."; return; } const picks=[document.getElementById(`e_${idx}_t1a`).value,document.getElementById(`e_${idx}_t1b`).value,document.getElementById(`e_${idx}_t2a`).value,document.getElementById(`e_${idx}_t2b`).value]; if(new Set(picks).size < 4){ matchEditorStatus.textContent="All four spots must be different players."; return; } match.team1=[picks[0],picks[1]]; match.team2=[picks[2],picks[3]]; renderScheduleTable(week[dayKey].schedule); matchEditorStatus.textContent=`Saved manual matchup for Round ${match.round}, Court ${match.court}.`; saveState(); }
 
@@ -1409,6 +1408,7 @@ function renderScoreEntry(){
       <div><strong>Round ${m.round} • Court ${m.court}</strong></div>
       <div class="small" style="margin-top:8px"><strong>Team 1:</strong> ${esc(m.team1[0])} & ${esc(m.team1[1])}</div>
       <div class="small" style="margin-top:4px"><strong>Team 2:</strong> ${esc(m.team2[0])} & ${esc(m.team2[1])}</div>
+      <div class="small" style="margin-top:4px"><strong>Bye this round:</strong> ${(() => { const byes = getAdminByePlayersForRound(weekNum, dayKey, m.round); return byes.length ? esc(byes.join(", ")) : "None"; })()}</div>
       <div class="score-grid" style="margin-top:10px">
         <div></div>
         <div><label>Score 1</label><input type="number" min="0" value="${m.score1 ?? ''}" id="s1_${idx}"></div>
