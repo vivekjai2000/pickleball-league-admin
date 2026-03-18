@@ -430,6 +430,13 @@ th { background:#f8fbff; }
 <script src="../public-data.js"></script>
 <script>
 let data = window.POUNCEY_PUBLIC_DATA || null;
+try {
+  const embeddedUrl = (data && data.profile && data.profile.googleScriptUrl) ? data.profile.googleScriptUrl : "https://script.google.com/macros/s/AKfycbx8q6te2Id-CWSAELOSWMBoLDL5uUNpMKEdcgpd2H8yvHDK7QMVT0Dw0UvkPjDu6kVf/exec";
+  if (embeddedUrl) {
+    localStorage.setItem("pouncey_google_script_url", embeddedUrl);
+    localStorage.setItem("pouncy_google_script_url", embeddedUrl);
+  }
+} catch (e) {}
 function showTab(id, btn) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tabbtn').forEach(b => b.classList.remove('active'));
