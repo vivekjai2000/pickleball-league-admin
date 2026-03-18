@@ -841,12 +841,13 @@ function renderHistory() {
 function renderPlayers() {
   if(!data) return;
   const stats = buildPlayerDeepStats();
-  playersBox.innerHTML = stats.length ? stats.map(p => {
-    return `
+  const box = document.getElementById("playersBox");
+  if(!box) return;
+  box.innerHTML = stats.length ? stats.map(p => `
       <div class="player-profile-card">
         <div class="player-profile-hero">
           <div class="player-profile-name">${esc(p.name)}</div>
-          <div class="player-profile-rating">🏆 ${(p.elo ? p.elo/100 : p.rating).toFixed(2)} Rating</div>
+          <div class="player-profile-rating">🏆 ${Number(p.displayRating || 0).toFixed(2)} Rating</div>
         </div>
         <div class="player-profile-sections">
           <div class="player-subtitle">Activity</div>
@@ -885,10 +886,8 @@ function renderPlayers() {
           </div>
         </div>
       </div>
-    `;
-  }).join('') : '<div class="small">No player data yet.</div>';
+    `).join('') : '<div class="small">No player data yet.</div>';
 }
-
 function renderPlayoffs() {
   const p = data.playoffs || {};
   const rows = (data.season || []);
