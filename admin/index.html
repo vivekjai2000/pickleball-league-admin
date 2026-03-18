@@ -182,6 +182,21 @@ th { background:#f8fbff; }
   color:#92400e;
 }
 
+
+@media (max-width: 900px){
+  .wrap{padding:12px;}
+  .hero{padding:18px;}
+  .hero-layout{flex-direction:column; align-items:flex-start; gap:14px;}
+  .logo{width:96px; height:96px; border-radius:18px;}
+  h1{font-size:22px; line-height:1.2;}
+  .hero-location{font-size:16px;}
+  .tabs{overflow-x:auto; flex-wrap:nowrap; padding-bottom:4px; -webkit-overflow-scrolling:touch;}
+  .tabbtn{flex:0 0 auto;}
+  .grid2,.grid3,.grid4,.row2{grid-template-columns:1fr !important;}
+  .table-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+  input,select,button,textarea{font-size:16px !important;}
+}
+
 </style>
 </head>
 <body>
@@ -548,6 +563,7 @@ th { background:#f8fbff; }
 
 </div>
 
+<script src="../public-data.js"></script>
 <script>
 const KEY = "pouncey_tract_admin_professional_v1";
 let state = {profile:{leagueTitle:"Pouncey Tract Weekend Pickleball League",leagueSubtitle:"Short Pump, VA",seasonStart:"2026-04-11",seasonEnd:"2026-10-03",defaultCourts:5,defaultRounds:8,winScore:11,kFactor:24,minMatchesForPlayoffs:8,playoffFormat:12,googleScriptUrl:"",currentSignupWeek:""},roster:[],weeks:[],availability:{},playoffs:{}};
@@ -1013,12 +1029,27 @@ async function callGoogleScript(action, payload={}){
   syncProfileFromUI();
   const url = state.profile.googleScriptUrl || "";
   if(!url) throw new Error("Save your Google Apps Script URL first.");
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {"Content-Type": "text/plain;charset=utf-8"},
-    body: JSON.stringify({action, payload}),
-    mode: "cors"
-  });
+  const body = JSON.stringify({action, payload});
+  let res = null;
+  try{
+    res = await fetch(url, {
+      method: "POST",
+      headers: {"Content-Type": "text/plain;charset=utf-8"},
+      body,
+      mode: "cors",
+      credentials: "omit",
+      cache: "no-store"
+    });
+  }catch(e){}
+  if(!res || !res.ok){
+    const qs = encodeURIComponent(body);
+    res = await fetch(url + "?data=" + qs + "&ts=" + Date.now(), {
+      method: "GET",
+      mode: "cors",
+      credentials: "omit",
+      cache: "no-store"
+    });
+  }
   const text = await res.text();
   let data;
   try { data = JSON.parse(text); } catch(e){ throw new Error("Unexpected Apps Script response: " + text.slice(0,200)); }
@@ -1314,6 +1345,13 @@ function generateDaySchedule(){
   if(!week){ scheduleStatus.textContent = "Week not found."; previewSignedUpPlayersForSchedule(); return; }
   if(!week[dayKey].active){ scheduleStatus.textContent = `${dayLabel} is not active for Week ${weekNum}.`; previewSignedUpPlayersForSchedule(); return; }
 
+  const existingRows = week[dayKey].schedule || [];
+  if(existingRows.length && existingRows.every(m => m.completed)){
+    scheduleStatus.textContent = `Blocked. All ${dayLabel} matches for Week ${weekNum} are already completed, so the schedule cannot be generated again.`;
+    previewSignedUpPlayersForSchedule();
+    return;
+  }
+
   const signedUpPlayers = getSignedUpPlayersFor(weekNum, dayKey);
   if(!signedUpPlayers.length){
     scheduleStatus.textContent = `No signed-up players found for Week ${weekNum} ${dayLabel}. Ask players to sign up from the public page before generating schedule.`;
@@ -1436,7 +1474,35 @@ function saveState(){ syncProfileFromUI(); localStorage.setItem(KEY, JSON.string
 function loadState(){ const raw=localStorage.getItem(KEY); if(!raw){ alert("No saved state found."); return; } state=JSON.parse(raw); state.roster.forEach(p=>{ if(typeof p.joinedWeek === 'undefined') p.joinedWeek=1; if(typeof p.active === 'undefined') p.active=true; if(typeof p.elo === 'undefined') p.elo=p.rating*100; }); if(!state.availability) state.availability={}; if(!state.playoffs) state.playoffs={}; reseedRoster(); recalcElo(); pushProfileToUI(); renderRoster(); renderWeeks(); renderWeekOptions(); refreshSignupWeekOptions(); renderSummary(); renderScheduleTable(state.weeks[0]?.saturday?.schedule || []); profileStatus.textContent="Saved state loaded."; }
 function importJson(event){ const file=event.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=e=>{ try{ state=JSON.parse(e.target.result); state.roster.forEach(p=>{ if(typeof p.joinedWeek === 'undefined') p.joinedWeek=1; if(typeof p.active === 'undefined') p.active=true; if(typeof p.elo === 'undefined') p.elo=p.rating*100; }); if(!state.availability) state.availability={}; if(!state.playoffs) state.playoffs={}; reseedRoster(); recalcElo(); pushProfileToUI(); renderRoster(); renderWeeks(); renderWeekOptions(); refreshSignupWeekOptions(); renderSummary(); renderScheduleTable(state.weeks[0]?.saturday?.schedule || []); profileStatus.textContent="Backup imported successfully."; saveState(); }catch(err){ alert("Could not import backup."); } }; reader.readAsText(file); }
 function resetAll(){ if(!confirm("Reset everything?")) return; localStorage.removeItem(KEY); state={profile:{leagueTitle:"Pouncey Tract Weekend Pickleball League",leagueSubtitle:"Short Pump, VA",seasonStart:"2026-04-11",seasonEnd:"2026-10-03",defaultCourts:5,defaultRounds:8,winScore:11,kFactor:24,minMatchesForPlayoffs:8,googleScriptUrl:"",currentSignupWeek:""},roster:[],weeks:[],availability:{},playoffs:{}}; pushProfileToUI(); rosterInput.value=""; renderRoster(); renderWeeks(); renderWeekOptions(); renderScheduleTable([]); renderSummary(); profileStatus.textContent="Reset complete."; rosterStatus.textContent="No roster imported yet."; scheduleStatus.textContent="Select week and day to build a schedule."; scoreStatus.textContent="Select a week and day, then enter scores."; matchEditorStatus.textContent="Choose a week and day to edit matchups."; awardsBox.innerHTML=''; historyBox.innerHTML=''; playerChangeStatus.textContent='Use this area after the season starts to add or remove players.'; }
-window.addEventListener("load", ()=>{ if(!state.profile.googleScriptUrl){ try{ state.profile.googleScriptUrl = localStorage.getItem("pouncey_google_script_url") || ""; }catch(e){} } if (typeof pushProfileToUI === "function") pushProfileToUI(); renderRoster(); renderWeeks(); renderWeekOptions(); refreshSignupWeekOptions(); renderScheduleTable([]); renderSummary(); populateRemoveSelect(); if(localStorage.getItem(KEY)) loadState(); setTimeout(() => { try { previewSignedUpPlayersForSchedule(); } catch(e) {} }, 200); setTimeout(startAdminAutoRefresh, 1200); });
+window.addEventListener("load", async ()=>{
+  try{
+    const params = new URLSearchParams(window.location.search);
+    const qs = params.get("gs") || params.get("googleScriptUrl") || "";
+    if(qs){
+      state.profile.googleScriptUrl = qs;
+      try{ localStorage.setItem("pouncey_google_script_url", qs); }catch(e){}
+    }
+  }catch(e){}
+  if(!state.profile.googleScriptUrl){
+    try{ state.profile.googleScriptUrl = localStorage.getItem("pouncey_google_script_url") || ""; }catch(e){}
+  }
+  if(!state.profile.googleScriptUrl){
+    try{
+      const embedded = (window.POUNCEY_PUBLIC_DATA || window.POUNCY_PUBLIC_DATA || null);
+      if(embedded && embedded.profile && embedded.profile.googleScriptUrl){
+        state.profile.googleScriptUrl = embedded.profile.googleScriptUrl;
+      }
+    }catch(e){}
+  }
+  if (typeof pushProfileToUI === "function") pushProfileToUI();
+  renderRoster(); renderWeeks(); renderWeekOptions(); refreshSignupWeekOptions(); renderScheduleTable([]); renderSummary(); populateRemoveSelect();
+  if(localStorage.getItem(KEY)) loadState();
+  if(state.profile.googleScriptUrl){
+    try{ await loadStateFromGoogleSheets(); }catch(e){}
+  }
+  setTimeout(() => { try { previewSignedUpPlayersForSchedule(); } catch(e) {} }, 200);
+  setTimeout(startAdminAutoRefresh, 1200);
+});
 </script>
 
 <script>
