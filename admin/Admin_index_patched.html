@@ -571,7 +571,27 @@ let state = {profile:{leagueTitle:"Pouncey Tract Weekend Pickleball League",leag
 const SHARED_GOOGLE_SCRIPT_URL =
   ((window.POUNCEY_PUBLIC_DATA || window.POUNCY_PUBLIC_DATA || {}).profile || {}).googleScriptUrl ||
   "PASTE_YOUR_DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE";
+  
+function getLiveGoogleUrl() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const qs = params.get("gs");
+    if (qs) return qs;
+  } catch (e) {}
 
+  // ✅ Primary source (works on all devices)
+  if (window.POUNCEY_PUBLIC_DATA?.profile?.googleScriptUrl) {
+    return window.POUNCEY_PUBLIC_DATA.profile.googleScriptUrl;
+  }
+
+  // fallback only
+  try {
+    return localStorage.getItem("pouncey_google_script_url") || "";
+  } catch (e) {
+    return "";
+  }
+}
+  
 function resolveGoogleScriptUrl(){
   try {
     const params = new URLSearchParams(window.location.search);
