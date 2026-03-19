@@ -372,11 +372,11 @@ th { background:#f8fbff; }
         </div>
         <div class="row2">
           <div><label>Joined week</label><input id="newPlayerWeek" type="number" min="1" placeholder="1"></div>
-          <div><label>Photo URL</label><input id="newPlayerPhotoUrl" type="text" placeholder="https://... or data URL"></div>
+          <div><label>Upload Photo</label><input id="newPlayerPhotoFile" type="file" accept="image/*"></div>
         </div>
         <div class="row2">
-          <div><label>Upload Photo</label><input id="newPlayerPhotoFile" type="file" accept="image/*"></div>
           <div><label>Preview</label><div id="adminPhotoPreview" class="small" style="margin-top:10px">No image selected.</div></div>
+          <div><label>Photo update note</label><div class="small" style="margin-top:10px">Upload a photo for new or existing players. Existing player ratings can still be updated by admin here.</div></div>
         </div>
         <div class="row2">
           <div><label>Remove player</label><select id="removePlayerSelect"></select></div>
@@ -602,7 +602,7 @@ th { background:#f8fbff; }
           <button class="secondary" onclick="loadStateFromGoogleSheets()">Load League from Google Sheets</button>
           <button class="red" onclick="resetGoogleSheetsData()">Reset Google Sheets Data</button>
         </div>
-        <div id="googleSyncStatus" class="status">Reset will clear the stored league in Google Sheets. Scores, schedules, roster imports, player changes, check-ins, and playoff updates now auto-save when a Google Script URL is configured. This admin page also auto-refreshes from Google Sheets every 15 seconds.</div>
+        <div id="googleSyncStatus" class="status">Reset will clear the stored league in Google Sheets. Scores, schedules, roster imports, player changes, check-ins, and playoff updates now auto-save when a Google Script URL is configured. This admin page also auto-refreshes from Google Sheets every 15 seconds.</div><div class="rules-banner" style="margin-top:12px"><div class="rules-banner-title">🛡️ Player profile persistence rules</div><div class="rules-banner-list"><div class="rules-line"><span class="rules-icon green">✓</span><span>Player profiles are permanent until admin removes them.</span></div><div class="rules-line"><span class="rules-icon green">✓</span><span>Schedule refresh must never delete players.</span></div><div class="rules-line"><span class="rules-icon green">✓</span><span>Sync merges profile data and never blindly replaces the full player list.</span></div></div></div>
       </div>
     </div>
   </div>
@@ -683,7 +683,6 @@ async function fileToDataUrl(file, maxSize=480){
 
 function bindAdminPhotoPreview(){
   const fileEl = document.getElementById("newPlayerPhotoFile");
-  const urlEl = document.getElementById("newPlayerPhotoUrl");
   const previewEl = document.getElementById("adminPhotoPreview");
   if(!previewEl) return;
   if(fileEl && !fileEl.dataset.bound){
@@ -692,14 +691,6 @@ function bindAdminPhotoPreview(){
       const file = fileEl.files && fileEl.files[0];
       if(!file){ previewEl.innerHTML = 'No image selected.'; return; }
       previewEl.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Preview" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid #e5eef8;">`;
-    });
-  }
-  if(urlEl && !urlEl.dataset.bound){
-    urlEl.dataset.bound = "1";
-    urlEl.addEventListener("input", () => {
-      const val = String(urlEl.value || '').trim();
-      if(val) previewEl.innerHTML = `<img src="${esc(val)}" alt="Preview" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid #e5eef8;">`;
-      else if(!(fileEl && fileEl.files && fileEl.files[0])) previewEl.innerHTML = 'No image selected.';
     });
   }
 }
@@ -848,7 +839,7 @@ async function addPlayerMidSeason(){
   const name = String(newPlayerName.value || '').trim();
   const rating = Number(newPlayerRating.value);
   const joinedWeek = Number(newPlayerWeek.value || 1);
-  let photoUrl = String((document.getElementById("newPlayerPhotoUrl") || {}).value || '').trim();
+  let photoUrl = "";
   const fileEl = document.getElementById("newPlayerPhotoFile");
   const file = fileEl && fileEl.files ? fileEl.files[0] : null;
 
@@ -883,8 +874,6 @@ async function addPlayerMidSeason(){
   newPlayerName.value='';
   newPlayerRating.value='';
   newPlayerWeek.value='';
-  const photoEl = document.getElementById("newPlayerPhotoUrl");
-  if(photoEl) photoEl.value='';
   if(fileEl) fileEl.value='';
   const previewEl = document.getElementById("adminPhotoPreview");
   if(previewEl) previewEl.textContent = 'No image selected.';
@@ -1334,17 +1323,31 @@ async function loadStateFromGoogleSheets(){
   try{
     const data = await callGoogleScript("loadLeagueState", {});
     const loaded = data.data || {};
+    const currentRoster = Array.isArray(state.roster) ? state.roster.slice() : [];
+
     state.profile = Object.assign({}, state.profile, loaded.profile || {});
-    state.roster = loaded.roster || [];
     state.weeks = loaded.weeks || [];
     state.availability = loaded.availability || {};
     state.playoffs = loaded.playoffs || {};
+    state.roster = currentRoster;
+
+    (loaded.roster || []).forEach(p=>{
+      upsertPlayerProfile({
+        name: p.name,
+        rating: p.rating,
+        joinedWeek: p.joinedWeek || 1,
+        active: typeof p.active === 'undefined' ? true : p.active,
+        photoUrl: p.photoUrl || "",
+        elo: p.elo
+      }, {source:"admin"});
+    });
+
     pushProfileToUI();
     renderRoster(); renderWeeks(); renderWeekOptions(); refreshSignupWeekOptions(); renderSummary(); renderScheduleTable(state.weeks[0]?.saturday?.schedule || []);
     populateRemoveSelect();
     recalcElo();
     saveState();
-    googleSyncStatus.textContent = "League data loaded from Google Sheets."; ADMIN_LAST_SHEET_SNAPSHOT = buildAdminSheetSnapshot(loaded); startAdminAutoRefresh();
+    googleSyncStatus.textContent = "League data loaded from Google Sheets. Player profiles were merged safely."; ADMIN_LAST_SHEET_SNAPSHOT = buildAdminSheetSnapshot(loaded); startAdminAutoRefresh();
   }catch(err){
     googleSyncStatus.textContent = err.message;
   }
@@ -1648,7 +1651,47 @@ function copySeasonSummary(){ const rows=seasonStats().slice(0,10); let txt=`*${
 function exportAdminJson(){ const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="pouncey_tract_admin_professional.json"; a.click(); URL.revokeObjectURL(a.href); }
 function exportPublicJs(){ const payload={profile:state.profile, roster:state.roster.map(p=>({name:p.name,rating:p.rating,seed:p.seed,elo:p.elo,joinedWeek:p.joinedWeek,active:p.active})), weeks:state.weeks, availability:state.availability||{}, playoffs:state.playoffs||{}, season:seasonStats()}; const content="window.POUNCEY_PUBLIC_DATA = " + JSON.stringify(payload, null, 2) + ";\n"; const blob=new Blob([content],{type:"application/javascript"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="public-data.js"; a.click(); URL.revokeObjectURL(a.href); }
 function saveState(){ syncProfileFromUI(); localStorage.setItem(KEY, JSON.stringify(state)); }
-function loadState(){ const raw=localStorage.getItem(KEY); if(!raw){ alert("No saved state found."); return; } state=JSON.parse(raw); state.roster.forEach(p=>{ if(typeof p.joinedWeek === 'undefined') p.joinedWeek=1; if(typeof p.active === 'undefined') p.active=true; if(typeof p.elo === 'undefined') p.elo=p.rating*100; if(typeof p.photoUrl === 'undefined') p.photoUrl=''; if(typeof p.createdAt === 'undefined') p.createdAt=''; if(typeof p.updatedAt === 'undefined') p.updatedAt=''; }); if(!state.availability) state.availability={}; if(!state.playoffs) state.playoffs={}; reseedRoster(); recalcElo(); pushProfileToUI(); renderRoster(); renderWeeks(); renderWeekOptions(); refreshSignupWeekOptions(); renderSummary(); renderScheduleTable(state.weeks[0]?.saturday?.schedule || []); profileStatus.textContent="Saved state loaded."; }
+function loadState(){
+  const raw=localStorage.getItem(KEY);
+  if(!raw){ alert("No saved state found."); return; }
+  const incoming = JSON.parse(raw);
+
+  const currentRoster = Array.isArray(state.roster) ? state.roster.slice() : [];
+  state = Object.assign({}, state, incoming);
+  state.roster = currentRoster;
+
+  (incoming.roster || []).forEach(p=>{
+    upsertPlayerProfile({
+      name: p.name,
+      rating: p.rating,
+      joinedWeek: p.joinedWeek || 1,
+      active: typeof p.active === 'undefined' ? true : p.active,
+      photoUrl: p.photoUrl || "",
+      elo: p.elo
+    }, {source:"admin"});
+  });
+
+  state.roster.forEach(p=>{
+    if(typeof p.joinedWeek === 'undefined') p.joinedWeek=1;
+    if(typeof p.active === 'undefined') p.active=true;
+    if(typeof p.elo === 'undefined') p.elo=p.rating*100;
+    if(typeof p.photoUrl === 'undefined') p.photoUrl='';
+    if(typeof p.createdAt === 'undefined') p.createdAt='';
+    if(typeof p.updatedAt === 'undefined') p.updatedAt='';
+  });
+  if(!state.availability) state.availability={};
+  if(!state.playoffs) state.playoffs={};
+  reseedRoster();
+  recalcElo();
+  pushProfileToUI();
+  renderRoster();
+  renderWeeks();
+  renderWeekOptions();
+  refreshSignupWeekOptions();
+  renderSummary();
+  renderScheduleTable(state.weeks[0]?.saturday?.schedule || []);
+  profileStatus.textContent="Saved state loaded. Player profiles were merged safely.";
+}
 function importJson(event){ const file=event.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=e=>{ try{ state=JSON.parse(e.target.result); state.roster.forEach(p=>{ if(typeof p.joinedWeek === 'undefined') p.joinedWeek=1; if(typeof p.active === 'undefined') p.active=true; if(typeof p.elo === 'undefined') p.elo=p.rating*100; if(typeof p.photoUrl === 'undefined') p.photoUrl=''; if(typeof p.createdAt === 'undefined') p.createdAt=''; if(typeof p.updatedAt === 'undefined') p.updatedAt=''; }); if(!state.availability) state.availability={}; if(!state.playoffs) state.playoffs={}; reseedRoster(); recalcElo(); pushProfileToUI(); renderRoster(); renderWeeks(); renderWeekOptions(); refreshSignupWeekOptions(); renderSummary(); renderScheduleTable(state.weeks[0]?.saturday?.schedule || []); profileStatus.textContent="Backup imported successfully."; saveState(); }catch(err){ alert("Could not import backup."); } }; reader.readAsText(file); }
 function resetAll(){ if(!confirm("Reset everything?")) return; localStorage.removeItem(KEY); state={profile:{leagueTitle:"Pouncey Tract Weekend Pickleball League",leagueSubtitle:"Short Pump, VA",seasonStart:"2026-04-11",seasonEnd:"2026-10-03",defaultCourts:5,defaultRounds:8,winScore:11,kFactor:24,minMatchesForPlayoffs:8,googleScriptUrl:"",currentSignupWeek:""},roster:[],weeks:[],availability:{},playoffs:{}}; pushProfileToUI(); rosterInput.value=""; renderRoster(); renderWeeks(); renderWeekOptions(); renderScheduleTable([]); renderSummary(); profileStatus.textContent="Reset complete."; rosterStatus.textContent="No roster imported yet."; scheduleStatus.textContent="Select week and day to build a schedule."; scoreStatus.textContent="Select a week and day, then enter scores."; matchEditorStatus.textContent="Choose a week and day to edit matchups."; awardsBox.innerHTML=''; historyBox.innerHTML=''; playerChangeStatus.textContent='Use this area after the season starts to add or remove players.'; }
 window.addEventListener("load", async ()=>{
