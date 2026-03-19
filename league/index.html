@@ -356,7 +356,11 @@ th { background:#f8fbff; }
         <div><label style="display:block;font-weight:700;margin-bottom:6px">Rating</label><input id="enrollPlayerRating" type="number" step="0.01" placeholder="Required for new players"></div>
       </div>
       <div class="row2" style="margin-top:12px">
-        <div><label style="display:block;font-weight:700;margin-bottom:6px">Photo URL</label><input id="enrollPlayerPhotoUrl" type="text" placeholder="https://... or ../assets/players/name.jpg"></div>
+        <div><label style="display:block;font-weight:700;margin-bottom:6px">Photo URL</label><input id="enrollPlayerPhotoUrl" type="text" placeholder="https://... or data URL"></div>
+        <div><label style="display:block;font-weight:700;margin-bottom:6px">Upload Photo</label><input id="enrollPlayerPhotoFile" type="file" accept="image/*"></div>
+      </div>
+      <div class="row2" style="margin-top:12px">
+        <div><label style="display:block;font-weight:700;margin-bottom:6px">Preview</label><div id="leaguePhotoPreview" class="small" style="margin-top:10px">No image selected.</div></div>
         <div><label style="display:block;font-weight:700;margin-bottom:6px">Note</label><div class="small" style="margin-top:10px">Photo is optional. Existing players can update their photo here. Ratings for existing players stay protected.</div></div>
       </div>
       <button style="margin-top:12px" onclick="saveLeaguePlayerProfile()">Save Profile</button>
@@ -593,6 +597,7 @@ function useData() {
   renderPlayers();
   renderPlayoffs();
   renderHallOfFame();
+  try{ bindLeaguePhotoPreview(); }catch(e){}
 }
 
 
@@ -936,6 +941,55 @@ async function savePublicScore(week, dayKey, round, court){
 }
 
 
+
+async function leagueFileToDataUrl(file, maxSize=480){
+  if(!file) return "";
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      img.onerror = () => reject(new Error("Could not read image."));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error("Could not read file."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function bindLeaguePhotoPreview(){
+  const fileEl = document.getElementById("enrollPlayerPhotoFile");
+  const urlEl = document.getElementById("enrollPlayerPhotoUrl");
+  const previewEl = document.getElementById("leaguePhotoPreview");
+  if(!previewEl) return;
+
+  if(fileEl && !fileEl.dataset.bound){
+    fileEl.dataset.bound = "1";
+    fileEl.addEventListener("change", async () => {
+      const file = fileEl.files && fileEl.files[0];
+      if(!file){ previewEl.innerHTML = 'No image selected.'; return; }
+      previewEl.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Preview" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid #e5eef8;">`;
+    });
+  }
+
+  if(urlEl && !urlEl.dataset.bound){
+    urlEl.dataset.bound = "1";
+    urlEl.addEventListener("input", () => {
+      const val = String(urlEl.value || '').trim();
+      if(val) previewEl.innerHTML = `<img src="${esc(val)}" alt="Preview" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid #e5eef8;">`;
+      else if(!(fileEl && fileEl.files && fileEl.files[0])) previewEl.innerHTML = 'No image selected.';
+    });
+  }
+}
+
 function normalizeLeaguePlayerName(name){
   return String(name || '').trim().toLowerCase();
 }
@@ -1020,8 +1074,19 @@ async function saveLeaguePlayerProfile(){
   const statusEl = document.getElementById("enrollPlayerStatus");
   const name = String((document.getElementById("enrollPlayerName") || {}).value || '').trim();
   const ratingRaw = String((document.getElementById("enrollPlayerRating") || {}).value || '').trim();
-  const photoUrl = String((document.getElementById("enrollPlayerPhotoUrl") || {}).value || '').trim();
+  let photoUrl = String((document.getElementById("enrollPlayerPhotoUrl") || {}).value || '').trim();
+  const fileEl = document.getElementById("enrollPlayerPhotoFile");
+  const file = fileEl && fileEl.files ? fileEl.files[0] : null;
   const rating = ratingRaw === "" ? NaN : Number(ratingRaw);
+
+  if(file){
+    try{
+      photoUrl = await leagueFileToDataUrl(file);
+    }catch(err){
+      if(statusEl) statusEl.textContent = "Photo upload failed: " + err.message;
+      return;
+    }
+  }
 
   const result = upsertLeaguePlayerProfile({
     name,
@@ -1052,6 +1117,9 @@ async function saveLeaguePlayerProfile(){
     renderHallOfFame();
     renderOverview();
   }catch(e){}
+
+  const previewEl = document.getElementById("leaguePhotoPreview");
+  if(previewEl && !(photoUrl || (fileEl && fileEl.files && fileEl.files[0]))) previewEl.textContent = 'No image selected.';
 }
 
 function renderOverview() {
