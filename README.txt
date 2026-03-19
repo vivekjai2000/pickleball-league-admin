@@ -1,16 +1,12 @@
-Player profiles phase 2
+Profile persistence rules implemented
 
-Included:
-- image upload support for Admin and League
-- photos display in Player Profiles
-- responsive image sizing for desktop, mobile, and tablet
-- existing public rating protection remains in place
+Rules implemented:
+- profile records are permanent until admin removes them
+- schedule refresh must not delete players
+- sync merges profile data and does not blindly replace the full player list
+- refreshing public data, season data, rankings, or schedules must never delete player profiles
 
-Files to replace:
+Replace:
 - admin/index.html
 - league/index.html
 - public-data.js
-
-Notes:
-- uploaded images are stored as compressed data URLs in the player profile for now
-- this is phase 2 without Google Drive upload yet
