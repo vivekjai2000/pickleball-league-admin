@@ -317,6 +317,128 @@ th { background:#f8fbff; }
   gap:14px;
 }
 
+
+.latest-result-list{
+  display:grid;
+  gap:16px;
+}
+.latest-result-card{
+  border:1px solid var(--line);
+  border-radius:24px;
+  overflow:hidden;
+  background:#fff;
+  box-shadow:0 10px 24px rgba(15,23,42,.06);
+}
+.latest-result-top{
+  display:grid;
+  grid-template-columns:1fr 120px 1fr;
+  align-items:stretch;
+  min-height:150px;
+}
+.latest-team{
+  padding:18px 16px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:12px;
+}
+.latest-team.right{
+  border-left:1px solid var(--line);
+}
+.latest-avatars{
+  display:flex;
+  align-items:center;
+  min-height:44px;
+}
+.latest-avatars .player-avatar,
+.latest-avatars .player-avatar-fallback{
+  width:44px;
+  height:44px;
+  border-width:2px;
+  margin-left:-10px;
+}
+.latest-avatars > :first-child{
+  margin-left:0;
+}
+.latest-team-name{
+  font-weight:900;
+  font-size:18px;
+  line-height:1.25;
+  color:#0f172a;
+  word-break:break-word;
+}
+.latest-score-col{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-left:1px solid var(--line);
+  border-right:1px solid var(--line);
+  padding:12px 8px;
+}
+.latest-score-pill{
+  background:#dff5ff;
+  color:#1681b4;
+  font-weight:900;
+  font-size:30px;
+  line-height:1;
+  padding:18px 14px;
+  border-radius:14px;
+  min-width:96px;
+  text-align:center;
+}
+.latest-result-bottom{
+  background:#f3f4f6;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  padding:14px 22px;
+}
+.latest-outcome{
+  font-size:22px;
+  font-weight:900;
+  color:#111827;
+}
+.latest-date{
+  font-size:18px;
+  font-weight:800;
+  color:#111827;
+  text-align:right;
+}
+.latest-meta{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:13px;
+  font-weight:700;
+}
+@media (max-width: 700px){
+  .latest-result-top{
+    grid-template-columns:1fr;
+  }
+  .latest-score-col{
+    border-left:none;
+    border-right:none;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    min-height:88px;
+  }
+  .latest-team.right{
+    border-left:none;
+    border-top:1px solid var(--line);
+  }
+  .latest-result-bottom{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  .latest-date{
+    text-align:left;
+    font-size:16px;
+  }
+  .latest-outcome{
+    font-size:20px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -840,20 +962,72 @@ function renderChampionshipCenter() {
     </div>
   `;
 }
+
+function getPlayerProfileByName(name){
+  return (data.roster || []).find(p => normalizeLeaguePlayerName(p.name) === normalizeLeaguePlayerName(name)) || null;
+}
+function playerAvatarMarkup(name){
+  const p = getPlayerProfileByName(name);
+  const photoUrl = p && p.photoUrl ? String(p.photoUrl) : "";
+  return photoUrl
+    ? `<img src="${esc(photoUrl)}" alt="${esc(name)}" class="player-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="player-avatar-fallback" style="display:none">${esc((name||'?').charAt(0).toUpperCase())}</div>`
+    : `<div class="player-avatar-fallback">${esc((name||'?').charAt(0).toUpperCase())}</div>`;
+}
+function formatLatestResultDate(week, dayKey){
+  const w = (data.weeks || []).find(x => Number(x.week) === Number(week));
+  const dayObj = w && w[dayKey] ? w[dayKey] : null;
+  const raw = dayObj && (dayObj.date || dayObj.dayDate || dayObj.playDate) ? (dayObj.date || dayObj.dayDate || dayObj.playDate) : "";
+  if(raw){
+    try{
+      const d = new Date(raw + "T12:00:00");
+      return d.toLocaleDateString(undefined,{month:"short", day:"numeric", year:"numeric"});
+    }catch(e){}
+  }
+  return `Week ${week} • ${dayKey[0].toUpperCase()+dayKey.slice(1)}`;
+}
+function getLatestOutcomeLabel(match){
+  const s1 = Number(match.score1 || 0), s2 = Number(match.score2 || 0);
+  if(!match.completed) return "Pending";
+  if(s1 === s2) return "Completed";
+  return s1 > s2 ? "Team 1 Won" : "Team 2 Won";
+}
+
 function renderLatestResultsWidget() {
   const completed = [];
   (data.weeks||[]).forEach(w => ['saturday','sunday'].forEach(day => (w[day]?.schedule||[]).forEach(m => {
     if(m.completed) completed.push({week:w.week, day, round:m.round, court:m.court, ...m});
   })));
-  completed.sort((a,b) => a.week - b.week || a.day.localeCompare(b.day) || Number(a.round||0)-Number(b.round||0) || Number(a.court||0)-Number(b.court||0));
+  completed.sort((a,b) => b.week - a.week || b.day.localeCompare(a.day) || Number(b.round||0)-Number(a.round||0) || Number(b.court||0)-Number(a.court||0));
 
-  latestResultsBox.innerHTML = completed.length ? completed.map(m => `
-    <div class="match-card">
-      <div class="match-meta">Week ${m.week} • ${m.day[0].toUpperCase()+m.day.slice(1)} • Round ${m.round} • Court ${m.court}</div>
-      <div style="margin-top:8px"><strong>${esc((m.team1||[]).join(' & '))}</strong> vs <strong>${esc((m.team2||[]).join(' & '))}</strong></div>
-      <div class="small" style="margin-top:6px">Result: ${m.score1}-${m.score2}</div>
+  latestResultsBox.innerHTML = completed.length ? `<div class="latest-result-list">${completed.map(m => `
+    <div class="latest-result-card">
+      <div class="latest-result-top">
+        <div class="latest-team">
+          <div class="latest-avatars">
+            ${playerAvatarMarkup((m.team1||[])[0] || "")}
+            ${playerAvatarMarkup((m.team1||[])[1] || "")}
+          </div>
+          <div class="latest-team-name">${esc((m.team1||[]).join('<br>').replaceAll(',', ''))}</div>
+          <div class="latest-meta">Round ${m.round} • Court ${m.court}</div>
+        </div>
+        <div class="latest-score-col">
+          <div class="latest-score-pill">${m.score1}-${m.score2}</div>
+        </div>
+        <div class="latest-team right">
+          <div class="latest-avatars">
+            ${playerAvatarMarkup((m.team2||[])[0] || "")}
+            ${playerAvatarMarkup((m.team2||[])[1] || "")}
+          </div>
+          <div class="latest-team-name">${esc((m.team2||[]).join('<br>').replaceAll(',', ''))}</div>
+          <div class="latest-meta">Week ${m.week} • ${m.day[0].toUpperCase()+m.day.slice(1)}</div>
+        </div>
+      </div>
+      <div class="latest-result-bottom">
+        <div class="latest-outcome">${getLatestOutcomeLabel(m)}</div>
+        <div class="latest-date">${formatLatestResultDate(m.week, m.day)}</div>
+      </div>
     </div>
-  `).join('') : 'No recent results yet.';
+  `).join('')}</div>` : 'No recent results yet.';
 }
 
 function isValidPickleballScore(score1, score2){
