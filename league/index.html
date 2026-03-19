@@ -439,6 +439,43 @@ th { background:#f8fbff; }
   }
 }
 
+
+.avatar-stack{
+  display:flex;
+  align-items:center;
+  gap:0;
+  min-height:44px;
+}
+.avatar-stack > *{
+  margin-left:-10px;
+}
+.avatar-stack > :first-child{
+  margin-left:0;
+}
+.name-lines{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.name-lines span{
+  display:block;
+}
+.player-inline{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.player-inline .player-avatar,
+.player-inline .player-avatar-fallback{
+  width:36px;
+  height:36px;
+  border-width:2px;
+}
+.player-mini-list{
+  display:grid;
+  gap:8px;
+}
+
 </style>
 </head>
 <body>
@@ -472,7 +509,7 @@ th { background:#f8fbff; }
     </div>
     <div class="card" style="margin-top:16px">
       <h2>Player Profile Enrollment</h2>
-      <div class="small">Create your player profile or update your photo. If your profile already exists, your existing profile will be updated instead of creating a duplicate. Existing player ratings are protected and cannot be changed here.</div><div class="rules-banner" style="margin-top:12px"><div class="rules-banner-title">🛡️ Player profile persistence</div><div class="rules-banner-list"><div class="rules-line"><span class="rules-icon green">✓</span><span>Player profiles stay saved until an admin removes them.</span></div><div class="rules-line"><span class="rules-icon green">✓</span><span>Refreshing public data, season data, rankings, or schedules will not delete player profiles.</span></div></div></div>
+      <div class="small">Create your player profile or update your photo. If your profile already exists, your existing profile will be updated instead of creating a duplicate. Existing player ratings are protected and cannot be changed here.</div>
       <div class="row2" style="margin-top:12px">
         <div><label style="display:block;font-weight:700;margin-bottom:6px">Player Name</label><input id="enrollPlayerName" type="text" placeholder="Enter your name"></div>
         <div><label style="display:block;font-weight:700;margin-bottom:6px">Rating</label><input id="enrollPlayerRating" type="number" step="0.01" placeholder="Required for new players"></div>
@@ -877,16 +914,13 @@ function getWeeklyRankingRows(){
     .sort((a,b) => b.pct-a.pct || b.diff-a.diff || b.pf-a.pf || a.name.localeCompare(b.name));
 }
 function renderWeeklyRanking(){
-  const rows = getWeeklyRankingRows();
-  if(!rows.length){
-    weeklyRankingBox.innerHTML = "No weekly ranking available yet.";
-    return;
-  }
-  const weekNum = rows[0].week;
-  weeklyRankingBox.innerHTML = `<div class="small" style="margin-bottom:10px">Week ${weekNum} ranking based on completed matches for the selected/current week.</div>` +
-    `<div class="table-wrap"><table><thead><tr><th>Rank</th><th>Player</th><th>W-L</th><th>Point Diff</th></tr></thead><tbody>${
-      rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.name)}</td><td>${r.wins}-${r.losses}</td><td>${r.diff}</td></tr>`).join('')
-    }</tbody></table></div>`;
+  const weekNum = Number((document.getElementById("rankWeekSel") || {}).value || 0);
+  const dayVal = String((document.getElementById("rankDaySel") || {}).value || "ALL");
+  const box = document.getElementById("weeklyRankingBox");
+  if(!box) return;
+  const rows = weeklyStatsPublic(weekNum || ((data.weeks||[])[0]?.week || 1), dayVal);
+  if(!rows.length){ box.innerHTML = '<div class="small">No weekly ranking data yet.</div>'; return; }
+  box.innerHTML = `<div class="table-wrap"><table><thead><tr><th>#</th><th>Player</th><th>W</th><th>L</th><th>Win %</th><th>Diff</th><th>Rating</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td><div class="player-inline">${playerAvatarSmallMarkup(r.name)}<span>${esc(r.name)}</span></div></td><td>${r.wins}</td><td>${r.losses}</td><td>${(r.pct*100).toFixed(1)}%</td><td>${r.diff}</td><td>${Number(r.elo||0).toFixed(1)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 
 
@@ -973,6 +1007,26 @@ function playerAvatarMarkup(name){
     ? `<img src="${esc(photoUrl)}" alt="${esc(name)}" class="player-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="player-avatar-fallback" style="display:none">${esc((name||'?').charAt(0).toUpperCase())}</div>`
     : `<div class="player-avatar-fallback">${esc((name||'?').charAt(0).toUpperCase())}</div>`;
 }
+
+function playerAvatarSmallMarkup(name){
+  const p = getPlayerProfileByName(name);
+  const photoUrl = p && p.photoUrl ? String(p.photoUrl) : "";
+  return photoUrl
+    ? `<img src="${esc(photoUrl)}" alt="${esc(name)}" class="player-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="player-avatar-fallback" style="display:none">${esc((name||'?').charAt(0).toUpperCase())}</div>`
+    : `<div class="player-avatar-fallback">${esc((name||'?').charAt(0).toUpperCase())}</div>`;
+}
+function namesLinesMarkup(arr){
+  return `<div class="name-lines">${(arr||[]).map(n=>`<span>${esc(n)}</span>`).join('')}</div>`;
+}
+function teamWithAvatarsMarkup(arr){
+  return `<div class="player-mini-list">${(arr||[]).map(n=>`<div class="player-inline">${playerAvatarSmallMarkup(n)}<span>${esc(n)}</span></div>`).join('')}</div>`;
+}
+function outcomeLabelForViewer(match){
+  const s1 = Number(match.score1 || 0), s2 = Number(match.score2 || 0);
+  if(!match.completed) return "Pending";
+  if(s1 === s2) return "Completed";
+  return s1 > s2 ? "Team 1 Won" : "Team 2 Won";
+}
 function formatLatestResultDate(week, dayKey){
   const w = (data.weeks || []).find(x => Number(x.week) === Number(week));
   const dayObj = w && w[dayKey] ? w[dayKey] : null;
@@ -1003,27 +1057,27 @@ function renderLatestResultsWidget() {
     <div class="latest-result-card">
       <div class="latest-result-top">
         <div class="latest-team">
-          <div class="latest-avatars">
+          <div class="avatar-stack">
             ${playerAvatarMarkup((m.team1||[])[0] || "")}
             ${playerAvatarMarkup((m.team1||[])[1] || "")}
           </div>
-          <div class="latest-team-name">${esc((m.team1||[]).join('<br>').replaceAll(',', ''))}</div>
+          <div class="latest-team-name">${namesLinesMarkup(m.team1||[])}</div>
           <div class="latest-meta">Round ${m.round} • Court ${m.court}</div>
         </div>
         <div class="latest-score-col">
           <div class="latest-score-pill">${m.score1}-${m.score2}</div>
         </div>
         <div class="latest-team right">
-          <div class="latest-avatars">
+          <div class="avatar-stack">
             ${playerAvatarMarkup((m.team2||[])[0] || "")}
             ${playerAvatarMarkup((m.team2||[])[1] || "")}
           </div>
-          <div class="latest-team-name">${esc((m.team2||[]).join('<br>').replaceAll(',', ''))}</div>
+          <div class="latest-team-name">${namesLinesMarkup(m.team2||[])}</div>
           <div class="latest-meta">Week ${m.week} • ${m.day[0].toUpperCase()+m.day.slice(1)}</div>
         </div>
       </div>
       <div class="latest-result-bottom">
-        <div class="latest-outcome">${getLatestOutcomeLabel(m)}</div>
+        <div class="latest-outcome">${outcomeLabelForViewer(m)}</div>
         <div class="latest-date">${formatLatestResultDate(m.week, m.day)}</div>
       </div>
     </div>
@@ -1086,12 +1140,10 @@ function byeMarkup(weekNum, dayKey, round){
 }
 
 function scoreEditorMarkup(m){
-  const disabled = m.completed ? "disabled" : "";
   return `<div class="match-card">
     <div class="match-head"><strong>Week ${m.week} • ${m.day[0].toUpperCase()+m.day.slice(1)}</strong><span class="small">Round ${m.round} • Court ${m.court}</span></div>
-    <div class="team-row"><div class="team-name">${esc(m.team1[0])} & ${esc(m.team1[1])}</div><div class="team-score">${m.completed ? m.score1 : `<input type="number" min="0" inputmode="numeric" id="s1_${m.week}_${m.day}_${m.round}_${m.court}" style="width:78px;padding:8px;border:1px solid #ccd7e5;border-radius:12px" placeholder="0">`}</div></div>
-    <div class="team-row"><div class="team-name">${esc(m.team2[0])} & ${esc(m.team2[1])}</div><div class="team-score">${m.completed ? m.score2 : `<input type="number" min="0" inputmode="numeric" id="s2_${m.week}_${m.day}_${m.round}_${m.court}" style="width:78px;padding:8px;border:1px solid #ccd7e5;border-radius:12px" placeholder="0">`}</div></div>
-    ${byeMarkup(m.week, m.day, m.round)}
+    <div class="team-row"><div class="team-name">${teamWithAvatarsMarkup(m.team1||[])}</div><div class="team-score">${m.completed ? m.score1 : `<input type="number" min="0" inputmode="numeric" id="s1_${m.week}_${m.day}_${m.round}_${m.court}" style="width:78px;padding:8px;border:1px solid #ccd7e5;border-radius:12px" placeholder="0">`}</div></div>
+    <div class="team-row"><div class="team-name">${teamWithAvatarsMarkup(m.team2||[])}</div><div class="team-score">${m.completed ? m.score2 : `<input type="number" min="0" inputmode="numeric" id="s2_${m.week}_${m.day}_${m.round}_${m.court}" style="width:78px;padding:8px;border:1px solid #ccd7e5;border-radius:12px" placeholder="0">`}</div></div>
     ${m.completed ? `<div class="small" style="margin-top:10px">Completed result is locked.</div>` : `<div style="margin-top:12px"><button onclick="savePublicScore(${m.week}, '${m.day}', ${m.round}, ${m.court})">Save Score</button><div class="small" id="msg_${m.week}_${m.day}_${m.round}_${m.court}" style="margin-top:8px"></div></div>`}
   </div>`;
 }
@@ -1403,10 +1455,10 @@ function renderSchedule() {
         </div>
         <div class="player-profile-sections">
           <div class="info-grid-2">
-            <div class="info-card"><div class="info-label">Team 1</div><div class="info-value">${esc(m.team1[0])} & ${esc(m.team1[1])}</div></div>
-            <div class="info-card"><div class="info-label">Team 2</div><div class="info-value">${esc(m.team2[0])} & ${esc(m.team2[1])}</div></div>
+            <div class="info-card"><div class="info-label">Team 1</div><div class="info-value">${teamWithAvatarsMarkup(m.team1||[])}</div></div>
+            <div class="info-card"><div class="info-label">Team 2</div><div class="info-value">${teamWithAvatarsMarkup(m.team2||[])}</div></div>
           </div>
-          <div class="info-card" style="margin-top:12px"><div class="info-label">Bye This Round</div><div class="info-value">${(() => { const byes = getByePlayersForRound(weekNum, day, m.round); return byes.length ? esc(byes.join(", ")) : "None"; })()}</div></div>
+          <div class="info-card" style="margin-top:12px"><div class="info-label">Bye This Round</div><div class="info-value">${(() => { const byes = getByePlayersForRound(weekNum, day, m.round); return byes.length ? teamWithAvatarsMarkup(byes) : "None"; })()}</div></div>
           ${editor}
         </div>
       </div>
@@ -1420,7 +1472,7 @@ function renderLeaderboard() {
   const box = document.getElementById("seasonRankingBox");
   if(!box) return;
   if(!rows.length) { box.innerHTML = '<div class="status">No leaderboard yet.</div>'; return; }
-  box.innerHTML = `<div class="small" style="margin-bottom:10px">Playoff qualification requires at least ${Number(data.profile?.minMatchesForPlayoffs || 8)} matches played. Eligible players are auto-highlighted.</div><div class="table-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Matches</th><th>W</th><th>L</th><th>Win %</th><th>Diff</th><th>Rating</th><th>Active</th><th>Playoff Eligible</th></tr></thead><tbody>${rows.map((r,i)=>`<tr class="${r.playoffEligible ? 'leaderboard-row-eligible' : ''}"><td>${i+1}</td><td>${esc(r.name)}</td><td>${r.games}</td><td>${r.wins}</td><td>${r.losses}</td><td>${(r.pct*100).toFixed(1)}%</td><td>${r.diff}</td><td>${Number(r.elo||0).toFixed(1)}</td><td>${r.active===false ? 'No' : 'Yes'}</td><td>${r.playoffEligible ? '<span class="eligible-badge">Yes</span>' : '<span class="ineligible-badge">No</span>'}</td></tr>`).join('')}</tbody></table></div>`;
+  box.innerHTML = `<div class="small" style="margin-bottom:10px">Playoff qualification requires at least ${Number(data.profile?.minMatchesForPlayoffs || 8)} matches played. Eligible players are auto-highlighted.</div><div class="table-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Matches</th><th>W</th><th>L</th><th>Win %</th><th>Diff</th><th>Rating</th><th>Active</th><th>Playoff Eligible</th></tr></thead><tbody>${rows.map((r,i)=>`<tr class="${r.playoffEligible ? 'leaderboard-row-eligible' : ''}"><td>${i+1}</td><td><div class="player-inline">${playerAvatarSmallMarkup(r.name)}<span>${esc(r.name)}</span></div></td><td>${r.games}</td><td>${r.wins}</td><td>${r.losses}</td><td>${(r.pct*100).toFixed(1)}%</td><td>${r.diff}</td><td>${Number(r.elo||0).toFixed(1)}</td><td>${r.active===false ? 'No' : 'Yes'}</td><td>${r.playoffEligible ? '<span class="eligible-badge">Yes</span>' : '<span class="ineligible-badge">No</span>'}</td></tr>`).join('')}</tbody></table></div>`;
 }
 function renderHistory() {
   if(!data || !data.weeks) return;
@@ -1447,14 +1499,14 @@ function renderHistory() {
 
     const weekly = weeklyStatsPublic(w.week, "ALL").slice(0,3);
     const leaders = weekly.length
-      ? weekly.map((p,i)=>`${i+1}. ${esc(p.name)} (${p.wins}-${p.losses}, diff ${p.diff})`).join('<br>')
+      ? weekly.map((p,i)=>`<div class="player-inline">${playerAvatarSmallMarkup(p.name)}<span>${i+1}. ${esc(p.name)} (${p.wins}-${p.losses}, diff ${p.diff})</span></div>`).join('')
       : 'No results';
 
     const resultsHtml = completed.length
       ? `<div class="history-results-list">${completed.map(m => `
           <div class="info-card">
             <div class="info-label">${m.day[0].toUpperCase()+m.day.slice(1)} • Round ${m.round} • Court ${m.court}</div>
-            <div class="info-value">${esc(m.team1.join(' & '))} vs ${esc(m.team2.join(' & '))}</div>
+            <div class="info-value" style="margin-top:8px">${teamWithAvatarsMarkup(m.team1)}<div style="margin:8px 0;font-weight:800">vs</div>${teamWithAvatarsMarkup(m.team2)}</div>
             <div class="small" style="margin-top:6px">Result: ${m.score1}-${m.score2}</div>
           </div>
         `).join('')}</div>`
@@ -1593,10 +1645,11 @@ function renderPlayoffs() {
   if(subEl) subEl.textContent = headerSubtitle + ` Only playoff-eligible players (minimum ${Number(data.profile?.minMatchesForPlayoffs || 8)} matches) are shown and seeded automatically from the season leaderboard.`;
 
   const stages = fmt === 4 ? ["Semifinals","Final"] : fmt === 8 ? ["Quarterfinals","Semifinals","Final"] : ["Play-In","Quarterfinals","Semifinals","Final"];
-  const seed = i => eligibleRows[i-1] ? `${i}. ${esc(eligibleRows[i-1].name)}` : `Seed ${i} TBD`;
+  const seedName = i => eligibleRows[i-1] ? eligibleRows[i-1].name : `Seed ${i} TBD`;
+  const seed = i => eligibleRows[i-1] ? `<div class="player-inline">${playerAvatarSmallMarkup(eligibleRows[i-1].name)}<span>${i}. ${esc(eligibleRows[i-1].name)}</span></div>` : `Seed ${i} TBD`;
 
   if(summaryEl){
-    const seededNames = eligibleRows.slice(0, fmt).map((r,i)=>`${i+1}. ${esc(r.name)} (${r.games} matches)`).join('<br>') || 'No eligible players yet.';
+    const seededNames = eligibleRows.slice(0, fmt).map((r,i)=>`<div class="player-inline">${playerAvatarSmallMarkup(r.name)}<span>${i+1}. ${esc(r.name)} (${r.games} matches)</span></div>`).join('') || 'No eligible players yet.';
     summaryEl.innerHTML = `
       <div class="info-grid-2">
         <div class="info-card"><div class="info-label">Format</div><div class="info-value">Top ${fmt}</div></div>
@@ -1656,11 +1709,11 @@ function renderWeeklyAwardsPublic(){
     <div class="info-grid-2">
       <div class="info-card">
         <div class="info-label">Player of the Week</div>
-        <div class="info-value">${best ? `${esc(best.name)} • ${best.wins}-${best.losses} • ${(best.pct*100).toFixed(1)}% • Diff ${best.diff}` : 'No completed results yet.'}</div>
+        <div class="info-value">${best ? `<div class="player-inline">${playerAvatarSmallMarkup(best.name)}<span>${esc(best.name)} • ${best.wins}-${best.losses} • ${(best.pct*100).toFixed(1)}% • Diff ${best.diff}</span></div>` : 'No completed results yet.'}</div>
       </div>
       <div class="info-card">
         <div class="info-label">Match of the Week</div>
-        <div class="info-value">${matchOfWeek ? `${esc(matchOfWeek.team1[0])} & ${esc(matchOfWeek.team1[1])} vs ${esc(matchOfWeek.team2[0])} & ${esc(matchOfWeek.team2[1])}<br><span class="small">Week ${activeWeek.week} • ${matchOfWeek.day[0].toUpperCase()+matchOfWeek.day.slice(1)} • Round ${matchOfWeek.round} • Court ${matchOfWeek.court} • ${matchOfWeek.score1}-${matchOfWeek.score2}</span>` : 'No completed match found.'}</div>
+        <div class="info-value">${matchOfWeek ? `${teamWithAvatarsMarkup(matchOfWeek.team1)}<div style="margin:8px 0;font-weight:800">vs</div>${teamWithAvatarsMarkup(matchOfWeek.team2)}<br><span class="small">Week ${activeWeek.week} • ${matchOfWeek.day[0].toUpperCase()+matchOfWeek.day.slice(1)} • Round ${matchOfWeek.round} • Court ${matchOfWeek.court} • ${matchOfWeek.score1}-${matchOfWeek.score2}</span>` : 'No completed match found.'}</div>
       </div>
     </div>
   ` : '<div class="small">No weekly awards yet.</div>';
@@ -1683,10 +1736,10 @@ function renderHallOfFame() {
       <div class="player-profile-sections">
         <div class="section-hero-title">Awards</div>
         <div class="info-grid-2">
-          <div class="info-card"><div class="info-label">League Leader</div><div class="info-value">${esc(champ.name)} • ${(champ.pct*100).toFixed(1)}%</div></div>
-          <div class="info-card"><div class="info-label">Most Wins</div><div class="info-value">${esc(mostWins.name)} • ${mostWins.wins} wins</div></div>
-          <div class="info-card"><div class="info-label">Best Point Differential</div><div class="info-value">${esc(bestDiff.name)} • Diff ${bestDiff.diff}</div></div>
-          <div class="info-card"><div class="info-label">Iron Player</div><div class="info-value">${esc(iron.name)} • ${iron.games} matches played</div></div>
+          <div class="info-card"><div class="info-label">League Leader</div><div class="info-value"><div class="player-inline">${playerAvatarSmallMarkup(champ.name)}<span>${esc(champ.name)} • ${(champ.pct*100).toFixed(1)}%</span></div></div></div>
+          <div class="info-card"><div class="info-label">Most Wins</div><div class="info-value"><div class="player-inline">${playerAvatarSmallMarkup(mostWins.name)}<span>${esc(mostWins.name)} • ${mostWins.wins} wins</span></div></div></div>
+          <div class="info-card"><div class="info-label">Best Point Differential</div><div class="info-value"><div class="player-inline">${playerAvatarSmallMarkup(bestDiff.name)}<span>${esc(bestDiff.name)} • Diff ${bestDiff.diff}</span></div></div></div>
+          <div class="info-card"><div class="info-label">Iron Player</div><div class="info-value"><div class="player-inline">${playerAvatarSmallMarkup(iron.name)}<span>${esc(iron.name)} • ${iron.games} matches played</span></div></div></div>
         </div>
       </div>
     </div>
