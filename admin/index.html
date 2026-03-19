@@ -197,6 +197,43 @@ th { background:#f8fbff; }
   input,select,button,textarea{font-size:16px !important;}
 }
 
+
+.player-avatar{
+  width:clamp(56px, 12vw, 78px);
+  height:clamp(56px, 12vw, 78px);
+  border-radius:50%;
+  object-fit:cover;
+  object-position:center;
+  aspect-ratio:1/1;
+  border:3px solid #e5eef8;
+  box-shadow:0 4px 12px rgba(15,23,42,.10);
+  flex:0 0 auto;
+}
+.player-avatar-fallback{
+  width:clamp(56px, 12vw, 78px);
+  height:clamp(56px, 12vw, 78px);
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#2563eb 0%, #38bdf8 100%);
+  color:#fff;
+  font-weight:800;
+  font-size:clamp(20px, 4vw, 28px);
+  border:3px solid #e5eef8;
+  box-shadow:0 4px 12px rgba(15,23,42,.10);
+  flex:0 0 auto;
+}
+.player-profile-identity{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  width:100%;
+}
+@media (max-width:700px){
+  .player-profile-identity{align-items:flex-start;}
+}
+
 </style>
 </head>
 <body>
@@ -335,7 +372,11 @@ th { background:#f8fbff; }
         </div>
         <div class="row2">
           <div><label>Joined week</label><input id="newPlayerWeek" type="number" min="1" placeholder="1"></div>
-          <div><label>Photo URL</label><input id="newPlayerPhotoUrl" type="text" placeholder="https://... or ../assets/players/name.jpg"></div>
+          <div><label>Photo URL</label><input id="newPlayerPhotoUrl" type="text" placeholder="https://... or data URL"></div>
+        </div>
+        <div class="row2">
+          <div><label>Upload Photo</label><input id="newPlayerPhotoFile" type="file" accept="image/*"></div>
+          <div><label>Preview</label><div id="adminPhotoPreview" class="small" style="margin-top:10px">No image selected.</div></div>
         </div>
         <div class="row2">
           <div><label>Remove player</label><select id="removePlayerSelect"></select></div>
@@ -616,6 +657,53 @@ function pushProfileToUI(){
   if (gs) gs.value = p.googleScriptUrl || localStorage.getItem("pouncey_google_script_url") || "";
 }
 
+
+async function fileToDataUrl(file, maxSize=480){
+  if(!file) return "";
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      img.onerror = () => reject(new Error("Could not read image."));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error("Could not read file."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function bindAdminPhotoPreview(){
+  const fileEl = document.getElementById("newPlayerPhotoFile");
+  const urlEl = document.getElementById("newPlayerPhotoUrl");
+  const previewEl = document.getElementById("adminPhotoPreview");
+  if(!previewEl) return;
+  if(fileEl && !fileEl.dataset.bound){
+    fileEl.dataset.bound = "1";
+    fileEl.addEventListener("change", async () => {
+      const file = fileEl.files && fileEl.files[0];
+      if(!file){ previewEl.innerHTML = 'No image selected.'; return; }
+      previewEl.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Preview" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid #e5eef8;">`;
+    });
+  }
+  if(urlEl && !urlEl.dataset.bound){
+    urlEl.dataset.bound = "1";
+    urlEl.addEventListener("input", () => {
+      const val = String(urlEl.value || '').trim();
+      if(val) previewEl.innerHTML = `<img src="${esc(val)}" alt="Preview" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid #e5eef8;">`;
+      else if(!(fileEl && fileEl.files && fileEl.files[0])) previewEl.innerHTML = 'No image selected.';
+    });
+  }
+}
+
 function normalizePlayerName(name){
   return String(name || '').trim().toLowerCase();
 }
@@ -756,15 +844,26 @@ function importRoster(){
   }
 }
 
-function addPlayerMidSeason(){
+async function addPlayerMidSeason(){
   const name = String(newPlayerName.value || '').trim();
   const rating = Number(newPlayerRating.value);
   const joinedWeek = Number(newPlayerWeek.value || 1);
-  const photoUrl = String((document.getElementById("newPlayerPhotoUrl") || {}).value || '').trim();
+  let photoUrl = String((document.getElementById("newPlayerPhotoUrl") || {}).value || '').trim();
+  const fileEl = document.getElementById("newPlayerPhotoFile");
+  const file = fileEl && fileEl.files ? fileEl.files[0] : null;
 
   if(!name || !Number.isFinite(rating)){
     playerChangeStatus.textContent = "Enter a valid player name and rating.";
     return;
+  }
+
+  if(file){
+    try{
+      photoUrl = await fileToDataUrl(file);
+    }catch(err){
+      playerChangeStatus.textContent = "Photo upload failed: " + err.message;
+      return;
+    }
   }
 
   const result = upsertPlayerProfile({
@@ -786,6 +885,9 @@ function addPlayerMidSeason(){
   newPlayerWeek.value='';
   const photoEl = document.getElementById("newPlayerPhotoUrl");
   if(photoEl) photoEl.value='';
+  if(fileEl) fileEl.value='';
+  const previewEl = document.getElementById("adminPhotoPreview");
+  if(previewEl) previewEl.textContent = 'No image selected.';
 
   playerChangeStatus.textContent = result.mode === "created"
     ? `Created player profile for ${name}.`
@@ -1571,6 +1673,7 @@ window.addEventListener("load", async ()=>{
     }catch(e){}
   }
   if (typeof pushProfileToUI === "function") pushProfileToUI();
+  try{ bindAdminPhotoPreview(); }catch(e){}
   renderRoster(); renderWeeks(); renderWeekOptions(); refreshSignupWeekOptions(); renderScheduleTable([]); renderSummary(); populateRemoveSelect();
   if(localStorage.getItem(KEY)) loadState();
   if(state.profile.googleScriptUrl){
