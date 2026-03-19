@@ -1,12 +1,11 @@
-Profile persistence rules implemented
+Latest Results redesigned
 
-Rules implemented:
-- profile records are permanent until admin removes them
-- schedule refresh must not delete players
-- sync merges profile data and does not blindly replace the full player list
-- refreshing public data, season data, rankings, or schedules must never delete player profiles
+Changes:
+- Latest Results now uses a large match card style similar to the reference image
+- Shows player photos/avatars for both teams
+- Shows score prominently in the center
+- Shows outcome label and formatted date at the bottom
+- Responsive for mobile/tablet/desktop
 
 Replace:
-- admin/index.html
 - league/index.html
-- public-data.js
