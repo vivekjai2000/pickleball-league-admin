@@ -1,19 +1,16 @@
-Player profile phase 1 build
+Player profiles phase 2
 
 Included:
-- Persistent player profile records
-- League self-enrollment
-- Admin photo update
-- Protected rating updates for existing players on the public page
-
-What changed:
-- Admin can add/update photo URL for new and existing players
-- League page has Player Profile Enrollment form
-- Existing player ratings are protected on the League page
-- Profiles now keep photoUrl / createdAt / updatedAt fields
-- Refresh should not delete player profiles because roster upserts/merges are used
+- image upload support for Admin and League
+- photos display in Player Profiles
+- responsive image sizing for desktop, mobile, and tablet
+- existing public rating protection remains in place
 
 Files to replace:
 - admin/index.html
 - league/index.html
 - public-data.js
+
+Notes:
+- uploaded images are stored as compressed data URLs in the player profile for now
+- this is phase 2 without Google Drive upload yet
