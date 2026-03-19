@@ -286,6 +286,37 @@ th { background:#f8fbff; }
   color:#111827;
 }
 
+
+.player-avatar{
+  width:72px;
+  height:72px;
+  border-radius:50%;
+  object-fit:cover;
+  border:3px solid #e5eef8;
+  box-shadow:0 4px 12px rgba(15,23,42,.10);
+  flex:0 0 auto;
+}
+.player-avatar-fallback{
+  width:72px;
+  height:72px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#2563eb 0%, #38bdf8 100%);
+  color:#fff;
+  font-weight:800;
+  font-size:26px;
+  border:3px solid #e5eef8;
+  box-shadow:0 4px 12px rgba(15,23,42,.10);
+  flex:0 0 auto;
+}
+.player-profile-identity{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
 </style>
 </head>
 <body>
@@ -317,6 +348,21 @@ th { background:#f8fbff; }
       <div class="small">Players can sign up here for the active week. Admin can then generate round robin matches in admin using the signed-up players for each active day.</div>
       <div id="signupBox" class="small" style="margin-top:12px">No active week found yet.</div>
     </div>
+    <div class="card" style="margin-top:16px">
+      <h2>Player Profile Enrollment</h2>
+      <div class="small">Create your player profile or update your photo. If your profile already exists, your existing profile will be updated instead of creating a duplicate. Existing player ratings are protected and cannot be changed here.</div>
+      <div class="row2" style="margin-top:12px">
+        <div><label style="display:block;font-weight:700;margin-bottom:6px">Player Name</label><input id="enrollPlayerName" type="text" placeholder="Enter your name"></div>
+        <div><label style="display:block;font-weight:700;margin-bottom:6px">Rating</label><input id="enrollPlayerRating" type="number" step="0.01" placeholder="Required for new players"></div>
+      </div>
+      <div class="row2" style="margin-top:12px">
+        <div><label style="display:block;font-weight:700;margin-bottom:6px">Photo URL</label><input id="enrollPlayerPhotoUrl" type="text" placeholder="https://... or ../assets/players/name.jpg"></div>
+        <div><label style="display:block;font-weight:700;margin-bottom:6px">Note</label><div class="small" style="margin-top:10px">Photo is optional. Existing players can update their photo here. Ratings for existing players stay protected.</div></div>
+      </div>
+      <button style="margin-top:12px" onclick="saveLeaguePlayerProfile()">Save Profile</button>
+      <div id="enrollPlayerStatus" class="small" style="margin-top:10px">No profile changes submitted yet.</div>
+    </div>
+
     <div class="card" style="margin-top:16px">
       <h2>Current Matches</h2>
       <div id="featuredMatchesBox" class="small">No current matches yet.</div>
@@ -468,11 +514,11 @@ function loadPublicFile() {
 }
 function buildPlayerStats() {
   const stats = {};
-  (data.roster||[]).forEach(p => stats[p.name] = {name:p.name,wins:0,losses:0,pf:0,pa:0,elo:Number(p.elo||0),active:p.active!==false});
+  (data.roster||[]).forEach(p => stats[p.name] = {name:p.name,wins:0,losses:0,pf:0,pa:0,elo:Number(p.elo||0),active:p.active!==false,photoUrl:String(p.photoUrl||"")});
   (data.weeks||[]).forEach(w => ["saturday","sunday"].forEach(day => (w[day]?.schedule||[]).forEach(m => {
     if(!m.completed) return;
     const [a,b,c,d] = [m.team1[0],m.team1[1],m.team2[0],m.team2[1]];
-    [a,b,c,d].forEach(n => { if(!stats[n]) stats[n] = {name:n,wins:0,losses:0,pf:0,pa:0,elo:0,active:true}; });
+    [a,b,c,d].forEach(n => { if(!stats[n]) stats[n] = {name:n,wins:0,losses:0,pf:0,pa:0,elo:0,active:true,photoUrl:""}; });
     stats[a].pf += Number(m.score1||0); stats[b].pf += Number(m.score1||0); stats[c].pf += Number(m.score2||0); stats[d].pf += Number(m.score2||0);
     stats[a].pa += Number(m.score2||0); stats[b].pa += Number(m.score2||0); stats[c].pa += Number(m.score1||0); stats[d].pa += Number(m.score1||0);
     if(Number(m.score1||0) > Number(m.score2||0)) { stats[a].wins++; stats[b].wins++; stats[c].losses++; stats[d].losses++; }
@@ -889,6 +935,125 @@ async function savePublicScore(week, dayKey, round, court){
   }
 }
 
+
+function normalizeLeaguePlayerName(name){
+  return String(name || '').trim().toLowerCase();
+}
+
+function ensureLeaguePlayerDefaults(p){
+  if(typeof p.joinedWeek === 'undefined' || !p.joinedWeek) p.joinedWeek = 1;
+  if(typeof p.active === 'undefined') p.active = true;
+  if(typeof p.elo === 'undefined' || !Number.isFinite(Number(p.elo))) p.elo = Number(p.rating || 0) * 100;
+  if(typeof p.photoUrl === 'undefined') p.photoUrl = "";
+  if(typeof p.createdAt === 'undefined' || !p.createdAt) p.createdAt = new Date().toISOString();
+  if(typeof p.updatedAt === 'undefined' || !p.updatedAt) p.updatedAt = new Date().toISOString();
+  return p;
+}
+
+function upsertLeaguePlayerProfile(profile, options={}){
+  const key = normalizeLeaguePlayerName(profile.name);
+  if(!key) return {ok:false, message:"Player name is required."};
+
+  if(!data.roster) data.roster = [];
+  const idx = data.roster.findIndex(p => normalizeLeaguePlayerName(p.name) === key);
+  const now = new Date().toISOString();
+
+  if(idx === -1){
+    if(!Number.isFinite(Number(profile.rating))){
+      return {ok:false, message:"Rating is required for new players."};
+    }
+    const rec = ensureLeaguePlayerDefaults({
+      name: String(profile.name || '').trim(),
+      rating: Number(profile.rating || 0),
+      seed: 0,
+      elo: Number(profile.elo || (Number(profile.rating || 0) * 100)),
+      joinedWeek: Number(profile.joinedWeek || 1),
+      active: true,
+      photoUrl: String(profile.photoUrl || '').trim(),
+      createdAt: now,
+      updatedAt: now
+    });
+    data.roster.push(rec);
+    return {ok:true, mode:"created", player:rec};
+  }
+
+  const existing = data.roster[idx];
+  const incomingPhoto = String(profile.photoUrl || '').trim();
+  // Protect rating updates for existing players on the public page.
+  if(incomingPhoto) existing.photoUrl = incomingPhoto;
+  if(typeof existing.photoUrl === 'undefined') existing.photoUrl = "";
+  existing.updatedAt = now;
+  ensureLeaguePlayerDefaults(existing);
+  return {ok:true, mode:"updated", player:existing};
+}
+
+function buildLeaguePayload(){
+  return {
+    profile: data.profile || {},
+    roster: data.roster || [],
+    weeks: data.weeks || [],
+    availability: data.availability || {},
+    playoffs: data.playoffs || {}
+  };
+}
+
+async function saveLeagueStateToGoogle(reason="update"){
+  const url = getLiveGoogleUrl();
+  if(!url) throw new Error("Google Apps Script URL is not configured.");
+  const payload = buildLeaguePayload();
+  let res = await fetch(url, {
+    method: "POST",
+    headers: {"Content-Type": "text/plain;charset=utf-8"},
+    body: JSON.stringify({action:"saveLeagueState", payload}),
+    mode: "cors",
+    credentials: "omit",
+    cache: "no-store"
+  });
+  const text = await res.text();
+  let json;
+  try{ json = JSON.parse(text); }catch(e){ throw new Error("Unexpected Apps Script response."); }
+  if(!json.ok) throw new Error(json.error || "Save failed.");
+  return json;
+}
+
+async function saveLeaguePlayerProfile(){
+  const statusEl = document.getElementById("enrollPlayerStatus");
+  const name = String((document.getElementById("enrollPlayerName") || {}).value || '').trim();
+  const ratingRaw = String((document.getElementById("enrollPlayerRating") || {}).value || '').trim();
+  const photoUrl = String((document.getElementById("enrollPlayerPhotoUrl") || {}).value || '').trim();
+  const rating = ratingRaw === "" ? NaN : Number(ratingRaw);
+
+  const result = upsertLeaguePlayerProfile({
+    name,
+    rating,
+    photoUrl,
+    joinedWeek: 1,
+    active: true
+  }, {source:"league"});
+
+  if(!result.ok){
+    if(statusEl) statusEl.textContent = result.message;
+    return;
+  }
+
+  if(statusEl) statusEl.textContent = result.mode === "created"
+    ? `Created player profile for ${name}.`
+    : `Updated player profile for ${name}.`;
+
+  try{
+    await saveLeagueStateToGoogle('player profile enrollment');
+  }catch(err){
+    if(statusEl) statusEl.textContent = (statusEl.textContent || "") + " Saved locally, but Google sync failed: " + err.message;
+  }
+
+  try{
+    renderPlayers();
+    renderRankings();
+    renderHallOfFame();
+    renderOverview();
+  }catch(e){}
+}
+
 function renderOverview() {
   if(!data) return;
   renderChampionshipCenter();
@@ -1061,7 +1226,7 @@ function renderHistory() {
 function buildPlayerDeepStats(){
   const base = {};
   (data.roster || []).forEach(p => {
-    base[p.name] = {name:p.name,rating:Number(p.rating||0),elo:Number(p.elo||0),wins:0,losses:0,ties:0,sessions:new Set(),lastPlayedWeek:0,lastPlayedDay:"",bestWeekSessions:0,weekSessionCounts:{},pf:0,pa:0};
+    base[p.name] = {name:p.name,rating:Number(p.rating || 0),elo:Number(p.elo || 0),wins:0,losses:0,ties:0,sessions:new Set(),lastPlayedWeek:0,lastPlayedDay:"",bestWeekSessions:0,weekSessionCounts:{},pf:0,pa:0,photoUrl:String(p.photoUrl||"")};
   });
   (data.weeks || []).forEach(w => {
     ["saturday","sunday"].forEach(dayKey => {
@@ -1070,7 +1235,7 @@ function buildPlayerDeepStats(){
         if(!m.completed) return;
         const players = [...(m.team1 || []), ...(m.team2 || [])];
         players.forEach(name => {
-          if(!base[name]) base[name] = {name,rating:0,elo:0,wins:0,losses:0,ties:0,sessions:new Set(),lastPlayedWeek:0,lastPlayedDay:"",bestWeekSessions:0,weekSessionCounts:{},pf:0,pa:0};
+          if(!base[name]) base[name] = {name,rating:0,elo:0,wins:0,losses:0,ties:0,sessions:new Set(),lastPlayedWeek:0,lastPlayedDay:"",bestWeekSessions:0,weekSessionCounts:{},pf:0,pa:0,photoUrl:""};
           base[name].sessions.add(`W${w.week}-${dayKey}`);
           if(Number(w.week||0) >= base[name].lastPlayedWeek){ base[name].lastPlayedWeek = Number(w.week||0); base[name].lastPlayedDay = dayKey; }
           base[name].weekSessionCounts[w.week] = (base[name].weekSessionCounts[w.week] || 0) + 1;
@@ -1101,8 +1266,14 @@ function renderPlayers() {
   box.innerHTML = stats.length ? stats.map(p => `
       <div class="player-profile-card">
         <div class="player-profile-hero">
-          <div class="player-profile-name">${esc(p.name)}</div>
-          <div class="player-profile-rating">🏆 ${Number(p.displayRating || 0).toFixed(2)} Rating</div>
+          <div class="player-profile-identity">
+            ${p.photoUrl ? `<img src="${esc(p.photoUrl)}" alt="${esc(p.name)}" class="player-avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : ''}
+            <div class="player-avatar-fallback" ${p.photoUrl ? 'style="display:none"' : ''}>${esc((p.name || '?').charAt(0).toUpperCase())}</div>
+            <div>
+              <div class="player-profile-name">${esc(p.name)}</div>
+              <div class="player-profile-rating">🏆 ${Number(p.displayRating || 0).toFixed(2)} Rating</div>
+            </div>
+          </div>
         </div>
         <div class="player-profile-sections">
           <div class="player-subtitle">Activity</div>
