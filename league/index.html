@@ -350,18 +350,18 @@ th { background:#f8fbff; }
     </div>
     <div class="card" style="margin-top:16px">
       <h2>Player Profile Enrollment</h2>
-      <div class="small">Create your player profile or update your photo. If your profile already exists, your existing profile will be updated instead of creating a duplicate. Existing player ratings are protected and cannot be changed here.</div>
+      <div class="small">Create your player profile or update your photo. If your profile already exists, your existing profile will be updated instead of creating a duplicate. Existing player ratings are protected and cannot be changed here.</div><div class="rules-banner" style="margin-top:12px"><div class="rules-banner-title">🛡️ Player profile persistence</div><div class="rules-banner-list"><div class="rules-line"><span class="rules-icon green">✓</span><span>Player profiles stay saved until an admin removes them.</span></div><div class="rules-line"><span class="rules-icon green">✓</span><span>Refreshing public data, season data, rankings, or schedules will not delete player profiles.</span></div></div></div>
       <div class="row2" style="margin-top:12px">
         <div><label style="display:block;font-weight:700;margin-bottom:6px">Player Name</label><input id="enrollPlayerName" type="text" placeholder="Enter your name"></div>
         <div><label style="display:block;font-weight:700;margin-bottom:6px">Rating</label><input id="enrollPlayerRating" type="number" step="0.01" placeholder="Required for new players"></div>
       </div>
       <div class="row2" style="margin-top:12px">
-        <div><label style="display:block;font-weight:700;margin-bottom:6px">Photo URL</label><input id="enrollPlayerPhotoUrl" type="text" placeholder="https://... or data URL"></div>
         <div><label style="display:block;font-weight:700;margin-bottom:6px">Upload Photo</label><input id="enrollPlayerPhotoFile" type="file" accept="image/*"></div>
+        <div><label style="display:block;font-weight:700;margin-bottom:6px">Preview</label><div id="leaguePhotoPreview" class="small" style="margin-top:10px">No image selected.</div></div>
       </div>
       <div class="row2" style="margin-top:12px">
-        <div><label style="display:block;font-weight:700;margin-bottom:6px">Preview</label><div id="leaguePhotoPreview" class="small" style="margin-top:10px">No image selected.</div></div>
         <div><label style="display:block;font-weight:700;margin-bottom:6px">Note</label><div class="small" style="margin-top:10px">Photo is optional. Existing players can update their photo here. Ratings for existing players stay protected.</div></div>
+        <div></div>
       </div>
       <button style="margin-top:12px" onclick="saveLeaguePlayerProfile()">Save Profile</button>
       <div id="enrollPlayerStatus" class="small" style="margin-top:10px">No profile changes submitted yet.</div>
@@ -502,13 +502,30 @@ function loadPublicFile() {
   reader.onload=e=> {
     try {
       const raw=e.target.result;
+      let incoming;
       if(file.name.endsWith('.js')) {
         const match=raw.match(/window\.POUNCEY_PUBLIC_DATA\s*=\s*([\s\S]*);/);
         if(!match) throw new Error("Invalid JS format");
-        data=JSON.parse(match[1]);
+        incoming=JSON.parse(match[1]);
       } else {
-        data=JSON.parse(raw);
+        incoming=JSON.parse(raw);
       }
+
+      const currentRoster = Array.isArray(data && data.roster) ? data.roster.slice() : [];
+      const incomingRoster = Array.isArray(incoming.roster) ? incoming.roster : [];
+      data = Object.assign({}, incoming, {roster: currentRoster});
+
+      incomingRoster.forEach(p=>{
+        upsertLeaguePlayerProfile({
+          name: p.name,
+          rating: p.rating,
+          photoUrl: p.photoUrl || "",
+          joinedWeek: p.joinedWeek || 1,
+          active: typeof p.active === 'undefined' ? true : p.active,
+          elo: p.elo
+        }, {source:"admin"});
+      });
+
       useData();
     } catch(err) {
       viewerStatus.textContent="Could not read the selected file.";
@@ -967,7 +984,6 @@ async function leagueFileToDataUrl(file, maxSize=480){
 
 function bindLeaguePhotoPreview(){
   const fileEl = document.getElementById("enrollPlayerPhotoFile");
-  const urlEl = document.getElementById("enrollPlayerPhotoUrl");
   const previewEl = document.getElementById("leaguePhotoPreview");
   if(!previewEl) return;
 
@@ -977,15 +993,6 @@ function bindLeaguePhotoPreview(){
       const file = fileEl.files && fileEl.files[0];
       if(!file){ previewEl.innerHTML = 'No image selected.'; return; }
       previewEl.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Preview" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid #e5eef8;">`;
-    });
-  }
-
-  if(urlEl && !urlEl.dataset.bound){
-    urlEl.dataset.bound = "1";
-    urlEl.addEventListener("input", () => {
-      const val = String(urlEl.value || '').trim();
-      if(val) previewEl.innerHTML = `<img src="${esc(val)}" alt="Preview" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid #e5eef8;">`;
-      else if(!(fileEl && fileEl.files && fileEl.files[0])) previewEl.innerHTML = 'No image selected.';
     });
   }
 }
@@ -1074,10 +1081,15 @@ async function saveLeaguePlayerProfile(){
   const statusEl = document.getElementById("enrollPlayerStatus");
   const name = String((document.getElementById("enrollPlayerName") || {}).value || '').trim();
   const ratingRaw = String((document.getElementById("enrollPlayerRating") || {}).value || '').trim();
-  let photoUrl = String((document.getElementById("enrollPlayerPhotoUrl") || {}).value || '').trim();
+  let photoUrl = "";
   const fileEl = document.getElementById("enrollPlayerPhotoFile");
   const file = fileEl && fileEl.files ? fileEl.files[0] : null;
   const rating = ratingRaw === "" ? NaN : Number(ratingRaw);
+
+  const existing = (data.roster || []).find(p => normalizeLeaguePlayerName(p.name) === normalizeLeaguePlayerName(name));
+  if(existing && ratingRaw !== ""){
+    if(statusEl) statusEl.textContent = `Rating update is not allowed for existing player ${name}. Your existing rating was kept. You can still update the photo.`;
+  }
 
   if(file){
     try{
@@ -1101,9 +1113,13 @@ async function saveLeaguePlayerProfile(){
     return;
   }
 
-  if(statusEl) statusEl.textContent = result.mode === "created"
-    ? `Created player profile for ${name}.`
-    : `Updated player profile for ${name}.`;
+  if(result.mode === "created"){
+    if(statusEl) statusEl.textContent = `Created player profile for ${name}.`;
+  } else if(!(existing && ratingRaw !== "")) {
+    if(statusEl) statusEl.textContent = `Updated player profile for ${name}.`;
+  } else if(existing && photoUrl){
+    if(statusEl) statusEl.textContent = `Rating update is not allowed for existing player ${name}. Photo updated successfully.`;
+  }
 
   try{
     await saveLeagueStateToGoogle('player profile enrollment');
@@ -1119,7 +1135,8 @@ async function saveLeaguePlayerProfile(){
   }catch(e){}
 
   const previewEl = document.getElementById("leaguePhotoPreview");
-  if(previewEl && !(photoUrl || (fileEl && fileEl.files && fileEl.files[0]))) previewEl.textContent = 'No image selected.';
+  if(previewEl) previewEl.textContent = 'No image selected.';
+  if(fileEl) fileEl.value = '';
 }
 
 function renderOverview() {
