@@ -1,17 +1,19 @@
-Final build ready
+Player profile phase 1 build
 
 Included:
+- Persistent player profile records
+- League self-enrollment
+- Admin photo update
+- Protected rating updates for existing players on the public page
+
+What changed:
+- Admin can add/update photo URL for new and existing players
+- League page has Player Profile Enrollment form
+- Existing player ratings are protected on the League page
+- Profiles now keep photoUrl / createdAt / updatedAt fields
+- Refresh should not delete player profiles because roster upserts/merges are used
+
+Files to replace:
 - admin/index.html
 - league/index.html
 - public-data.js
-
-Embedded Apps Script URL:
-https://script.google.com/macros/s/AKfycbx8q6te2Id-CWSAELOSWMBoLDL5uUNpMKEdcgpd2H8yvHDK7QMVT0Dw0UvkPjDu6kVf/exec
-
-Clean links to share:
-- Admin:  https://jaiswal2000.github.io/pickleball-league-admin/admin/
-- League: https://jaiswal2000.github.io/pickleball-league-admin/league/
-
-Notes:
-- Mobile browsers can auto-connect using the shared URL in public-data.js
-- Admin now includes a Share League Link button
