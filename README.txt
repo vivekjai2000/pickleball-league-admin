@@ -1,18 +1,14 @@
-UI avatar cleanup update
+Mobile Google sync fix
 
-Changes:
-1. Fixed Latest Results line breaks by rendering player names on separate lines instead of literal <br> text
-2. Current Matches no longer shows bye players
-3. Removed player profile persistence text from League page
-4. Added player images/avatars where available to:
-   - leaderboard
-   - current matches
-   - rankings tab
-   - latest results
-   - hall of fame
-   - playoffs
-   - history
-   - schedule tab
+Why the error happened:
+- the League page was trying a direct POST to Apps Script
+- some mobile browsers fail that request even when desktop works
+- the profile was saved locally, but the remote Google sync failed
+
+Fix included:
+- added robust Apps Script request helper for the League page
+- now tries POST first, then GET fallback automatically
+- improved error messaging for profile save and score save
 
 Replace:
 - league/index.html
