@@ -736,7 +736,7 @@ async function tryLoadLiveGoogleData(){
       cache:"no-store",
       credentials:"omit"
     });
-    if(!res.ok) return false;
+    if(!res || !res.ok) return false;
     const text = await res.text();
     let json = null;
     try { json = JSON.parse(text); } catch(e) { return false; }
@@ -746,6 +746,11 @@ async function tryLoadLiveGoogleData(){
         try {
           localStorage.setItem("pouncey_google_script_url", data.profile.googleScriptUrl);
           localStorage.setItem("pouncy_google_script_url", data.profile.googleScriptUrl);
+        } catch(e) {}
+      } else {
+        try {
+          localStorage.setItem("pouncey_google_script_url", url);
+          localStorage.setItem("pouncy_google_script_url", url);
         } catch(e) {}
       }
       return true;
@@ -1103,22 +1108,63 @@ function isValidPickleballScore(score1, score2){
   }
   return {ok:false, message:"Invalid score."};
 }
-async function updateMatchScoreOnGoogle(week, dayKey, round, court, score1, score2){
+
+async function callLeagueGoogle(action, payload={}){
   const url = getLiveGoogleUrl();
   if(!url) throw new Error("Google Sheets live URL is not configured.");
-  const res = await fetch(url, {
-    method:"POST",
-    headers: {"Content-Type": "text/plain;charset=utf-8"},
-    body: JSON.stringify({
-      action:"updateMatchScore",
-      payload:{week:Number(week), day:String(dayKey), round:Number(round), court:Number(court), score1:Number(score1), score2:Number(score2)}
-    }),
-    mode:"cors"
-  });
+  const body = JSON.stringify({action, payload});
+
+  let res = null;
+  let lastErr = null;
+
+  try{
+    res = await fetch(url, {
+      method:"POST",
+      headers: {"Content-Type":"text/plain;charset=utf-8"},
+      body,
+      mode:"cors",
+      credentials:"omit",
+      cache:"no-store"
+    });
+  }catch(err){
+    lastErr = err;
+  }
+
+  if(!res || !res.ok){
+    try{
+      res = await fetch(url + "?data=" + encodeURIComponent(body) + "&ts=" + Date.now(), {
+        method:"GET",
+        mode:"cors",
+        credentials:"omit",
+        cache:"no-store"
+      });
+    }catch(err){
+      lastErr = err;
+    }
+  }
+
+  if(!res) throw new Error(lastErr && lastErr.message ? lastErr.message : "Google sync request failed.");
+
   const text = await res.text();
   let json;
-  try { json = JSON.parse(text); } catch(e){ throw new Error("Unexpected response while saving score."); }
-  if(!json.ok) throw new Error(json.error || "Unable to save score.");
+  try{
+    json = JSON.parse(text);
+  }catch(e){
+    throw new Error(text && text.trim() ? text.slice(0,160) : "Unexpected Apps Script response.");
+  }
+  if(!json.ok) throw new Error(json.error || json.message || "Google sync failed.");
+  return json;
+}
+
+async function updateMatchScoreOnGoogle(week, dayKey, round, court, score1, score2){
+  const json = await callLeagueGoogle("updateMatchScore", {
+    week:Number(week),
+    day:String(dayKey),
+    round:Number(round),
+    court:Number(court),
+    score1:Number(score1),
+    score2:Number(score2)
+  });
   if(json.data) data = json.data;
   return json;
 }
@@ -1285,21 +1331,9 @@ function buildLeaguePayload(){
 }
 
 async function saveLeagueStateToGoogle(reason="update"){
-  const url = getLiveGoogleUrl();
-  if(!url) throw new Error("Google Apps Script URL is not configured.");
   const payload = buildLeaguePayload();
-  let res = await fetch(url, {
-    method: "POST",
-    headers: {"Content-Type": "text/plain;charset=utf-8"},
-    body: JSON.stringify({action:"saveLeagueState", payload}),
-    mode: "cors",
-    credentials: "omit",
-    cache: "no-store"
-  });
-  const text = await res.text();
-  let json;
-  try{ json = JSON.parse(text); }catch(e){ throw new Error("Unexpected Apps Script response."); }
-  if(!json.ok) throw new Error(json.error || "Save failed.");
+  const json = await callLeagueGoogle("saveLeagueState", payload);
+  if(json.data) data = json.data;
   return json;
 }
 
@@ -1349,8 +1383,10 @@ async function saveLeaguePlayerProfile(){
 
   try{
     await saveLeagueStateToGoogle('player profile enrollment');
+    if(statusEl && result.mode === "created") statusEl.textContent = `Created player profile for ${name}. Synced successfully.`;
+    else if(statusEl && !(existing && ratingRaw !== "")) statusEl.textContent = `Updated player profile for ${name}. Synced successfully.`;
   }catch(err){
-    if(statusEl) statusEl.textContent = (statusEl.textContent || "") + " Saved locally, but Google sync failed: " + err.message;
+    if(statusEl) statusEl.textContent = (statusEl.textContent || "") + " Saved locally, but Google sync failed. Please ask admin to verify the Apps Script deployment. Details: " + err.message;
   }
 
   try{
