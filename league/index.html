@@ -611,9 +611,71 @@ button{min-height:44px;border-radius:16px;font-weight:800;}
   }
 }
 
+
+/* Layout overflow hotfix */
+html, body{
+  max-width:100%;
+  overflow-x:hidden !important;
+}
+*, *::before, *::after{
+  box-sizing:border-box;
+}
+body{
+  margin:0;
+}
+.wrap, .container, .page, main{
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+}
+.hero, .card, .player-profile-card, .mobile-card, .info-card, .match-card, .rank-card{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+.hero h1, .player-profile-name, h1, h2, h3{
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+.hero-layout > *, .player-profile-identity > *, .info-grid-2 > *, .grid2 > *, .grid3 > *, .grid4 > *, .row2 > *{
+  min-width:0;
+}
+.tabs{
+  width:100%;
+  max-width:100%;
+}
+.tabbtn{
+  white-space:nowrap;
+}
+img{
+  max-width:100%;
+  height:auto;
+}
+.table-wrap{
+  max-width:100%;
+}
+@media (max-width:900px){
+  .wrap, .container, .page, main{
+    padding-left:12px !important;
+    padding-right:12px !important;
+  }
+  .hero{
+    width:100%;
+    max-width:100%;
+  }
+  .hero-layout{
+    width:100%;
+  }
+  .tabs{
+    padding-left:2px;
+    padding-right:2px;
+  }
+}
+
 </style>
 </head>
 <body>
+<!-- LAYOUT OVERFLOW HOTFIX -->
 <!-- TABS VISIBILITY HOTFIX -->
 <!-- VERIFIED STICKY TABS LEAGUE -->
 <div class="wrap">
@@ -932,10 +994,7 @@ function useData() {
     if(viewer) viewer.textContent = "No league data found yet. Make sure Google Sheets sync is configured or the shared data file is updated.";
     return;
   }
-  const pendingCount = getPendingProfilesQueue().length;
-  if(viewer) viewer.textContent = getLiveGoogleUrl()
-    ? `Live Google Sheets data loaded.${pendingCount ? ` Pending local profile recovery: ${pendingCount}.` : ""}`
-    : `Public data loaded successfully.${pendingCount ? ` Pending local profile recovery: ${pendingCount}.` : ""}`;
+  if(viewer) viewer.textContent = getLiveGoogleUrl() ? "Live Google Sheets data loaded." : "Public data loaded successfully.";
 
   const weekOptions = (data.weeks || []).map(w=>`<option value="${w.week}">Week ${w.week}</option>`).join('');
   const weekEl = document.getElementById("weekSel");
@@ -949,7 +1008,6 @@ function useData() {
   try{ renderPlayoffs(); }catch(e){ console.error(e); }
   try{ renderHallOfFame(); }catch(e){ console.error(e); }
   try{ bindLeaguePhotoPreview(); }catch(e){}
-  try{ if(getLiveGoogleUrl()) retryPendingProfilesSync(); }catch(e){}
 }
 
 
@@ -1280,51 +1338,6 @@ function isValidPickleballScore(score1, score2){
   return {ok:false, message:"Invalid score."};
 }
 
-
-function getPendingProfilesQueue(){
-  try{
-    return JSON.parse(localStorage.getItem("pouncey_pending_profiles_queue") || "[]");
-  }catch(e){
-    return [];
-  }
-}
-function setPendingProfilesQueue(queue){
-  try{
-    localStorage.setItem("pouncey_pending_profiles_queue", JSON.stringify(queue || []));
-  }catch(e){}
-}
-function queuePendingProfile(profile){
-  const queue = getPendingProfilesQueue();
-  const key = normalizeLeaguePlayerName(profile.name);
-  const existingIdx = queue.findIndex(p => normalizeLeaguePlayerName(p.name) === key);
-  if(existingIdx >= 0) queue[existingIdx] = {...queue[existingIdx], ...profile, queuedAt: new Date().toISOString()};
-  else queue.push({...profile, queuedAt: new Date().toISOString()});
-  setPendingProfilesQueue(queue);
-}
-function removePendingProfile(name){
-  const key = normalizeLeaguePlayerName(name);
-  const queue = getPendingProfilesQueue().filter(p => normalizeLeaguePlayerName(p.name) !== key);
-  setPendingProfilesQueue(queue);
-}
-async function retryPendingProfilesSync(){
-  const queue = getPendingProfilesQueue();
-  if(!queue.length) return;
-  for(const p of queue){
-    try{
-      upsertLeaguePlayerProfile({
-        name: p.name,
-        rating: p.rating,
-        photoUrl: p.photoUrl || "",
-        joinedWeek: p.joinedWeek || 1,
-        active: true
-      }, {source:"league"});
-      await saveLeagueStateToGoogle("pending profile retry");
-      removePendingProfile(p.name);
-    }catch(err){
-      break;
-    }
-  }
-}
 async function callLeagueGoogle(action, payload={}){
   const url = getLiveGoogleUrl();
   if(!url) throw new Error("Google Sheets live URL is not configured.");
@@ -1589,26 +1602,20 @@ async function saveLeaguePlayerProfile(){
     return;
   }
 
+  if(result.mode === "created"){
+    if(statusEl) statusEl.textContent = `Created player profile for ${name}.`;
+  } else if(!(existing && ratingRaw !== "")) {
+    if(statusEl) statusEl.textContent = `Updated player profile for ${name}.`;
+  } else if(existing && photoUrl){
+    if(statusEl) statusEl.textContent = `Rating update is not allowed for existing player ${name}. Photo updated successfully.`;
+  }
+
   try{
     await saveLeagueStateToGoogle('player profile enrollment');
-    removePendingProfile(name);
-    if(result.mode === "created"){
-      if(statusEl) statusEl.textContent = `Created player profile for ${name}. Synced successfully.`;
-    } else if(!(existing && ratingRaw !== "")) {
-      if(statusEl) statusEl.textContent = `Updated player profile for ${name}. Synced successfully.`;
-    } else if(existing && photoUrl){
-      if(statusEl) statusEl.textContent = `Rating update is not allowed for existing player ${name}. Photo updated successfully and synced.`;
-    } else if(statusEl){
-      statusEl.textContent = `Profile for ${name} synced successfully.`;
-    }
+    if(statusEl && result.mode === "created") statusEl.textContent = `Created player profile for ${name}. Synced successfully.`;
+    else if(statusEl && !(existing && ratingRaw !== "")) statusEl.textContent = `Updated player profile for ${name}. Synced successfully.`;
   }catch(err){
-    queuePendingProfile({
-      name,
-      rating: Number.isFinite(rating) ? rating : (existing ? Number(existing.rating || 0) : 0),
-      photoUrl,
-      joinedWeek: 1
-    });
-    if(statusEl) statusEl.textContent = `Profile for ${name} was NOT permanently saved yet because Google sync failed. It has been kept in local recovery queue on this device. Please retry later or ask admin to add/update this player. Details: ${err.message}`;
+    if(statusEl) statusEl.textContent = (statusEl.textContent || "") + " Saved locally, but Google sync failed. Please ask admin to verify the Apps Script deployment. Details: " + err.message;
   }
 
   try{
