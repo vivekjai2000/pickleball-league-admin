@@ -234,6 +234,93 @@ th { background:#f8fbff; }
   .player-profile-identity{align-items:flex-start;}
 }
 
+
+/* Sticky tabs + responsive polish */
+.sticky-tabs-wrap{
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  background: rgba(248,250,252,.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 10px 0 12px;
+  margin: 8px 0 10px;
+  border-bottom: 1px solid var(--line);
+}
+.tabs{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.tabbtn{
+  border-radius:18px;
+  min-height:44px;
+  font-weight:800;
+}
+.card{
+  background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);
+  border:1px solid var(--line);
+  box-shadow:0 8px 20px rgba(15,23,42,.06);
+  border-radius:24px;
+}
+.mobile-card{
+  background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);
+  border:1px solid var(--line);
+  border-radius:20px;
+  box-shadow:0 8px 20px rgba(15,23,42,.06);
+}
+input,select,textarea{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:14px;
+  min-height:46px;
+  padding:10px 12px;
+  background:#fff;
+}
+button{
+  min-height:44px;
+  border-radius:16px;
+  font-weight:800;
+}
+label{
+  display:block;
+  font-weight:800;
+  margin-bottom:6px;
+}
+.table-wrap{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+@media (max-width: 1024px){
+  .wrap{padding:14px;}
+  .hero{padding:18px;}
+  h1{font-size:28px; line-height:1.15;}
+}
+@media (max-width: 900px){
+  .hero-layout{flex-direction:column; align-items:flex-start; gap:14px;}
+  .tabs{
+    overflow-x:auto;
+    flex-wrap:nowrap;
+    padding-bottom:4px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .tabbtn{flex:0 0 auto;}
+  .grid2,.grid3,.grid4,.row2{
+    grid-template-columns:1fr !important;
+  }
+  input,select,textarea,button{
+    font-size:16px !important;
+  }
+}
+
+
+.section-hero-title{
+  color:#38a8d8;
+  font-weight:900;
+  font-size:clamp(22px,4vw,28px);
+  margin:6px 0 10px;
+}
+
 </style>
 </head>
 <body>
@@ -263,7 +350,7 @@ th { background:#f8fbff; }
         <div class="hero-tagline">Round Robin • Weekend League • Auto Rankings • Smart Rotation</div>
       </div>
     </div>
-    <div class="tabs">
+    <div class="sticky-tabs-wrap"><div class="tabs">
       <button class="tabbtn active" onclick="showTab('overview', this)">Overview</button>
       <button class="tabbtn" onclick="showTab('setup', this)">League Setup</button>
       <button class="tabbtn" onclick="showTab('roster', this)">Roster</button>
@@ -276,7 +363,7 @@ th { background:#f8fbff; }
       <button class="tabbtn" onclick="showTab('quicktools', this)">Quick Tools</button>
       <button class="tabbtn" onclick="showTab('playoffmanager', this)">Playoff Manager</button>
       <button class="tabbtn" onclick="showTab('sheetsync', this)">Google Sheets Sync</button>
-    </div>
+    </div></div>
 
   <div id="overview" class="section active">
     <div class="card">
@@ -1789,6 +1876,18 @@ window.addEventListener("load", () => {
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") unlockAdmin();
     });
+  }
+});
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".tabbtn");
+  if(btn){
+    setTimeout(() => {
+      try{
+        const sticky = document.querySelector(".sticky-tabs-wrap");
+        if(sticky) window.scrollTo({top: Math.max(0, sticky.offsetTop - 8), behavior: "smooth"});
+      }catch(err){}
+    }, 10);
   }
 });
 </script>
