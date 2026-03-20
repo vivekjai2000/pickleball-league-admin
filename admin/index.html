@@ -1499,12 +1499,32 @@ async function resetGoogleSheetsData(){
 async function autoPushLeagueToGoogleSheets(reason="update"){
   syncProfileFromUI();
   const url = (state.profile && state.profile.googleScriptUrl) || "";
-  if(!url) return;
+  if(!url) throw new Error("Save your Google Apps Script URL first.");
   const payload = {profile:state.profile, roster:state.roster, weeks:state.weeks, availability:state.availability||{}, playoffs:state.playoffs||{}};
-  const data = await callGoogleScript("saveLeagueState", payload);
+  await callGoogleScript("saveLeagueState", payload);
+  const verify = await callGoogleScript("loadLeagueState", {});
+  if(!verify || !verify.data) throw new Error("Save completed but verification load failed.");
+
+  state.profile = Object.assign({}, state.profile, verify.data.profile || {});
+  state.weeks = verify.data.weeks || [];
+  state.availability = verify.data.availability || {};
+  state.playoffs = verify.data.playoffs || {};
+  state.roster = [];
+  (verify.data.roster || []).forEach(p=>{
+    upsertPlayerProfile({
+      name: p.name,
+      rating: p.rating,
+      joinedWeek: p.joinedWeek || 1,
+      active: typeof p.active === 'undefined' ? true : p.active,
+      photoUrl: p.photoUrl || "",
+      photoDriveFileId: p.photoDriveFileId || "",
+      elo: p.elo
+    }, {source:"admin"});
+  });
   const syncEl = document.getElementById("googleSyncStatus");
-  if(syncEl) syncEl.textContent = data.message || `League data auto-saved to Google Sheets after ${reason}.`;
-  return data;
+  if(syncEl) syncEl.textContent = "League data synced and verified from Google Sheets.";
+  saveState();
+  return verify.data;
 }
 
 
