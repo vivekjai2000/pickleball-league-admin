@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Pouncey Tract League Admin</title>
 <link rel="icon" type="image/jpeg" href="../assets/pouncey-logo.jpeg">
 <style>
@@ -234,304 +234,9 @@ th { background:#f8fbff; }
   .player-profile-identity{align-items:flex-start;}
 }
 
-
-/* VERIFIED PHASE 1: sticky tabs + responsive UI */
-.sticky-tabs-wrap{
-  position:sticky;
-  top:0;
-  z-index:120;
-  background:rgba(248,250,252,.96);
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
-  padding:10px 0 12px;
-  margin:8px 0 14px;
-  border-bottom:1px solid var(--line);
-}
-.tabs{display:flex;gap:10px;flex-wrap:wrap;}
-.tabbtn{border-radius:18px;min-height:44px;font-weight:800;}
-.card{background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);border:1px solid var(--line);box-shadow:0 8px 20px rgba(15,23,42,.06);border-radius:24px;}
-.mobile-card{background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);border:1px solid var(--line);border-radius:20px;box-shadow:0 8px 20px rgba(15,23,42,.06);}
-input,select,textarea{width:100%;min-height:46px;border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:#fff;}
-button{min-height:44px;border-radius:16px;font-weight:800;}
-label{display:block;font-weight:800;margin-bottom:6px;}
-.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-.section-hero-title{color:#38a8d8;font-weight:900;font-size:clamp(22px,4vw,28px);margin:6px 0 10px;}
-@media (max-width:1024px){.wrap{padding:14px;}.hero{padding:18px;}h1{font-size:28px;line-height:1.15;}}
-@media (max-width:900px){
-  .hero-layout{flex-direction:column;align-items:flex-start;gap:14px;}
-  .tabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
-  .tabbtn{flex:0 0 auto;}
-  .grid2,.grid3,.grid4,.row2{grid-template-columns:1fr !important;}
-  input,select,textarea,button{font-size:16px !important;}
-}
-
-
-/* Compact header + accessible tabs */
-.hero{
-  padding:16px 18px !important;
-}
-.hero-layout{
-  gap:12px !important;
-  align-items:center !important;
-}
-.hero img, .hero-logo, .league-logo{
-  width:78px !important;
-  height:78px !important;
-  border-radius:18px !important;
-}
-.hero h1{
-  font-size:clamp(24px,6vw,40px) !important;
-  line-height:1.08 !important;
-  margin:0 0 6px 0 !important;
-}
-.hero .sub, .hero .subtitle{
-  font-size:clamp(15px,3.8vw,22px) !important;
-  margin:0 0 6px 0 !important;
-}
-.hero .meta, .hero .small{
-  font-size:clamp(12px,2.8vw,16px) !important;
-  line-height:1.35 !important;
-}
-.sticky-tabs-wrap{
-  position:sticky !important;
-  top:0 !important;
-  z-index:999 !important;
-  background:rgba(248,250,252,.98) !important;
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--line);
-  padding:8px 0 10px !important;
-  margin:8px 0 12px !important;
-}
-.tabs{
-  display:flex;
-  gap:10px;
-  flex-wrap:nowrap !important;
-  overflow-x:auto !important;
-  -webkit-overflow-scrolling:touch !important;
-  scrollbar-width:none;
-  padding:0 2px;
-}
-.tabs::-webkit-scrollbar{display:none;}
-.tabbtn{
-  flex:0 0 auto !important;
-  min-width:max-content;
-}
-@media (max-width: 900px){
-  .hero{
-    padding:12px 12px 8px !important;
-    border-radius:20px !important;
-  }
-  .hero-layout{
-    flex-direction:column !important;
-    align-items:center !important;
-    text-align:center !important;
-    gap:8px !important;
-  }
-  .hero img, .hero-logo, .league-logo{
-    width:62px !important;
-    height:62px !important;
-    border-radius:16px !important;
-  }
-  .hero h1{
-    font-size:clamp(18px,7vw,28px) !important;
-    line-height:1.1 !important;
-    margin-bottom:3px !important;
-  }
-  .hero .sub, .hero .subtitle{
-    font-size:clamp(13px,4.5vw,18px) !important;
-    margin-bottom:3px !important;
-  }
-  .hero .meta, .hero .small{
-    font-size:clamp(11px,3.4vw,14px) !important;
-    line-height:1.35 !important;
-  }
-  .sticky-tabs-wrap{
-    top:0 !important;
-    bottom:auto !important;
-    position:sticky !important;
-    left:auto;
-    right:auto;
-    box-shadow:0 6px 16px rgba(15,23,42,.08);
-    border-top:none;
-    border-bottom:1px solid var(--line);
-    padding:8px 0 10px !important;
-    margin:6px 0 10px !important;
-  }
-  body{
-    padding-bottom:0 !important;
-  }
-  .tabs{
-    gap:8px !important;
-  }
-}
-
-
-/* STICKY TABS ROLLBACK */
-.sticky-tabs-wrap{
-  position:static !important;
-  top:auto !important;
-  bottom:auto !important;
-  z-index:auto !important;
-  background:transparent !important;
-  backdrop-filter:none !important;
-  -webkit-backdrop-filter:none !important;
-  border:none !important;
-  box-shadow:none !important;
-  padding:0 !important;
-  margin:0 !important;
-}
-.tabs{
-  display:flex !important;
-  gap:10px !important;
-  flex-wrap:wrap !important;
-  overflow:visible !important;
-  width:100% !important;
-  max-width:100% !important;
-}
-.tabbtn{
-  flex:0 0 auto !important;
-  white-space:nowrap !important;
-}
-@media (max-width: 900px){
-  .tabs{
-    flex-wrap:wrap !important;
-    overflow:visible !important;
-  }
-  body{
-    padding-bottom:0 !important;
-  }
-}
-
-
-/* FINAL MOBILE FRIENDLY FIX */
-html, body{
-  margin:0;
-  width:100%;
-  max-width:100%;
-  overflow-x:hidden !important;
-}
-*, *::before, *::after{
-  box-sizing:border-box;
-}
-body{
-  background:#f8fafc;
-}
-.wrap{
-  width:100%;
-  max-width:1200px;
-  margin:0 auto;
-  padding:16px;
-  overflow-x:hidden;
-}
-.hero, .card, .player-profile-card, .mobile-card, .info-card, .rank-card, .match-card{
-  width:100%;
-  max-width:100%;
-  min-width:0;
-}
-.hero{
-  padding:18px;
-  overflow:hidden;
-}
-.hero-layout{
-  display:flex;
-  align-items:center;
-  gap:18px;
-  width:100%;
-}
-.hero-copy{
-  flex:1 1 auto;
-  min-width:0;
-}
-.logo, .hero img, .hero-logo, .league-logo{
-  width:96px;
-  height:96px;
-  flex:0 0 96px;
-  max-width:96px;
-  object-fit:cover;
-}
-h1, h2, h3, .player-profile-name, .hero-location, .hero-tagline{
-  overflow-wrap:anywhere;
-  word-break:break-word;
-}
-.tabs{
-  display:flex;
-  flex-wrap:wrap !important;
-  gap:10px !important;
-  justify-content:center;
-  width:100%;
-  max-width:100%;
-  overflow:visible !important;
-}
-.tabbtn{
-  min-width:0 !important;
-  max-width:100%;
-}
-.table-wrap{
-  max-width:100%;
-  overflow-x:auto;
-  -webkit-overflow-scrolling:touch;
-}
-img{
-  max-width:100%;
-  height:auto;
-}
-.grid2,.grid3,.grid4,.row2,.score-grid,.players-grid,.podium,.bracket-grid,.info-grid-2,.info-grid-3,.player-mini-grid,.player-record-grid{
-  min-width:0;
-}
-@media (max-width: 900px){
-  .wrap{
-    padding:12px;
-  }
-  .hero{
-    padding:14px;
-  }
-  .hero-layout{
-    flex-direction:column;
-    align-items:center;
-    text-align:center;
-    gap:10px;
-  }
-  .logo, .hero img, .hero-logo, .league-logo{
-    width:72px;
-    height:72px;
-    flex:0 0 72px;
-    max-width:72px;
-  }
-  h1{
-    font-size:clamp(20px, 7vw, 30px) !important;
-    line-height:1.1 !important;
-  }
-  .hero-location{
-    font-size:clamp(14px, 5vw, 20px) !important;
-  }
-  .hero-tagline{
-    font-size:clamp(11px, 3.5vw, 14px) !important;
-    line-height:1.4 !important;
-  }
-  .tabs{
-    justify-content:flex-start;
-  }
-  .tabbtn{
-    flex:0 1 auto !important;
-    padding:10px 14px !important;
-    min-height:42px !important;
-  }
-  .grid2,.grid3,.grid4,.row2,.score-grid,.players-grid,.podium,.bracket-grid,.info-grid-2,.info-grid-3,.player-mini-grid,.player-record-grid{
-    grid-template-columns:1fr !important;
-  }
-  input, select, textarea, button{
-    font-size:16px !important;
-  }
-}
-
 </style>
 </head>
 <body>
-<!-- FINAL MOBILE FRIENDLY FIX -->
-<!-- ADMIN HERO WRAPPER EXACT FIX -->
-
-
 
 <div id="adminLock" class="admin-lock">
   <div class="admin-lock-card">
@@ -907,27 +612,11 @@ img{
 <script src="../public-data.js"></script>
 <script>
 const KEY = "pouncey_tract_admin_professional_v1";
-let ADMIN_LIVE_DATA_READY = false;
-let ADMIN_INITIAL_LOAD_DONE = false;
 let state = {profile:{leagueTitle:"Pouncey Tract Weekend Pickleball League",leagueSubtitle:"Short Pump, VA",seasonStart:"2026-04-11",seasonEnd:"2026-10-03",defaultCourts:5,defaultRounds:8,winScore:11,kFactor:24,minMatchesForPlayoffs:8,playoffFormat:12,googleScriptUrl:"https://script.google.com/macros/s/AKfycbx8q6te2Id-CWSAELOSWMBoLDL5uUNpMKEdcgpd2H8yvHDK7QMVT0Dw0UvkPjDu6kVf/exec",currentSignupWeek:""},roster:[],weeks:[],availability:{},playoffs:{}};
 
 function showTab(id, btn){ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('active')); document.getElementById(id).classList.add('active'); btn.classList.add('active'); }
 function esc(s){ return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;"); }
 function fmtDate(iso){ if(!iso) return ""; const d=new Date(iso+"T12:00:00"); return d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); }
-
-function hasMeaningfulRoster(roster){
-  return Array.isArray(roster) && roster.some(p => String((p && p.name) || '').trim());
-}
-function hasMeaningfulWeeks(weeks){
-  return Array.isArray(weeks) && weeks.length > 0;
-}
-function shouldBlockDestructiveSave(payload){
-  const currentRosterHasData = hasMeaningfulRoster(state.roster);
-  const incomingRosterHasData = hasMeaningfulRoster(payload && payload.roster);
-  if(currentRosterHasData && !incomingRosterHasData) return true;
-  if(ADMIN_LIVE_DATA_READY && currentRosterHasData && !incomingRosterHasData) return true;
-  return false;
-}
 function addDays(iso,n){ const d=new Date(iso+"T12:00:00"); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
 function saturdaysBetween(start,end){ let d=new Date(start+"T12:00:00"); while(d.getDay()!==6) d.setDate(d.getDate()+1); const arr=[]; while(d.toISOString().slice(0,10)<=end){ arr.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+7); } return arr; }
 function syncProfileFromUI(){
@@ -1562,12 +1251,7 @@ async function pushStateToGoogleSheets(){
   try{
     syncProfileFromUI();
     const payload = {profile:state.profile, roster:state.roster, weeks:state.weeks, availability:state.availability||{}, playoffs:state.playoffs||{}};
-    if(shouldBlockDestructiveSave(payload)){
-      googleSyncStatus.textContent = "Blocked save to protect existing player profiles. Load live Google data first or restore roster before saving.";
-      return;
-    }
     const data = await callGoogleScript("saveLeagueState", payload);
-    ADMIN_LIVE_DATA_READY = true;
     googleSyncStatus.textContent = data.message || "League data saved to Google Sheets.";
   }catch(err){
     googleSyncStatus.textContent = err.message;
@@ -1663,11 +1347,8 @@ async function loadStateFromGoogleSheets(){
     populateRemoveSelect();
     recalcElo();
     saveState();
-    ADMIN_LIVE_DATA_READY = true;
-    ADMIN_INITIAL_LOAD_DONE = true;
     googleSyncStatus.textContent = "League data loaded from Google Sheets. Player profiles were merged safely."; ADMIN_LAST_SHEET_SNAPSHOT = buildAdminSheetSnapshot(loaded); startAdminAutoRefresh();
   }catch(err){
-    ADMIN_INITIAL_LOAD_DONE = true;
     googleSyncStatus.textContent = err.message;
   }
 }
@@ -1684,18 +1365,11 @@ async function resetGoogleSheetsData(){
 
 async function autoPushLeagueToGoogleSheets(reason="update"){
   try{
-    if(!ADMIN_INITIAL_LOAD_DONE) return;
     syncProfileFromUI();
     const url = (state.profile && state.profile.googleScriptUrl) || "";
     if(!url) return;
     const payload = {profile:state.profile, roster:state.roster, weeks:state.weeks, availability:state.availability||{}, playoffs:state.playoffs||{}};
-    if(shouldBlockDestructiveSave(payload)){
-      const syncEl = document.getElementById("googleSyncStatus");
-      if(syncEl) syncEl.textContent = "Auto-save blocked to protect existing player profiles.";
-      return;
-    }
     const data = await callGoogleScript("saveLeagueState", payload);
-    ADMIN_LIVE_DATA_READY = true;
     const syncEl = document.getElementById("googleSyncStatus");
     if(syncEl) syncEl.textContent = data.message || `League data auto-saved to Google Sheets after ${reason}.`;
   }catch(err){
@@ -1976,21 +1650,7 @@ function copyWeeklyRanking(){ const weekNum=Number(rankWeek.value), day=rankDay.
 function copySeasonSummary(){ const rows=seasonStats().slice(0,10); let txt=`*${state.profile.leagueTitle}*\nSeason Leaderboard\n\n`; rows.forEach((r,i)=>{ txt += `${i+1}. ${r.name}  ${r.wins}-${r.losses}  ${(r.pct*100).toFixed(1)}%  Diff ${r.diff}  ELO ${r.elo.toFixed(1)}\n`; }); navigator.clipboard.writeText(txt.trim()).then(()=>alert("Season summary copied.")); }
 function exportAdminJson(){ const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="pouncey_tract_admin_professional.json"; a.click(); URL.revokeObjectURL(a.href); }
 function exportPublicJs(){ const payload={profile:state.profile, roster:state.roster.map(p=>({name:p.name,rating:p.rating,seed:p.seed,elo:p.elo,joinedWeek:p.joinedWeek,active:p.active})), weeks:state.weeks, availability:state.availability||{}, playoffs:state.playoffs||{}, season:seasonStats()}; const content="window.POUNCEY_PUBLIC_DATA = " + JSON.stringify(payload, null, 2) + ";\n"; const blob=new Blob([content],{type:"application/javascript"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="public-data.js"; a.click(); URL.revokeObjectURL(a.href); }
-function saveState(){
-  syncProfileFromUI();
-  try{
-    const existingRaw = localStorage.getItem(KEY);
-    if(existingRaw){
-      const existing = JSON.parse(existingRaw);
-      if(hasMeaningfulRoster(existing.roster) && !hasMeaningfulRoster(state.roster)){
-        const merged = Object.assign({}, state, {roster: existing.roster});
-        localStorage.setItem(KEY, JSON.stringify(merged));
-        return;
-      }
-    }
-  }catch(e){}
-  localStorage.setItem(KEY, JSON.stringify(state));
-}
+function saveState(){ syncProfileFromUI(); localStorage.setItem(KEY, JSON.stringify(state)); }
 function loadState(){
   const raw=localStorage.getItem(KEY);
   if(!raw){ alert("No saved state found."); return; }
@@ -2061,8 +1721,6 @@ window.addEventListener("load", async ()=>{
   if(localStorage.getItem(KEY)) loadState();
   if(state.profile.googleScriptUrl){
     try{ await loadStateFromGoogleSheets(); }catch(e){}
-  } else {
-    ADMIN_INITIAL_LOAD_DONE = true;
   }
   setTimeout(() => { try { previewSignedUpPlayersForSchedule(); } catch(e) {} }, 200);
   setTimeout(startAdminAutoRefresh, 1200);
@@ -2131,31 +1789,6 @@ window.addEventListener("load", () => {
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") unlockAdmin();
     });
-  }
-});
-
-
-function keepActiveTabVisible(){
-  try{
-    const active = document.querySelector('.tabbtn.active, .tabbtn.on, .tabbtn.selected');
-    if(active) active.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
-  }catch(err){}
-}
-window.addEventListener('load', ()=> setTimeout(keepActiveTabVisible, 150));
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('.tabbtn');
-  if(btn){
-    setTimeout(() => {
-      try{
-        btn.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
-      }catch(err){}
-      try{
-        const sticky = document.querySelector('.sticky-tabs-wrap');
-        if(sticky){
-          window.scrollTo({top: Math.max(0, sticky.offsetTop - 8), behavior: 'smooth'});
-        }
-      }catch(err){}
-    }, 40);
   }
 });
 </script>
