@@ -477,82 +477,43 @@ th { background:#f8fbff; }
 }
 
 
-/* Sticky tabs + consistent responsive polish */
+/* VERIFIED PHASE 1: sticky tabs + responsive UI */
 .sticky-tabs-wrap{
-  position: sticky;
-  top: 0;
-  z-index: 80;
-  background: rgba(248,250,252,.92);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 10px 0 12px;
-  margin: 8px 0 10px;
-  border-bottom: 1px solid var(--line);
+  position:sticky;
+  top:0;
+  z-index:120;
+  background:rgba(248,250,252,.96);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  padding:10px 0 12px;
+  margin:8px 0 14px;
+  border-bottom:1px solid var(--line);
 }
-.tabs{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-.tabbtn{
-  border-radius:18px;
-  min-height:44px;
-  font-weight:800;
-}
-.card,.player-profile-card{
-  background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);
-  border:1px solid var(--line);
-  box-shadow:0 8px 20px rgba(15,23,42,.06);
-  border-radius:24px;
-}
-.player-mini-card,.player-record-box,.info-card,.rank-card,.match-card{
-  border-radius:20px;
-}
-input,select,textarea{
-  width:100%;
-  border:1px solid var(--line);
-  border-radius:14px;
-  min-height:46px;
-  padding:10px 12px;
-  background:#fff;
-}
-button{
-  min-height:44px;
-  border-radius:16px;
-  font-weight:800;
-}
-.table-wrap{
-  overflow-x:auto;
-  -webkit-overflow-scrolling:touch;
-}
-@media (max-width: 1024px){
-  .wrap{padding:14px;}
-  .hero{padding:18px;}
-  h1{font-size:28px; line-height:1.15;}
-}
-@media (max-width: 900px){
-  .hero-layout{flex-direction:column; align-items:flex-start; gap:14px;}
-  .tabs{
-    overflow-x:auto;
-    flex-wrap:nowrap;
-    padding-bottom:4px;
-    -webkit-overflow-scrolling:touch;
-  }
+.tabs{display:flex;gap:10px;flex-wrap:wrap;}
+.tabbtn{border-radius:18px;min-height:44px;font-weight:800;}
+.card,.player-profile-card{background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);border:1px solid var(--line);box-shadow:0 8px 20px rgba(15,23,42,.06);border-radius:24px;}
+.player-mini-card,.player-record-box,.info-card,.rank-card,.match-card{border-radius:20px;}
+input,select,textarea{width:100%;min-height:46px;border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:#fff;}
+button{min-height:44px;border-radius:16px;font-weight:800;}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+#overview .card{background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);border:1px solid var(--line);box-shadow:0 8px 20px rgba(15,23,42,.06);}
+#overview .stat{border:1px solid var(--line);border-radius:18px;padding:16px;background:linear-gradient(135deg,#e0f2fe 0%, #f8fbff 100%);box-shadow:0 8px 20px rgba(15,23,42,.06);}
+#overview .stat .label{font-size:13px;color:var(--muted);font-weight:700;text-transform:uppercase;}
+#overview .stat .value{margin-top:6px;font-size:28px;font-weight:900;color:#111827;}
+@media (max-width:1024px){.wrap{padding:14px;}.hero{padding:18px;}h1{font-size:28px;line-height:1.15;}}
+@media (max-width:900px){
+  .hero-layout{flex-direction:column;align-items:flex-start;gap:14px;}
+  .tabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
   .tabbtn{flex:0 0 auto;}
-  .grid2,.grid3,.grid4,.players-grid,.podium,.bracket-grid,.row2,.info-grid-2,.info-grid-3,.player-mini-grid,.player-record-grid{
-    grid-template-columns:1fr !important;
-  }
-  input,select,textarea,button{
-    font-size:16px !important;
-  }
-  .player-profile-name{
-    font-size:clamp(24px,6vw,34px) !important;
-  }
+  .grid2,.grid3,.grid4,.players-grid,.podium,.bracket-grid,.row2,.info-grid-2,.info-grid-3,.player-mini-grid,.player-record-grid{grid-template-columns:1fr !important;}
+  input,select,textarea,button{font-size:16px !important;}
+  .player-profile-name{font-size:clamp(24px,6vw,34px) !important;}
 }
 
 </style>
 </head>
 <body>
+<!-- VERIFIED STICKY TABS LEAGUE -->
 <div class="wrap">
   <div class="hero">
     <div class="hero-layout">
@@ -583,7 +544,7 @@ button{
     </div>
     <div class="card" style="margin-top:16px">
       <h2>Player Profile Enrollment</h2>
-      <div class="small">Create your player profile or update your photo. If your profile already exists, your existing profile will be updated instead of creating a duplicate. Existing player ratings are protected and cannot be changed here.</div>
+      <div class="small">Create your player profile or update your photo. If your profile already exists, your existing profile will be updated instead of creating a duplicate. Existing player ratings are protected and cannot be changed here.</div><div class="small" style="margin-top:8px;color:#166534;font-weight:700">Profile records are protected. Refreshing public data, season data, rankings, or schedules will not delete player profiles.</div>
       <div class="row2" style="margin-top:12px">
         <div><label style="display:block;font-weight:700;margin-bottom:6px">Player Name</label><input id="enrollPlayerName" type="text" placeholder="Enter your name"></div>
         <div><label style="display:block;font-weight:700;margin-bottom:6px">Rating</label><input id="enrollPlayerRating" type="number" step="0.01" placeholder="Required for new players"></div>
@@ -713,6 +674,8 @@ button{
 <script src="../public-data.js"></script>
 <script>
 let data = window.POUNCEY_PUBLIC_DATA || null;
+let LEAGUE_LIVE_DATA_READY = false;
+let LEAGUE_INITIAL_LOAD_DONE = false;
 try {
   const embeddedUrl = (data && data.profile && data.profile.googleScriptUrl) ? data.profile.googleScriptUrl : "https://script.google.com/macros/s/AKfycbx8q6te2Id-CWSAELOSWMBoLDL5uUNpMKEdcgpd2H8yvHDK7QMVT0Dw0UvkPjDu6kVf/exec";
   if (embeddedUrl) {
@@ -720,6 +683,17 @@ try {
     localStorage.setItem("pouncy_google_script_url", embeddedUrl);
   }
 } catch (e) {}
+
+function leagueHasMeaningfulRoster(roster){
+  return Array.isArray(roster) && roster.some(p => String((p && p.name) || '').trim());
+}
+function leagueShouldBlockDestructiveSave(payload){
+  const currentRosterHasData = leagueHasMeaningfulRoster(data && data.roster);
+  const incomingRosterHasData = leagueHasMeaningfulRoster(payload && payload.roster);
+  if(currentRosterHasData && !incomingRosterHasData) return true;
+  if(LEAGUE_LIVE_DATA_READY && currentRosterHasData && !incomingRosterHasData) return true;
+  return false;
+}
 function showTab(id, btn) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tabbtn').forEach(b => b.classList.remove('active'));
@@ -815,16 +789,38 @@ async function tryLoadLiveGoogleData(){
     let json = null;
     try { json = JSON.parse(text); } catch(e) { return false; }
     if(json && json.ok && json.data){
-      data = json.data;
+      const incoming = json.data;
+      const currentRoster = Array.isArray(data && data.roster) ? data.roster.slice() : [];
+      data = Object.assign({}, incoming, {roster: currentRoster});
+
+      (incoming.roster || []).forEach(p=>{
+        upsertLeaguePlayerProfile({
+          name: p.name,
+          rating: p.rating,
+          photoUrl: p.photoUrl || "",
+          joinedWeek: p.joinedWeek || 1,
+          active: typeof p.active === 'undefined' ? true : p.active,
+          elo: p.elo
+        }, {source:"admin"});
+      });
+
       if(data.profile && data.profile.googleScriptUrl){
         try {
           localStorage.setItem("pouncey_google_script_url", data.profile.googleScriptUrl);
           localStorage.setItem("pouncy_google_script_url", data.profile.googleScriptUrl);
         } catch(e) {}
+      } else {
+        try {
+          localStorage.setItem("pouncey_google_script_url", url);
+          localStorage.setItem("pouncy_google_script_url", url);
+        } catch(e) {}
       }
+      LEAGUE_LIVE_DATA_READY = true;
+      LEAGUE_INITIAL_LOAD_DONE = true;
       return true;
     }
   }catch(e){}
+  LEAGUE_INITIAL_LOAD_DONE = true;
   return false;
 }
 
@@ -1401,8 +1397,12 @@ function buildLeaguePayload(){
 
 async function saveLeagueStateToGoogle(reason="update"){
   const payload = buildLeaguePayload();
+  if(leagueShouldBlockDestructiveSave(payload)){
+    throw new Error("Blocked save to protect existing player profiles. Live data was not fully loaded yet.");
+  }
   const json = await callLeagueGoogle("saveLeagueState", payload);
   if(json.data) data = json.data;
+  LEAGUE_LIVE_DATA_READY = true;
   return json;
 }
 
@@ -1879,7 +1879,9 @@ document.addEventListener("click", (e) => {
     setTimeout(() => {
       try{
         const sticky = document.querySelector(".sticky-tabs-wrap");
-        if(sticky) window.scrollTo({top: Math.max(0, sticky.offsetTop - 8), behavior: "smooth"});
+        if(sticky){
+          window.scrollTo({top: Math.max(0, sticky.offsetTop - 8), behavior: "smooth"});
+        }
       }catch(err){}
     }, 10);
   }
