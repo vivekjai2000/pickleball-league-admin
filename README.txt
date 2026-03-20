@@ -1,13 +1,17 @@
-Phase 1 sticky tabs + responsive UI polish
+Photo upload safe fix
 
-Changes:
-- Sticky top tab navigation for both Admin and League pages
-- Improved visual consistency so pages align more closely with the Players tab style
-- Better responsive behavior for desktop, tablet, and mobile
-- Inputs/buttons/font sizing improved for mobile usability
-- Sticky tabs remain accessible while scrolling
+What was likely happening:
+- uploaded photos were being stored as large base64 strings
+- that could make sync or rendering unstable
+- on admin, leaving rating blank for an existing player could also overwrite the rating with 0
+
+This patch:
+- compresses uploaded photos more aggressively
+- blocks still-too-large images
+- preserves existing rating when admin updates only the photo
+- shows proper sync success/failure in admin after photo update
+- sanitizes oversized photo URLs on the league page so rendering does not break
 
 Replace:
 - admin/index.html
 - league/index.html
-- public-data.js (keep latest one from your current build if unchanged)
