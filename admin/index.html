@@ -633,6 +633,9 @@ th { background:#f8fbff; }
         <div class="small">Paste your deployed Google Apps Script Web App URL here. The admin page will save data to Google Sheets, and the public site will read live data from that sheet automatically.</div>
         <label>Apps Script Web App URL</label>
         <input id="googleScriptUrl" type="text" placeholder="https://script.google.com/macros/s/.../exec">
+        <label style="margin-top:12px">Google Drive Folder ID (optional)</label>
+        <input id="googleDriveFolderId" type="text" placeholder="Optional. Leave blank to auto-create Pouncey Player Photos folder.">
+        <div class="small" style="margin-top:8px">Photos will be uploaded to Google Drive and only the Drive image URL will be stored in player profiles.</div>
         <div class="btns">
           <button class="primary" onclick="saveGoogleScriptUrl()">Save URL</button>
           <button class="secondary" onclick="testGoogleScriptConnection()">Test Connection</button>
@@ -680,6 +683,7 @@ function addDays(iso,n){ const d=new Date(iso+"T12:00:00"); d.setDate(d.getDate(
 function saturdaysBetween(start,end){ let d=new Date(start+"T12:00:00"); while(d.getDay()!==6) d.setDate(d.getDate()+1); const arr=[]; while(d.toISOString().slice(0,10)<=end){ arr.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+7); } return arr; }
 function syncProfileFromUI(){
   const googleUrlEl = document.getElementById("googleScriptUrl");
+  const googleDriveFolderEl = document.getElementById("googleDriveFolderId");
   const playoffEl = document.getElementById("playoffFormat");
   const minMatchesEl = document.getElementById("minMatchesForPlayoffs");
   state.profile = {
@@ -694,6 +698,7 @@ function syncProfileFromUI(){
     minMatchesForPlayoffs: Number((minMatchesEl && minMatchesEl.value) || state.profile.minMatchesForPlayoffs || 8),
     playoffFormat: Number((playoffEl && playoffEl.value) || state.profile.playoffFormat || 12),
     googleScriptUrl: (googleUrlEl && googleUrlEl.value ? googleUrlEl.value.trim() : (state.profile.googleScriptUrl || localStorage.getItem("pouncey_google_script_url") || "")),
+    googleDriveFolderId: (googleDriveFolderEl && googleDriveFolderEl.value ? googleDriveFolderEl.value.trim() : (state.profile.googleDriveFolderId || "")),
     currentSignupWeek: ((document.getElementById("currentSignupWeek")||{}).value || state.profile.currentSignupWeek || "")
   };
 }
@@ -768,6 +773,7 @@ function ensurePlayerProfileDefaults(p){
   if(typeof p.active === 'undefined') p.active = true;
   if(typeof p.elo === 'undefined' || !Number.isFinite(Number(p.elo))) p.elo = Number(p.rating || 0) * 100;
   if(typeof p.photoUrl === 'undefined') p.photoUrl = "";
+  if(typeof p.photoDriveFileId === 'undefined') p.photoDriveFileId = "";
   if(typeof p.createdAt === 'undefined' || !p.createdAt) p.createdAt = new Date().toISOString();
   p.updatedAt = new Date().toISOString();
   return p;
@@ -789,6 +795,7 @@ function upsertPlayerProfile(profile, options={}){
       joinedWeek: Number(profile.joinedWeek || 1),
       active: profile.active !== false,
       photoUrl: String(profile.photoUrl || '').trim(),
+      photoDriveFileId: String(profile.photoDriveFileId || '').trim(),
       createdAt: now,
       updatedAt: now
     });
@@ -819,6 +826,11 @@ function upsertPlayerProfile(profile, options={}){
     existing.photoUrl = incomingPhoto;
   }else if(typeof existing.photoUrl === 'undefined'){
     existing.photoUrl = "";
+  }
+  if(typeof profile.photoDriveFileId !== 'undefined' && String(profile.photoDriveFileId || '').trim()){
+    existing.photoDriveFileId = String(profile.photoDriveFileId || '').trim();
+  }else if(typeof existing.photoDriveFileId === 'undefined'){
+    existing.photoDriveFileId = "";
   }
 
   if(!existing.createdAt) existing.createdAt = now;
@@ -904,6 +916,7 @@ async function addPlayerMidSeason(){
   const ratingRaw = String(newPlayerRating.value || '').trim();
   const joinedWeek = Number(newPlayerWeek.value || 1);
   let photoUrl = "";
+  let photoDriveFileId = "";
   const fileEl = document.getElementById("newPlayerPhotoFile");
   const file = fileEl && fileEl.files ? fileEl.files[0] : null;
 
@@ -921,7 +934,9 @@ async function addPlayerMidSeason(){
 
   if(file){
     try{
-      photoUrl = await fileToDataUrl(file);
+      const uploaded = await uploadPlayerPhotoToDriveFromFile(file, name, existing ? String(existing.photoDriveFileId || "") : "");
+      photoUrl = String((uploaded && uploaded.photoUrl) || "").trim();
+      photoDriveFileId = String((uploaded && uploaded.photoDriveFileId) || "").trim();
     }catch(err){
       playerChangeStatus.textContent = "Photo upload failed: " + err.message;
       return;
@@ -933,6 +948,7 @@ async function addPlayerMidSeason(){
     rating,
     joinedWeek,
     photoUrl,
+    photoDriveFileId,
     active:true
   }, {source:"admin"});
 
@@ -1284,6 +1300,46 @@ async function callGoogleScript(action, payload={}){
   try { data = JSON.parse(text); } catch(e){ throw new Error("Unexpected Apps Script response: " + text.slice(0,200)); }
   if(!data.ok) throw new Error(data.error || "Apps Script request failed.");
   return data;
+}
+
+
+async function callGoogleScriptPostOnly(action, payload={}){
+  syncProfileFromUI();
+  const url = state.profile.googleScriptUrl || "";
+  if(!url) throw new Error("Save your Google Apps Script URL first.");
+  const body = JSON.stringify({action, payload});
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {"Content-Type": "text/plain;charset=utf-8"},
+    body,
+    mode: "cors",
+    credentials: "omit",
+    cache: "no-store"
+  });
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch(e){ throw new Error("Unexpected Apps Script response: " + text.slice(0,200)); }
+  if(!data.ok) throw new Error(data.error || "Apps Script request failed.");
+  return data;
+}
+
+async function uploadPlayerPhotoToDriveFromFile(file, playerName, previousFileId=""){
+  const dataUrl = await fileToDataUrl(file);
+  const payload = {
+    playerName: playerName,
+    dataUrl: dataUrl,
+    previousFileId: previousFileId || "",
+    folderId: (state.profile && state.profile.googleDriveFolderId) || ""
+  };
+  const res = await callGoogleScriptPostOnly("uploadPlayerPhoto", payload);
+  if(res && res.data && res.data.folderId && (!state.profile.googleDriveFolderId || !String(state.profile.googleDriveFolderId).trim())){
+    state.profile.googleDriveFolderId = res.data.folderId;
+    try{
+      const fld = document.getElementById("googleDriveFolderId");
+      if(fld) fld.value = res.data.folderId;
+    }catch(e){}
+  }
+  return res.data || {};
 }
 
 function shareLeagueLink(){
