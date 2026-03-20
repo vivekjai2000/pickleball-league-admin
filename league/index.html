@@ -918,18 +918,27 @@ async function tryLoadLiveGoogleData(){
   const url = getLiveGoogleUrl();
   if(!url) return false;
   try{
-    let res = await fetch(url + "?action=loadLeagueState&ts=" + Date.now(), {
+    const res = await fetch(url + "?action=loadLeagueState&ts=" + Date.now(), {
       method:"GET",
       mode:"cors",
       cache:"no-store",
       credentials:"omit"
     });
-    if(!res || !res.ok) return false;
+    if(!res || !res.ok) {
+      const viewer = document.getElementById("viewerStatus");
+      if(viewer) viewer.textContent = "Live Google load failed. Showing fallback data.";
+      return false;
+    }
     const text = await res.text();
     let json = null;
-    try { json = JSON.parse(text); } catch(e) { return false; }
+    try { json = JSON.parse(text); } catch(e) {
+      const viewer = document.getElementById("viewerStatus");
+      if(viewer) viewer.textContent = "Could not read live Google response. Showing fallback data.";
+      return false;
+    }
     if(json && json.ok && json.data){
       data = json.data;
+      sanitizeRosterPhotoUrls();
       if(data.profile && data.profile.googleScriptUrl){
         try {
           localStorage.setItem("pouncey_google_script_url", data.profile.googleScriptUrl);
@@ -943,7 +952,10 @@ async function tryLoadLiveGoogleData(){
       }
       return true;
     }
-  }catch(e){}
+  }catch(e){
+    const viewer = document.getElementById("viewerStatus");
+    if(viewer) viewer.textContent = "Live Google load failed. Showing fallback data.";
+  }
   return false;
 }
 
@@ -953,12 +965,9 @@ function sanitizeRosterPhotoUrls(){
   data.roster.forEach(p => {
     if(!p) return;
     if(typeof p.photoUrl !== 'string') p.photoUrl = '';
-    if(p.photoUrl && /^data:/i.test(p.photoUrl)){
-      p.photoUrl = '';
-    }
-    if(p.photoUrl && p.photoUrl.length > 1000 && !/^https?:/i.test(p.photoUrl)){
-      p.photoUrl = '';
-    }
+    if(p.photoUrl && /^data:/i.test(p.photoUrl)) p.photoUrl = '';
+    if(p.photoUrl && /^https:\/\/drive\.google\.com\/file\//i.test(p.photoUrl)) p.photoUrl = '';
+    if(p.photoUrl && p.photoUrl.length > 200000) p.photoUrl = '';
   });
 }
 function useData() {
