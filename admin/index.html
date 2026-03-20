@@ -265,6 +265,104 @@ label{display:block;font-weight:800;margin-bottom:6px;}
   input,select,textarea,button{font-size:16px !important;}
 }
 
+
+/* Compact header + accessible tabs */
+.hero{
+  padding:20px 22px !important;
+}
+.hero-layout{
+  gap:16px !important;
+  align-items:center !important;
+}
+.hero img, .hero-logo, .league-logo{
+  width:96px !important;
+  height:96px !important;
+  border-radius:24px !important;
+}
+.hero h1{
+  font-size:clamp(34px,4.4vw,54px) !important;
+  line-height:1.05 !important;
+  margin:0 0 8px 0 !important;
+}
+.hero .sub, .hero .subtitle{
+  font-size:clamp(18px,2.2vw,24px) !important;
+  margin:0 0 8px 0 !important;
+}
+.hero .meta, .hero .small{
+  font-size:clamp(13px,1.5vw,18px) !important;
+  line-height:1.45 !important;
+}
+.sticky-tabs-wrap{
+  position:sticky !important;
+  top:0 !important;
+  z-index:999 !important;
+  background:rgba(248,250,252,.98) !important;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.tabs{
+  display:flex;
+  gap:10px;
+  flex-wrap:nowrap !important;
+  overflow-x:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  scrollbar-width:none;
+}
+.tabs::-webkit-scrollbar{display:none;}
+.tabbtn{
+  flex:0 0 auto !important;
+  min-width:max-content;
+}
+@media (max-width: 900px){
+  .hero{
+    padding:14px 14px 10px !important;
+    border-radius:24px !important;
+  }
+  .hero-layout{
+    flex-direction:column !important;
+    align-items:center !important;
+    text-align:center !important;
+    gap:10px !important;
+  }
+  .hero img, .hero-logo, .league-logo{
+    width:74px !important;
+    height:74px !important;
+    border-radius:18px !important;
+  }
+  .hero h1{
+    font-size:clamp(20px,8vw,32px) !important;
+    line-height:1.08 !important;
+    margin-bottom:4px !important;
+  }
+  .hero .sub, .hero .subtitle{
+    font-size:clamp(14px,5vw,20px) !important;
+    margin-bottom:4px !important;
+  }
+  .hero .meta, .hero .small{
+    font-size:clamp(12px,3.6vw,16px) !important;
+    line-height:1.4 !important;
+  }
+  .sticky-tabs-wrap{
+    top:auto !important;
+    bottom:0 !important;
+    position:fixed !important;
+    left:0;
+    right:0;
+    padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+    box-shadow:0 -8px 24px rgba(15,23,42,.10);
+    border-top:1px solid var(--line);
+    border-bottom:none;
+  }
+  .tabs{
+    gap:8px !important;
+    padding-bottom:0 !important;
+  }
+  body{
+    padding-bottom:92px !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1882,6 +1980,30 @@ document.addEventListener("click", (e) => {
         }
       }catch(err){}
     }, 10);
+  }
+});
+
+function keepActiveTabVisible(){
+  try{
+    const active = document.querySelector('.tabbtn.active, .tabbtn.on, .tabbtn.selected');
+    if(active) active.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+  }catch(err){}
+}
+window.addEventListener('load', ()=> setTimeout(keepActiveTabVisible, 150));
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.tabbtn');
+  if(btn){
+    setTimeout(() => {
+      try{
+        btn.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+      }catch(err){}
+      try{
+        const topAnchor = document.querySelector('.hero') || document.querySelector('.sticky-tabs-wrap');
+        if(topAnchor && window.innerWidth > 900){
+          window.scrollTo({top: Math.max(0, topAnchor.offsetTop - 8), behavior: 'smooth'});
+        }
+      }catch(err){}
+    }, 40);
   }
 });
 </script>
