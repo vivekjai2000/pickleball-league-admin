@@ -1,14 +1,13 @@
-Mobile Google sync fix
+Phase 1 sticky tabs + responsive UI polish
 
-Why the error happened:
-- the League page was trying a direct POST to Apps Script
-- some mobile browsers fail that request even when desktop works
-- the profile was saved locally, but the remote Google sync failed
-
-Fix included:
-- added robust Apps Script request helper for the League page
-- now tries POST first, then GET fallback automatically
-- improved error messaging for profile save and score save
+Changes:
+- Sticky top tab navigation for both Admin and League pages
+- Improved visual consistency so pages align more closely with the Players tab style
+- Better responsive behavior for desktop, tablet, and mobile
+- Inputs/buttons/font sizing improved for mobile usability
+- Sticky tabs remain accessible while scrolling
 
 Replace:
+- admin/index.html
 - league/index.html
+- public-data.js (keep latest one from your current build if unchanged)
