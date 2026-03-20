@@ -688,7 +688,7 @@ th { background:#f8fbff; }
         <div><label style="display:block;font-weight:700;margin-bottom:6px">Preview</label><div id="leaguePhotoPreview" class="small" style="margin-top:10px">No image selected.</div></div>
       </div>
       <div class="row2" style="margin-top:12px">
-        <div><label style="display:block;font-weight:700;margin-bottom:6px">Note</label><div class="small" style="margin-top:10px">Photo is optional. Existing players can update their photo here. Ratings for existing players stay protected.</div></div>
+        <div><label style="display:block;font-weight:700;margin-bottom:6px">Note</label><div class="small" style="margin-top:10px">Photo is optional. Photos are uploaded to Google Drive and only the Drive image URL is stored. Existing players can update their photo here. Ratings for existing players stay protected.</div></div>
         <div></div>
       </div>
       <button style="margin-top:12px" onclick="saveLeaguePlayerProfile()">Save Profile</button>
@@ -953,7 +953,10 @@ function sanitizeRosterPhotoUrls(){
   data.roster.forEach(p => {
     if(!p) return;
     if(typeof p.photoUrl !== 'string') p.photoUrl = '';
-    if(p.photoUrl && p.photoUrl.length > 200000){
+    if(p.photoUrl && /^data:/i.test(p.photoUrl)){
+      p.photoUrl = '';
+    }
+    if(p.photoUrl && p.photoUrl.length > 1000 && !/^https?:/i.test(p.photoUrl)){
       p.photoUrl = '';
     }
   });
@@ -1356,6 +1359,45 @@ async function callLeagueGoogle(action, payload={}){
   return json;
 }
 
+
+async function callLeagueGooglePostOnly(action, payload={}){
+  const url = getLiveGoogleUrl();
+  if(!url) throw new Error("Google Sheets live URL is not configured.");
+  const body = JSON.stringify({action, payload});
+  const res = await fetch(url, {
+    method:"POST",
+    headers: {"Content-Type":"text/plain;charset=utf-8"},
+    body,
+    mode:"cors",
+    credentials:"omit",
+    cache:"no-store"
+  });
+  const text = await res.text();
+  let json;
+  try{
+    json = JSON.parse(text);
+  }catch(e){
+    throw new Error(text && text.trim() ? text.slice(0,160) : "Unexpected Apps Script response.");
+  }
+  if(!json.ok) throw new Error(json.error || json.message || "Google sync failed.");
+  return json;
+}
+
+async function uploadLeaguePlayerPhotoToDriveFromFile(file, playerName, previousFileId=""){
+  const dataUrl = await leagueFileToDataUrl(file);
+  const payload = {
+    playerName: playerName,
+    dataUrl: dataUrl,
+    previousFileId: previousFileId || "",
+    folderId: (data.profile && data.profile.googleDriveFolderId) || ""
+  };
+  const res = await callLeagueGooglePostOnly("uploadPlayerPhoto", payload);
+  if(res && res.data && res.data.folderId && (!data.profile.googleDriveFolderId || !String(data.profile.googleDriveFolderId).trim())){
+    data.profile.googleDriveFolderId = res.data.folderId;
+  }
+  return res.data || {};
+}
+
 async function updateMatchScoreOnGoogle(week, dayKey, round, court, score1, score2){
   const json = await callLeagueGoogle("updateMatchScore", {
     week:Number(week),
@@ -1483,6 +1525,7 @@ function ensureLeaguePlayerDefaults(p){
   if(typeof p.active === 'undefined') p.active = true;
   if(typeof p.elo === 'undefined' || !Number.isFinite(Number(p.elo))) p.elo = Number(p.rating || 0) * 100;
   if(typeof p.photoUrl === 'undefined') p.photoUrl = "";
+  if(typeof p.photoDriveFileId === 'undefined') p.photoDriveFileId = "";
   if(typeof p.createdAt === 'undefined' || !p.createdAt) p.createdAt = new Date().toISOString();
   if(typeof p.updatedAt === 'undefined' || !p.updatedAt) p.updatedAt = new Date().toISOString();
   return p;
@@ -1508,6 +1551,7 @@ function upsertLeaguePlayerProfile(profile, options={}){
       joinedWeek: Number(profile.joinedWeek || 1),
       active: true,
       photoUrl: String(profile.photoUrl || '').trim(),
+      photoDriveFileId: String(profile.photoDriveFileId || '').trim(),
       createdAt: now,
       updatedAt: now
     });
@@ -1520,6 +1564,11 @@ function upsertLeaguePlayerProfile(profile, options={}){
   // Protect rating updates for existing players on the public page.
   if(incomingPhoto) existing.photoUrl = incomingPhoto;
   if(typeof existing.photoUrl === 'undefined') existing.photoUrl = "";
+  if(typeof profile.photoDriveFileId !== 'undefined' && String(profile.photoDriveFileId || '').trim()){
+    existing.photoDriveFileId = String(profile.photoDriveFileId || '').trim();
+  }else if(typeof existing.photoDriveFileId === 'undefined'){
+    existing.photoDriveFileId = "";
+  }
   existing.updatedAt = now;
   ensureLeaguePlayerDefaults(existing);
   return {ok:true, mode:"updated", player:existing};
@@ -1547,6 +1596,7 @@ async function saveLeaguePlayerProfile(){
   const name = String((document.getElementById("enrollPlayerName") || {}).value || '').trim();
   const ratingRaw = String((document.getElementById("enrollPlayerRating") || {}).value || '').trim();
   let photoUrl = "";
+  let photoDriveFileId = "";
   const fileEl = document.getElementById("enrollPlayerPhotoFile");
   const file = fileEl && fileEl.files ? fileEl.files[0] : null;
   const rating = ratingRaw === "" ? NaN : Number(ratingRaw);
@@ -1558,7 +1608,9 @@ async function saveLeaguePlayerProfile(){
 
   if(file){
     try{
-      photoUrl = await leagueFileToDataUrl(file);
+      const uploaded = await uploadLeaguePlayerPhotoToDriveFromFile(file, name, existing ? String(existing.photoDriveFileId || "") : "");
+      photoUrl = String((uploaded && uploaded.photoUrl) || "").trim();
+      photoDriveFileId = String((uploaded && uploaded.photoDriveFileId) || "").trim();
     }catch(err){
       if(statusEl) statusEl.textContent = "Photo upload failed: " + err.message;
       return;
@@ -1569,6 +1621,7 @@ async function saveLeaguePlayerProfile(){
     name,
     rating,
     photoUrl,
+    photoDriveFileId,
     joinedWeek: 1,
     active: true
   }, {source:"league"});
@@ -1578,18 +1631,11 @@ async function saveLeaguePlayerProfile(){
     return;
   }
 
-  if(result.mode === "created"){
-    if(statusEl) statusEl.textContent = `Created player profile for ${name}.`;
-  } else if(!(existing && ratingRaw !== "")) {
-    if(statusEl) statusEl.textContent = `Updated player profile for ${name}.`;
-  } else if(existing && photoUrl){
-    if(statusEl) statusEl.textContent = `Rating update is not allowed for existing player ${name}. Photo updated successfully.`;
-  }
-
   try{
     await saveLeagueStateToGoogle('player profile enrollment');
     if(statusEl && result.mode === "created") statusEl.textContent = `Created player profile for ${name}. Synced successfully.`;
     else if(statusEl && !(existing && ratingRaw !== "")) statusEl.textContent = `Updated player profile for ${name}. Synced successfully.`;
+    else if(statusEl && file) statusEl.textContent = `Rating update is not allowed for existing player ${name}. Photo updated successfully and synced.`;
   }catch(err){
     if(statusEl) statusEl.textContent = (statusEl.textContent || "") + " Saved locally, but Google sync failed. Please ask admin to verify the Apps Script deployment. Details: " + err.message;
   }
