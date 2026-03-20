@@ -611,12 +611,48 @@ button{min-height:44px;border-radius:16px;font-weight:800;}
   }
 }
 
+
+/* STICKY TABS ROLLBACK */
+.sticky-tabs-wrap{
+  position:static !important;
+  top:auto !important;
+  bottom:auto !important;
+  z-index:auto !important;
+  background:transparent !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  border:none !important;
+  box-shadow:none !important;
+  padding:0 !important;
+  margin:0 !important;
+}
+.tabs{
+  display:flex !important;
+  gap:10px !important;
+  flex-wrap:wrap !important;
+  overflow:visible !important;
+  width:100% !important;
+  max-width:100% !important;
+}
+.tabbtn{
+  flex:0 0 auto !important;
+  white-space:nowrap !important;
+}
+@media (max-width: 900px){
+  .tabs{
+    flex-wrap:wrap !important;
+    overflow:visible !important;
+  }
+  body{
+    padding-bottom:0 !important;
+  }
+}
+
 </style>
 </head>
 <body>
-<!-- HERO WRAPPER EXACT FIX -->
-<!-- TABS VISIBILITY HOTFIX -->
-<!-- VERIFIED STICKY TABS LEAGUE -->
+
+
 <div class="wrap">
   <div class="hero">
     <div class="hero-layout">
@@ -627,7 +663,7 @@ button{min-height:44px;border-radius:16px;font-weight:800;}
         <div class="hero-tagline">Round Robin • Weekend League • Auto Rankings • Smart Rotation</div>
       </div>
     </div>
-    <div class="sticky-tabs-wrap"><div class="tabs">
+    <div class="tabs">
       <button class="tabbtn active" onclick="showTab('overview', this)">Overview</button>
       <button class="tabbtn" onclick="showTab('schedule', this)">Schedule</button>
       <button class="tabbtn" onclick="showTab('rankings', this)">Rankings</button>
@@ -635,9 +671,9 @@ button{min-height:44px;border-radius:16px;font-weight:800;}
       <button class="tabbtn" onclick="showTab('players', this)">Players</button>
       <button class="tabbtn" onclick="showTab('playoffs', this)">Playoffs</button>
       <button class="tabbtn" onclick="showTab('hof', this)">Hall of Fame</button>
-    </div></div>
-  </div>
+    </div>
 
+  
   <div id="overview" class="section active">
     <div class="grid4" id="statsGrid"></div>
     <div class="card" style="margin-top:16px">
@@ -2031,19 +2067,6 @@ window.addEventListener('load', () => {
   });
 });
 
-document.addEventListener("click", (e) => {
-  const btn = e.target.closest(".tabbtn");
-  if(btn){
-    setTimeout(() => {
-      try{
-        const sticky = document.querySelector(".sticky-tabs-wrap");
-        if(sticky){
-          window.scrollTo({top: Math.max(0, sticky.offsetTop - 8), behavior: "smooth"});
-        }
-      }catch(err){}
-    }, 10);
-  }
-});
 
 function keepActiveTabVisible(){
   try{
