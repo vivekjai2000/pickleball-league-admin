@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Pouncey Tract League Viewer</title>
 <link rel="icon" type="image/jpeg" href="../assets/pouncey-logo.jpeg">
 <style>
@@ -648,9 +648,132 @@ button{min-height:44px;border-radius:16px;font-weight:800;}
   }
 }
 
+
+/* FINAL MOBILE FRIENDLY FIX */
+html, body{
+  margin:0;
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden !important;
+}
+*, *::before, *::after{
+  box-sizing:border-box;
+}
+body{
+  background:#f8fafc;
+}
+.wrap{
+  width:100%;
+  max-width:1200px;
+  margin:0 auto;
+  padding:16px;
+  overflow-x:hidden;
+}
+.hero, .card, .player-profile-card, .mobile-card, .info-card, .rank-card, .match-card{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+.hero{
+  padding:18px;
+  overflow:hidden;
+}
+.hero-layout{
+  display:flex;
+  align-items:center;
+  gap:18px;
+  width:100%;
+}
+.hero-copy{
+  flex:1 1 auto;
+  min-width:0;
+}
+.logo, .hero img, .hero-logo, .league-logo{
+  width:96px;
+  height:96px;
+  flex:0 0 96px;
+  max-width:96px;
+  object-fit:cover;
+}
+h1, h2, h3, .player-profile-name, .hero-location, .hero-tagline{
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+.tabs{
+  display:flex;
+  flex-wrap:wrap !important;
+  gap:10px !important;
+  justify-content:center;
+  width:100%;
+  max-width:100%;
+  overflow:visible !important;
+}
+.tabbtn{
+  min-width:0 !important;
+  max-width:100%;
+}
+.table-wrap{
+  max-width:100%;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+img{
+  max-width:100%;
+  height:auto;
+}
+.grid2,.grid3,.grid4,.row2,.score-grid,.players-grid,.podium,.bracket-grid,.info-grid-2,.info-grid-3,.player-mini-grid,.player-record-grid{
+  min-width:0;
+}
+@media (max-width: 900px){
+  .wrap{
+    padding:12px;
+  }
+  .hero{
+    padding:14px;
+  }
+  .hero-layout{
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    gap:10px;
+  }
+  .logo, .hero img, .hero-logo, .league-logo{
+    width:72px;
+    height:72px;
+    flex:0 0 72px;
+    max-width:72px;
+  }
+  h1{
+    font-size:clamp(20px, 7vw, 30px) !important;
+    line-height:1.1 !important;
+  }
+  .hero-location{
+    font-size:clamp(14px, 5vw, 20px) !important;
+  }
+  .hero-tagline{
+    font-size:clamp(11px, 3.5vw, 14px) !important;
+    line-height:1.4 !important;
+  }
+  .tabs{
+    justify-content:flex-start;
+  }
+  .tabbtn{
+    flex:0 1 auto !important;
+    padding:10px 14px !important;
+    min-height:42px !important;
+  }
+  .grid2,.grid3,.grid4,.row2,.score-grid,.players-grid,.podium,.bracket-grid,.info-grid-2,.info-grid-3,.player-mini-grid,.player-record-grid{
+    grid-template-columns:1fr !important;
+  }
+  input, select, textarea, button{
+    font-size:16px !important;
+  }
+}
+
 </style>
 </head>
 <body>
+<!-- FINAL MOBILE FRIENDLY FIX -->
 
 
 <div class="wrap">
