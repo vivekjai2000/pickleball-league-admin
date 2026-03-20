@@ -235,33 +235,32 @@ th { background:#f8fbff; }
 }
 
 
-/* Mobile navigation enhancement */
-html,body{max-width:100%;overflow-x:hidden;}
-.wrap{width:min(1200px,100%);padding:16px;overflow-x:hidden;}
-.hero{padding:18px;margin-bottom:16px;}
-.hero-layout{display:flex;align-items:center;gap:14px;min-width:0;}
-.logo{width:72px;height:72px;flex:0 0 72px;border-radius:18px;}
-.hero-copy{min-width:0;flex:1;}
-.hero h1{font-size:clamp(28px,4vw,44px);line-height:1.08;overflow-wrap:anywhere;word-break:break-word;margin:0 0 6px 0;}
-.hero-location{font-size:clamp(16px,2vw,24px);margin:0 0 6px 0;}
-.hero-tagline{font-size:clamp(12px,1.4vw,16px);line-height:1.4;overflow-wrap:anywhere;word-break:break-word;}
-.mobile-nav{display:none;margin:12px 0 10px;}
-.mobile-nav-label{display:block;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:0 0 6px 2px;}
-.mobile-tab-select{width:100%;min-height:46px;border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:#fff;color:var(--text);font-weight:700;}
-.tabs{display:flex;gap:10px;flex-wrap:wrap;max-width:100%;overflow:visible;}
-.tabbtn{white-space:nowrap;flex:0 0 auto;}
+/* Mobile navigation patch v2 */
+.mobile-nav-wrap{display:none; margin:14px 0 8px;}
+.mobile-nav-label{font-size:12px; font-weight:800; letter-spacing:.08em; color:var(--muted); text-transform:uppercase; margin:0 0 8px 2px;}
+.mobile-nav-select{
+  width:100%;
+  min-height:48px;
+  border:1px solid #ccd7e5;
+  border-radius:18px;
+  background:#fff;
+  padding:12px 14px;
+  font-size:16px;
+  font-weight:700;
+}
 @media (max-width: 900px){
+  .tabs{display:none !important;}
+  .mobile-nav-wrap{display:block;}
   .wrap{padding:12px;}
-  .hero{padding:14px 14px 12px;border-radius:20px;}
-  .hero-layout{flex-direction:column;align-items:center;text-align:center;gap:10px;}
-  .logo{width:62px;height:62px;flex:0 0 62px;border-radius:16px;}
-  .hero h1{font-size:clamp(20px,7vw,32px);margin-bottom:4px;}
-  .hero-location{font-size:clamp(14px,4.5vw,20px);margin-bottom:4px;}
-  .hero-tagline{font-size:clamp(11px,3.5vw,14px);}
-  .mobile-nav{display:block;}
-  .tabs{display:none;}
-  .grid2,.grid3,.grid4,.row2,.players-grid,.podium,.bracket-grid,.info-grid-2,.info-grid-3,.player-mini-grid,.player-record-grid{grid-template-columns:1fr !important;}
-  input,select,textarea,button{font-size:16px !important;}
+  .hero{padding:16px;}
+  .hero-layout{flex-direction:column; text-align:center; gap:12px;}
+  .hero img{width:84px; height:84px;}
+  h1{font-size:clamp(24px, 7vw, 38px); line-height:1.08;}
+  .row2,.grid2,.grid3,.grid4,.info-grid-2,.info-grid-3,.players-grid,.player-mini-grid,.player-record-grid,.podium,.bracket-grid{
+    grid-template-columns:1fr !important;
+  }
+  .card,.player-profile-card,.mobile-card,.match-card,.rank-card,.info-card{max-width:100%; overflow:hidden;}
+  body,html{overflow-x:hidden;}
 }
 
 </style>
@@ -293,7 +292,6 @@ html,body{max-width:100%;overflow-x:hidden;}
         <div class="hero-tagline">Round Robin • Weekend League • Auto Rankings • Smart Rotation</div>
       </div>
     </div>
-    <div class="mobile-nav"><label class="mobile-nav-label" for="mobileTabSelect">Navigate</label><select id="mobileTabSelect" class="mobile-tab-select" onchange="showTab(this.value)"><option value="overview">Overview</option><option value="setup">League Setup</option><option value="roster">Roster</option><option value="schedule">Schedule</option><option value="scores">Scores</option><option value="rankings">Rankings</option><option value="history">History</option><option value="awards">Awards</option><option value="checkin">Check-In</option><option value="quicktools">Quick Tools</option><option value="playoffs">Playoff Manager</option><option value="google">Google Sheets Sync</option></select></div>
     <div class="tabs">
       <button class="tabbtn active" onclick="showTab('overview', this)">Overview</button>
       <button class="tabbtn" onclick="showTab('setup', this)">League Setup</button>
@@ -307,6 +305,23 @@ html,body{max-width:100%;overflow-x:hidden;}
       <button class="tabbtn" onclick="showTab('quicktools', this)">Quick Tools</button>
       <button class="tabbtn" onclick="showTab('playoffmanager', this)">Playoff Manager</button>
       <button class="tabbtn" onclick="showTab('sheetsync', this)">Google Sheets Sync</button>
+    </div>
+    <div class="mobile-nav-wrap">
+      <div class="mobile-nav-label">Navigate</div>
+      <select id="mobileNavSelect" class="mobile-nav-select" onchange="showTabFromSelect(this)">
+        <option value="overview">Overview</option>
+        <option value="setup">League Setup</option>
+        <option value="roster">Roster</option>
+        <option value="schedule">Schedule</option>
+        <option value="scores">Scores</option>
+        <option value="rankings">Rankings</option>
+        <option value="history">History</option>
+        <option value="awards">Awards</option>
+        <option value="checkin">Check-In</option>
+        <option value="quicktools">Quick Tools</option>
+        <option value="playoffmanager">Playoff Manager</option>
+        <option value="sheetsync">Google Sheets Sync</option>
+      </select>
     </div>
 
   <div id="overview" class="section active">
@@ -645,7 +660,20 @@ html,body{max-width:100%;overflow-x:hidden;}
 const KEY = "pouncey_tract_admin_professional_v1";
 let state = {profile:{leagueTitle:"Pouncey Tract Weekend Pickleball League",leagueSubtitle:"Short Pump, VA",seasonStart:"2026-04-11",seasonEnd:"2026-10-03",defaultCourts:5,defaultRounds:8,winScore:11,kFactor:24,minMatchesForPlayoffs:8,playoffFormat:12,googleScriptUrl:"https://script.google.com/macros/s/AKfycbx8q6te2Id-CWSAELOSWMBoLDL5uUNpMKEdcgpd2H8yvHDK7QMVT0Dw0UvkPjDu6kVf/exec",currentSignupWeek:""},roster:[],weeks:[],availability:{},playoffs:{}};
 
-function showTab(id, btn){ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('active')); const target=document.getElementById(id); if(target) target.classList.add('active'); if(btn) btn.classList.add('active'); else { const tab=document.querySelector(`.tabbtn[onclick*="showTab('${id}'"]`); if(tab) tab.classList.add('active'); } const sel=document.getElementById('mobileTabSelect'); if(sel) sel.value=id; }
+function showTab(id, btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('active'));
+  const target = document.getElementById(id);
+  if(target) target.classList.add('active');
+  if(btn) btn.classList.add('active');
+  const sel = document.getElementById('mobileNavSelect');
+  if(sel) sel.value = id;
+}
+function showTabFromSelect(sel){
+  const id = sel && sel.value ? sel.value : 'overview';
+  const btn = Array.from(document.querySelectorAll('.tabbtn')).find(b => (b.getAttribute('onclick')||'').includes("'" + id + "'"));
+  showTab(id, btn || null);
+}
 function esc(s){ return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;"); }
 function fmtDate(iso){ if(!iso) return ""; const d=new Date(iso+"T12:00:00"); return d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); }
 function addDays(iso,n){ const d=new Date(iso+"T12:00:00"); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
@@ -1823,15 +1851,16 @@ window.addEventListener("load", () => {
   }
 });
 
-function syncMobileTabSelect(){
-  const active=document.querySelector('.tabbtn.active');
-  const sel=document.getElementById('mobileTabSelect');
-  if(active && sel){
-    const match=(active.getAttribute('onclick')||'').match(/showTab\('([^']+)'/);
-    if(match) sel.value=match[1];
+function syncMobileNavOnLoad(){
+  const activeBtn = document.querySelector('.tabbtn.active');
+  const sel = document.getElementById('mobileNavSelect');
+  if(activeBtn && sel){
+    const onclick = activeBtn.getAttribute('onclick') || '';
+    const m = onclick.match(/showTab\('([^']+)'/);
+    if(m) sel.value = m[1];
   }
 }
-document.addEventListener('DOMContentLoaded', syncMobileTabSelect);
+window.addEventListener('load', () => { try{ syncMobileNavOnLoad(); }catch(e){} });
 </script>
 
 </body>
