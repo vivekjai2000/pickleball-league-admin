@@ -1,17 +1,34 @@
-Photo upload safe fix
+Google Drive photo storage patch
 
-What was likely happening:
-- uploaded photos were being stored as large base64 strings
-- that could make sync or rendering unstable
-- on admin, leaving rating blank for an existing player could also overwrite the rating with 0
+Built on:
+- pouncey_photo_upload_safe_fix_v2.zip
 
-This patch:
-- compresses uploaded photos more aggressively
-- blocks still-too-large images
-- preserves existing rating when admin updates only the photo
-- shows proper sync success/failure in admin after photo update
-- sanitizes oversized photo URLs on the league page so rendering does not break
+What changed:
+- photos are no longer stored inline as base64 in the saved league state
+- Admin and League now upload player photos to Google Drive through Apps Script
+- only the Drive image URL is stored in player profiles
+- old photo file can be replaced when a new photo is uploaded for the same player
+- optional Google Drive Folder ID field added in Admin > Google Sheets Connection
+- if blank, Apps Script auto-creates/uses a "Pouncey Player Photos" folder near the spreadsheet
 
-Replace:
+Important:
+- You must replace Code.gs in Apps Script and redeploy the web app after updating it
+- Then replace admin/index.html and league/index.html in GitHub
+
+Files to replace:
+- Code.gs
 - admin/index.html
 - league/index.html
+- public-data.js
+
+Deployment steps:
+1. Open your Apps Script project
+2. Replace Code.gs with the patched version
+3. Deploy > Manage deployments > Edit > New version > Deploy
+4. Copy the web app URL if it changed
+5. In Admin, save/test the Apps Script URL
+6. Upload a player photo again
+
+Expected result:
+- player profiles will store a Google Drive image URL, not a base64 blob
+- League page remains stable after photo updates
