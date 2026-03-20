@@ -235,95 +235,40 @@ th { background:#f8fbff; }
 }
 
 
-/* Sticky tabs + responsive polish */
+/* VERIFIED PHASE 1: sticky tabs + responsive UI */
 .sticky-tabs-wrap{
-  position: sticky;
-  top: 0;
-  z-index: 80;
-  background: rgba(248,250,252,.92);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 10px 0 12px;
-  margin: 8px 0 10px;
-  border-bottom: 1px solid var(--line);
+  position:sticky;
+  top:0;
+  z-index:120;
+  background:rgba(248,250,252,.96);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  padding:10px 0 12px;
+  margin:8px 0 14px;
+  border-bottom:1px solid var(--line);
 }
-.tabs{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-.tabbtn{
-  border-radius:18px;
-  min-height:44px;
-  font-weight:800;
-}
-.card{
-  background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);
-  border:1px solid var(--line);
-  box-shadow:0 8px 20px rgba(15,23,42,.06);
-  border-radius:24px;
-}
-.mobile-card{
-  background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);
-  border:1px solid var(--line);
-  border-radius:20px;
-  box-shadow:0 8px 20px rgba(15,23,42,.06);
-}
-input,select,textarea{
-  width:100%;
-  border:1px solid var(--line);
-  border-radius:14px;
-  min-height:46px;
-  padding:10px 12px;
-  background:#fff;
-}
-button{
-  min-height:44px;
-  border-radius:16px;
-  font-weight:800;
-}
-label{
-  display:block;
-  font-weight:800;
-  margin-bottom:6px;
-}
-.table-wrap{
-  overflow-x:auto;
-  -webkit-overflow-scrolling:touch;
-}
-@media (max-width: 1024px){
-  .wrap{padding:14px;}
-  .hero{padding:18px;}
-  h1{font-size:28px; line-height:1.15;}
-}
-@media (max-width: 900px){
-  .hero-layout{flex-direction:column; align-items:flex-start; gap:14px;}
-  .tabs{
-    overflow-x:auto;
-    flex-wrap:nowrap;
-    padding-bottom:4px;
-    -webkit-overflow-scrolling:touch;
-  }
+.tabs{display:flex;gap:10px;flex-wrap:wrap;}
+.tabbtn{border-radius:18px;min-height:44px;font-weight:800;}
+.card{background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);border:1px solid var(--line);box-shadow:0 8px 20px rgba(15,23,42,.06);border-radius:24px;}
+.mobile-card{background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);border:1px solid var(--line);border-radius:20px;box-shadow:0 8px 20px rgba(15,23,42,.06);}
+input,select,textarea{width:100%;min-height:46px;border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:#fff;}
+button{min-height:44px;border-radius:16px;font-weight:800;}
+label{display:block;font-weight:800;margin-bottom:6px;}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.section-hero-title{color:#38a8d8;font-weight:900;font-size:clamp(22px,4vw,28px);margin:6px 0 10px;}
+@media (max-width:1024px){.wrap{padding:14px;}.hero{padding:18px;}h1{font-size:28px;line-height:1.15;}}
+@media (max-width:900px){
+  .hero-layout{flex-direction:column;align-items:flex-start;gap:14px;}
+  .tabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
   .tabbtn{flex:0 0 auto;}
-  .grid2,.grid3,.grid4,.row2{
-    grid-template-columns:1fr !important;
-  }
-  input,select,textarea,button{
-    font-size:16px !important;
-  }
-}
-
-
-.section-hero-title{
-  color:#38a8d8;
-  font-weight:900;
-  font-size:clamp(22px,4vw,28px);
-  margin:6px 0 10px;
+  .grid2,.grid3,.grid4,.row2{grid-template-columns:1fr !important;}
+  input,select,textarea,button{font-size:16px !important;}
 }
 
 </style>
 </head>
 <body>
+<!-- VERIFIED STICKY TABS ADMIN -->
 
 <div id="adminLock" class="admin-lock">
   <div class="admin-lock-card">
@@ -699,11 +644,27 @@ label{
 <script src="../public-data.js"></script>
 <script>
 const KEY = "pouncey_tract_admin_professional_v1";
+let ADMIN_LIVE_DATA_READY = false;
+let ADMIN_INITIAL_LOAD_DONE = false;
 let state = {profile:{leagueTitle:"Pouncey Tract Weekend Pickleball League",leagueSubtitle:"Short Pump, VA",seasonStart:"2026-04-11",seasonEnd:"2026-10-03",defaultCourts:5,defaultRounds:8,winScore:11,kFactor:24,minMatchesForPlayoffs:8,playoffFormat:12,googleScriptUrl:"https://script.google.com/macros/s/AKfycbx8q6te2Id-CWSAELOSWMBoLDL5uUNpMKEdcgpd2H8yvHDK7QMVT0Dw0UvkPjDu6kVf/exec",currentSignupWeek:""},roster:[],weeks:[],availability:{},playoffs:{}};
 
 function showTab(id, btn){ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('active')); document.getElementById(id).classList.add('active'); btn.classList.add('active'); }
 function esc(s){ return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;"); }
 function fmtDate(iso){ if(!iso) return ""; const d=new Date(iso+"T12:00:00"); return d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); }
+
+function hasMeaningfulRoster(roster){
+  return Array.isArray(roster) && roster.some(p => String((p && p.name) || '').trim());
+}
+function hasMeaningfulWeeks(weeks){
+  return Array.isArray(weeks) && weeks.length > 0;
+}
+function shouldBlockDestructiveSave(payload){
+  const currentRosterHasData = hasMeaningfulRoster(state.roster);
+  const incomingRosterHasData = hasMeaningfulRoster(payload && payload.roster);
+  if(currentRosterHasData && !incomingRosterHasData) return true;
+  if(ADMIN_LIVE_DATA_READY && currentRosterHasData && !incomingRosterHasData) return true;
+  return false;
+}
 function addDays(iso,n){ const d=new Date(iso+"T12:00:00"); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
 function saturdaysBetween(start,end){ let d=new Date(start+"T12:00:00"); while(d.getDay()!==6) d.setDate(d.getDate()+1); const arr=[]; while(d.toISOString().slice(0,10)<=end){ arr.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+7); } return arr; }
 function syncProfileFromUI(){
@@ -1338,7 +1299,12 @@ async function pushStateToGoogleSheets(){
   try{
     syncProfileFromUI();
     const payload = {profile:state.profile, roster:state.roster, weeks:state.weeks, availability:state.availability||{}, playoffs:state.playoffs||{}};
+    if(shouldBlockDestructiveSave(payload)){
+      googleSyncStatus.textContent = "Blocked save to protect existing player profiles. Load live Google data first or restore roster before saving.";
+      return;
+    }
     const data = await callGoogleScript("saveLeagueState", payload);
+    ADMIN_LIVE_DATA_READY = true;
     googleSyncStatus.textContent = data.message || "League data saved to Google Sheets.";
   }catch(err){
     googleSyncStatus.textContent = err.message;
@@ -1434,8 +1400,11 @@ async function loadStateFromGoogleSheets(){
     populateRemoveSelect();
     recalcElo();
     saveState();
+    ADMIN_LIVE_DATA_READY = true;
+    ADMIN_INITIAL_LOAD_DONE = true;
     googleSyncStatus.textContent = "League data loaded from Google Sheets. Player profiles were merged safely."; ADMIN_LAST_SHEET_SNAPSHOT = buildAdminSheetSnapshot(loaded); startAdminAutoRefresh();
   }catch(err){
+    ADMIN_INITIAL_LOAD_DONE = true;
     googleSyncStatus.textContent = err.message;
   }
 }
@@ -1452,11 +1421,18 @@ async function resetGoogleSheetsData(){
 
 async function autoPushLeagueToGoogleSheets(reason="update"){
   try{
+    if(!ADMIN_INITIAL_LOAD_DONE) return;
     syncProfileFromUI();
     const url = (state.profile && state.profile.googleScriptUrl) || "";
     if(!url) return;
     const payload = {profile:state.profile, roster:state.roster, weeks:state.weeks, availability:state.availability||{}, playoffs:state.playoffs||{}};
+    if(shouldBlockDestructiveSave(payload)){
+      const syncEl = document.getElementById("googleSyncStatus");
+      if(syncEl) syncEl.textContent = "Auto-save blocked to protect existing player profiles.";
+      return;
+    }
     const data = await callGoogleScript("saveLeagueState", payload);
+    ADMIN_LIVE_DATA_READY = true;
     const syncEl = document.getElementById("googleSyncStatus");
     if(syncEl) syncEl.textContent = data.message || `League data auto-saved to Google Sheets after ${reason}.`;
   }catch(err){
@@ -1737,7 +1713,21 @@ function copyWeeklyRanking(){ const weekNum=Number(rankWeek.value), day=rankDay.
 function copySeasonSummary(){ const rows=seasonStats().slice(0,10); let txt=`*${state.profile.leagueTitle}*\nSeason Leaderboard\n\n`; rows.forEach((r,i)=>{ txt += `${i+1}. ${r.name}  ${r.wins}-${r.losses}  ${(r.pct*100).toFixed(1)}%  Diff ${r.diff}  ELO ${r.elo.toFixed(1)}\n`; }); navigator.clipboard.writeText(txt.trim()).then(()=>alert("Season summary copied.")); }
 function exportAdminJson(){ const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="pouncey_tract_admin_professional.json"; a.click(); URL.revokeObjectURL(a.href); }
 function exportPublicJs(){ const payload={profile:state.profile, roster:state.roster.map(p=>({name:p.name,rating:p.rating,seed:p.seed,elo:p.elo,joinedWeek:p.joinedWeek,active:p.active})), weeks:state.weeks, availability:state.availability||{}, playoffs:state.playoffs||{}, season:seasonStats()}; const content="window.POUNCEY_PUBLIC_DATA = " + JSON.stringify(payload, null, 2) + ";\n"; const blob=new Blob([content],{type:"application/javascript"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="public-data.js"; a.click(); URL.revokeObjectURL(a.href); }
-function saveState(){ syncProfileFromUI(); localStorage.setItem(KEY, JSON.stringify(state)); }
+function saveState(){
+  syncProfileFromUI();
+  try{
+    const existingRaw = localStorage.getItem(KEY);
+    if(existingRaw){
+      const existing = JSON.parse(existingRaw);
+      if(hasMeaningfulRoster(existing.roster) && !hasMeaningfulRoster(state.roster)){
+        const merged = Object.assign({}, state, {roster: existing.roster});
+        localStorage.setItem(KEY, JSON.stringify(merged));
+        return;
+      }
+    }
+  }catch(e){}
+  localStorage.setItem(KEY, JSON.stringify(state));
+}
 function loadState(){
   const raw=localStorage.getItem(KEY);
   if(!raw){ alert("No saved state found."); return; }
@@ -1808,6 +1798,8 @@ window.addEventListener("load", async ()=>{
   if(localStorage.getItem(KEY)) loadState();
   if(state.profile.googleScriptUrl){
     try{ await loadStateFromGoogleSheets(); }catch(e){}
+  } else {
+    ADMIN_INITIAL_LOAD_DONE = true;
   }
   setTimeout(() => { try { previewSignedUpPlayersForSchedule(); } catch(e) {} }, 200);
   setTimeout(startAdminAutoRefresh, 1200);
@@ -1885,7 +1877,9 @@ document.addEventListener("click", (e) => {
     setTimeout(() => {
       try{
         const sticky = document.querySelector(".sticky-tabs-wrap");
-        if(sticky) window.scrollTo({top: Math.max(0, sticky.offsetTop - 8), behavior: "smooth"});
+        if(sticky){
+          window.scrollTo({top: Math.max(0, sticky.offsetTop - 8), behavior: "smooth"});
+        }
       }catch(err){}
     }, 10);
   }
