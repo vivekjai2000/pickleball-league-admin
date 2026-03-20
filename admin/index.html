@@ -366,9 +366,71 @@ label{display:block;font-weight:800;margin-bottom:6px;}
   }
 }
 
+
+/* Layout overflow hotfix */
+html, body{
+  max-width:100%;
+  overflow-x:hidden !important;
+}
+*, *::before, *::after{
+  box-sizing:border-box;
+}
+body{
+  margin:0;
+}
+.wrap, .container, .page, main{
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+}
+.hero, .card, .player-profile-card, .mobile-card, .info-card, .match-card, .rank-card{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+.hero h1, .player-profile-name, h1, h2, h3{
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+.hero-layout > *, .player-profile-identity > *, .info-grid-2 > *, .grid2 > *, .grid3 > *, .grid4 > *, .row2 > *{
+  min-width:0;
+}
+.tabs{
+  width:100%;
+  max-width:100%;
+}
+.tabbtn{
+  white-space:nowrap;
+}
+img{
+  max-width:100%;
+  height:auto;
+}
+.table-wrap{
+  max-width:100%;
+}
+@media (max-width:900px){
+  .wrap, .container, .page, main{
+    padding-left:12px !important;
+    padding-right:12px !important;
+  }
+  .hero{
+    width:100%;
+    max-width:100%;
+  }
+  .hero-layout{
+    width:100%;
+  }
+  .tabs{
+    padding-left:2px;
+    padding-right:2px;
+  }
+}
+
 </style>
 </head>
 <body>
+<!-- LAYOUT OVERFLOW HOTFIX -->
 <!-- TABS VISIBILITY HOTFIX -->
 <!-- VERIFIED STICKY TABS ADMIN -->
 
