@@ -717,7 +717,7 @@ function pushProfileToUI(){
 }
 
 
-async function fileToDataUrl(file, maxSize=480){
+async function fileToDataUrl(file, maxSize=240){
   if(!file) return "";
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -726,11 +726,16 @@ async function fileToDataUrl(file, maxSize=480){
       img.onload = () => {
         const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
         const canvas = document.createElement("canvas");
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", 0.82));
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.72);
+        if(dataUrl.length > 180000){
+          reject(new Error("Image is still too large after compression. Please choose a smaller photo."));
+          return;
+        }
+        resolve(dataUrl);
       };
       img.onerror = () => reject(new Error("Could not read image."));
       img.src = e.target.result;
@@ -896,14 +901,21 @@ function importRoster(){
 
 async function addPlayerMidSeason(){
   const name = String(newPlayerName.value || '').trim();
-  const rating = Number(newPlayerRating.value);
+  const ratingRaw = String(newPlayerRating.value || '').trim();
   const joinedWeek = Number(newPlayerWeek.value || 1);
   let photoUrl = "";
   const fileEl = document.getElementById("newPlayerPhotoFile");
   const file = fileEl && fileEl.files ? fileEl.files[0] : null;
 
+  const existing = state.roster.find(p => normalizePlayerName(p.name) === normalizePlayerName(name));
+  const rating = ratingRaw === ""
+    ? (existing ? Number(existing.rating || 0) : NaN)
+    : Number(ratingRaw);
+
   if(!name || !Number.isFinite(rating)){
-    playerChangeStatus.textContent = "Enter a valid player name and rating.";
+    playerChangeStatus.textContent = existing
+      ? "Enter a valid player name. Leave rating blank to keep the existing rating."
+      : "Enter a valid player name and rating.";
     return;
   }
 
@@ -937,10 +949,16 @@ async function addPlayerMidSeason(){
   const previewEl = document.getElementById("adminPhotoPreview");
   if(previewEl) previewEl.textContent = 'No image selected.';
 
-  playerChangeStatus.textContent = result.mode === "created"
-    ? `Created player profile for ${name}.`
-    : `Updated player profile for ${name}.`;
-  autoPushLeagueToGoogleSheets('player profile upsert');
+  try{
+    await autoPushLeagueToGoogleSheets('player profile upsert');
+    playerChangeStatus.textContent = (result.mode === "created"
+      ? `Created player profile for ${name}.`
+      : `Updated player profile for ${name}.`) + " Synced successfully.";
+  }catch(err){
+    playerChangeStatus.textContent = (result.mode === "created"
+      ? `Created player profile for ${name}.`
+      : `Updated player profile for ${name}.`) + " Saved locally, but Google sync failed: " + err.message;
+  }
 }
 
 function removeSelectedPlayer(){
@@ -1423,18 +1441,14 @@ async function resetGoogleSheetsData(){
 
 
 async function autoPushLeagueToGoogleSheets(reason="update"){
-  try{
-    syncProfileFromUI();
-    const url = (state.profile && state.profile.googleScriptUrl) || "";
-    if(!url) return;
-    const payload = {profile:state.profile, roster:state.roster, weeks:state.weeks, availability:state.availability||{}, playoffs:state.playoffs||{}};
-    const data = await callGoogleScript("saveLeagueState", payload);
-    const syncEl = document.getElementById("googleSyncStatus");
-    if(syncEl) syncEl.textContent = data.message || `League data auto-saved to Google Sheets after ${reason}.`;
-  }catch(err){
-    const syncEl = document.getElementById("googleSyncStatus");
-    if(syncEl) syncEl.textContent = "Auto-save warning: " + err.message;
-  }
+  syncProfileFromUI();
+  const url = (state.profile && state.profile.googleScriptUrl) || "";
+  if(!url) return;
+  const payload = {profile:state.profile, roster:state.roster, weeks:state.weeks, availability:state.availability||{}, playoffs:state.playoffs||{}};
+  const data = await callGoogleScript("saveLeagueState", payload);
+  const syncEl = document.getElementById("googleSyncStatus");
+  if(syncEl) syncEl.textContent = data.message || `League data auto-saved to Google Sheets after ${reason}.`;
+  return data;
 }
 
 
