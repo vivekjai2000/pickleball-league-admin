@@ -476,6 +476,80 @@ th { background:#f8fbff; }
   gap:8px;
 }
 
+
+/* Sticky tabs + consistent responsive polish */
+.sticky-tabs-wrap{
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  background: rgba(248,250,252,.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 10px 0 12px;
+  margin: 8px 0 10px;
+  border-bottom: 1px solid var(--line);
+}
+.tabs{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.tabbtn{
+  border-radius:18px;
+  min-height:44px;
+  font-weight:800;
+}
+.card,.player-profile-card{
+  background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);
+  border:1px solid var(--line);
+  box-shadow:0 8px 20px rgba(15,23,42,.06);
+  border-radius:24px;
+}
+.player-mini-card,.player-record-box,.info-card,.rank-card,.match-card{
+  border-radius:20px;
+}
+input,select,textarea{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:14px;
+  min-height:46px;
+  padding:10px 12px;
+  background:#fff;
+}
+button{
+  min-height:44px;
+  border-radius:16px;
+  font-weight:800;
+}
+.table-wrap{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+@media (max-width: 1024px){
+  .wrap{padding:14px;}
+  .hero{padding:18px;}
+  h1{font-size:28px; line-height:1.15;}
+}
+@media (max-width: 900px){
+  .hero-layout{flex-direction:column; align-items:flex-start; gap:14px;}
+  .tabs{
+    overflow-x:auto;
+    flex-wrap:nowrap;
+    padding-bottom:4px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .tabbtn{flex:0 0 auto;}
+  .grid2,.grid3,.grid4,.players-grid,.podium,.bracket-grid,.row2,.info-grid-2,.info-grid-3,.player-mini-grid,.player-record-grid{
+    grid-template-columns:1fr !important;
+  }
+  input,select,textarea,button{
+    font-size:16px !important;
+  }
+  .player-profile-name{
+    font-size:clamp(24px,6vw,34px) !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -489,7 +563,7 @@ th { background:#f8fbff; }
         <div class="hero-tagline">Round Robin • Weekend League • Auto Rankings • Smart Rotation</div>
       </div>
     </div>
-    <div class="tabs">
+    <div class="sticky-tabs-wrap"><div class="tabs">
       <button class="tabbtn active" onclick="showTab('overview', this)">Overview</button>
       <button class="tabbtn" onclick="showTab('schedule', this)">Schedule</button>
       <button class="tabbtn" onclick="showTab('rankings', this)">Rankings</button>
@@ -736,7 +810,7 @@ async function tryLoadLiveGoogleData(){
       cache:"no-store",
       credentials:"omit"
     });
-    if(!res || !res.ok) return false;
+    if(!res.ok) return false;
     const text = await res.text();
     let json = null;
     try { json = JSON.parse(text); } catch(e) { return false; }
@@ -746,11 +820,6 @@ async function tryLoadLiveGoogleData(){
         try {
           localStorage.setItem("pouncey_google_script_url", data.profile.googleScriptUrl);
           localStorage.setItem("pouncy_google_script_url", data.profile.googleScriptUrl);
-        } catch(e) {}
-      } else {
-        try {
-          localStorage.setItem("pouncey_google_script_url", url);
-          localStorage.setItem("pouncy_google_script_url", url);
         } catch(e) {}
       }
       return true;
@@ -771,13 +840,13 @@ function useData() {
   const weekEl = document.getElementById("weekSel");
   if(weekEl) weekEl.innerHTML = weekOptions;
 
-  renderOverview();
-  renderSchedule();
-  renderRankings();
-  renderHistory();
-  renderPlayers();
-  renderPlayoffs();
-  renderHallOfFame();
+  try{ renderOverview(); }catch(e){ console.error(e); if(viewer) viewer.textContent = "Overview failed to render: " + e.message; }
+  try{ renderSchedule(); }catch(e){ console.error(e); }
+  try{ renderRankings(); }catch(e){ console.error(e); }
+  try{ renderHistory(); }catch(e){ console.error(e); }
+  try{ renderPlayers(); }catch(e){ console.error(e); }
+  try{ renderPlayoffs(); }catch(e){ console.error(e); }
+  try{ renderHallOfFame(); }catch(e){ console.error(e); }
   try{ bindLeaguePhotoPreview(); }catch(e){}
 }
 
@@ -1361,11 +1430,7 @@ async function saveLeaguePlayerProfile(){
   }
 
   const result = upsertLeaguePlayerProfile({
-    name,
-    rating,
-    photoUrl,
-    joinedWeek: 1,
-    active: true
+    name, rating, photoUrl, joinedWeek: 1, active: true
   }, {source:"league"});
 
   if(!result.ok){
@@ -1390,10 +1455,7 @@ async function saveLeaguePlayerProfile(){
   }
 
   try{
-    renderPlayers();
-    renderRankings();
-    renderHallOfFame();
-    renderOverview();
+    renderPlayers(); renderRankings(); renderHallOfFame(); renderOverview();
   }catch(e){}
 
   const previewEl = document.getElementById("leaguePhotoPreview");
@@ -1809,6 +1871,18 @@ window.addEventListener('load', () => {
       }
     }, 300);
   });
+});
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".tabbtn");
+  if(btn){
+    setTimeout(() => {
+      try{
+        const sticky = document.querySelector(".sticky-tabs-wrap");
+        if(sticky) window.scrollTo({top: Math.max(0, sticky.offsetTop - 8), behavior: "smooth"});
+      }catch(err){}
+    }, 10);
+  }
 });
 </script>
 
