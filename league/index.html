@@ -821,8 +821,9 @@ function getPlayerPhotoMarkup(name, large=false){
   const cls = large ? 'player-photo-lg' : 'player-avatar';
   const fcls = large ? 'player-photo-lg-fallback' : 'player-avatar-fallback';
   const initial = esc((name || '?').trim().charAt(0).toUpperCase() || '?');
-  if(p && p.photoUrl){
-    return `<img src="${esc(p.photoUrl)}" alt="${esc(name)}" class="${cls}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="${fcls}" style="display:none">${initial}</div>`;
+  const photoUrl = p && typeof p.photoUrl === 'string' && p.photoUrl.length < 200000 ? p.photoUrl : '';
+  if(photoUrl){
+    return `<img src="${esc(photoUrl)}" alt="${esc(name)}" class="${cls}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="${fcls}" style="display:none">${initial}</div>`;
   }
   return `<div class="${fcls}">${initial}</div>`;
 }
@@ -946,7 +947,19 @@ async function tryLoadLiveGoogleData(){
   return false;
 }
 
+
+function sanitizeRosterPhotoUrls(){
+  if(!data || !Array.isArray(data.roster)) return;
+  data.roster.forEach(p => {
+    if(!p) return;
+    if(typeof p.photoUrl !== 'string') p.photoUrl = '';
+    if(p.photoUrl && p.photoUrl.length > 200000){
+      p.photoUrl = '';
+    }
+  });
+}
 function useData() {
+  sanitizeRosterPhotoUrls();
   const viewer = document.getElementById("viewerStatus");
   if(!data) {
     if(viewer) viewer.textContent = "No league data found yet. Make sure Google Sheets sync is configured or the shared data file is updated.";
@@ -1418,7 +1431,7 @@ async function savePublicScore(week, dayKey, round, court){
 
 
 
-async function leagueFileToDataUrl(file, maxSize=480){
+async function leagueFileToDataUrl(file, maxSize=240){
   if(!file) return "";
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -1427,11 +1440,16 @@ async function leagueFileToDataUrl(file, maxSize=480){
       img.onload = () => {
         const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
         const canvas = document.createElement("canvas");
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", 0.82));
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.72);
+        if(dataUrl.length > 180000){
+          reject(new Error("Image is still too large after compression. Please choose a smaller photo."));
+          return;
+        }
+        resolve(dataUrl);
       };
       img.onerror = () => reject(new Error("Could not read image."));
       img.src = e.target.result;
