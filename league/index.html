@@ -977,7 +977,7 @@ tr:nth-child(even) td{
         
       </div>
       <div class="row2" style="margin-top:12px">
-        <div><label style="display:block;font-weight:700;margin-bottom:6px">Note</label><div class="small" style="margin-top:10px">Existing player ratings stay protected. Photo upload is disabled in this version.</div></div>
+        <div><label style="display:block;font-weight:700;margin-bottom:6px">Note</label><div class="small" style="margin-top:10px">Photo is optional. Photos are uploaded to Google Drive and only the Drive image URL is stored. Existing players can update their photo here. Ratings for existing players stay protected.</div></div>
         <div></div>
       </div>
       <button style="margin-top:12px" onclick="saveLeaguePlayerProfile()">Save Profile</button>
@@ -1183,34 +1183,16 @@ function buildPlayerStats() {
 }
 
 function getLiveGoogleUrl(){
-  const FALLBACK_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8q6te2Id-CWSAELOSWMBoLDL5uUNpMKEdcgpd2H8yvHDK7QMVT0Dw0UvkPjDu6kVf/exec";
-  try{
-    const params = new URLSearchParams(window.location.search);
-    const qs = params.get("gs") || params.get("googleScriptUrl");
-    if(qs) return qs;
-  }catch(e){}
-  try{
-    const embedded = (window.POUNCEY_PUBLIC_DATA || window.POUNCY_PUBLIC_DATA || null);
-    if(embedded && embedded.profile && embedded.profile.googleScriptUrl) return embedded.profile.googleScriptUrl;
-  }catch(e){}
-  try{
-    const localUrl = localStorage.getItem("pouncey_google_script_url") || localStorage.getItem("pouncy_google_script_url") || "";
-    if(localUrl) return localUrl;
-  }catch(e){}
-  return FALLBACK_SCRIPT_URL;
+  const FORCE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8q6te2Id-CWSAELOSWMBoLDL5uUNpMKEdcgpd2H8yvHDK7QMVT0Dw0UvkPjDu6kVf/exec";
+  return FORCE_SCRIPT_URL;
 }
 async function tryLoadLiveGoogleData(){
   const url = getLiveGoogleUrl();
-  if(!url) return false;
-
   const viewer = document.getElementById("viewerStatus");
-
-  async function parseResponse(res){
-    if(!res || !res.ok) return null;
-    const text = await res.text();
-    try { return JSON.parse(text); } catch(e) { return null; }
+  if(!url){
+    if(viewer) viewer.textContent = "No Google Apps Script URL configured.";
+    return false;
   }
-
   try{
     let res = await fetch(url + "?action=loadLeagueState&ts=" + Date.now(), {
       method:"GET",
@@ -1218,33 +1200,41 @@ async function tryLoadLiveGoogleData(){
       cache:"no-store",
       credentials:"omit"
     });
-    let json = await parseResponse(res);
 
-    if(!(json && json.ok && json.data)){
+    if(!res || !res.ok){
       res = await fetch(url + "?ts=" + Date.now(), {
         method:"GET",
         mode:"cors",
         cache:"no-store",
         credentials:"omit"
       });
-      json = await parseResponse(res);
+    }
+
+    if(!res || !res.ok){
+      if(viewer) viewer.textContent = "Live Google fetch failed. Showing fallback data.";
+      return false;
+    }
+
+    const text = await res.text();
+    let json = null;
+    try{
+      json = JSON.parse(text);
+    }catch(e){
+      if(viewer) viewer.textContent = "Google response was not valid JSON. Showing fallback data.";
+      return false;
     }
 
     if(json && json.ok && json.data){
       data = json.data;
-      try{
-        localStorage.setItem("pouncey_google_script_url", url);
-        localStorage.setItem("pouncy_google_script_url", url);
-      }catch(e){}
-      if(viewer){
-        const rosterCount = Array.isArray(data.roster) ? data.roster.length : 0;
-        const weekCount = Array.isArray(data.weeks) ? data.weeks.length : 0;
-        viewer.textContent = `Live Google Sheets data loaded. Players: ${rosterCount}. Weeks: ${weekCount}.`;
-      }
+      if(typeof sanitizeRosterPhotoUrls === "function") sanitizeRosterPhotoUrls();
+      const rosterCount = Array.isArray(data.roster) ? data.roster.length : 0;
+      const weekCount = Array.isArray(data.weeks) ? data.weeks.length : 0;
+      const curWeek = data && data.profile && data.profile.currentSignupWeek ? ("Week " + data.profile.currentSignupWeek) : "Not set";
+      if(viewer) viewer.textContent = `Live Google Sheets data loaded. Players: ${rosterCount}. Weeks: ${weekCount}. Current signup week: ${curWeek}.`;
       return true;
     }
 
-    if(viewer) viewer.textContent = "Live Google response was empty or invalid. Showing fallback data.";
+    if(viewer) viewer.textContent = "Live Google returned empty data. Showing fallback data.";
   }catch(e){
     if(viewer) viewer.textContent = "Live Google load failed. Showing fallback data.";
   }
@@ -1269,9 +1259,11 @@ function useData() {
     if(viewer) viewer.textContent = "No league data found yet. Make sure Google Sheets sync is configured or the shared data file is updated.";
     return;
   }
-  if(viewer) viewer.textContent = getLiveGoogleUrl()
-    ? "Live Google Sheets data loaded."
-    : "Showing fallback public data. Save/test the Apps Script URL in Admin if live data looks outdated.";
+  if(viewer && !viewer.textContent){
+    viewer.textContent = getLiveGoogleUrl()
+      ? "Live Google Sheets data loaded."
+      : "Showing fallback public data.";
+  }
 
   const weekOptions = (data.weeks || []).map(w=>`<option value="${w.week}">Week ${w.week}</option>`).join('');
   const weekEl = document.getElementById("weekSel");
@@ -2306,11 +2298,7 @@ function renderHallOfFame() {
 
 window.addEventListener('load', async ()=>{
   const loaded = await tryLoadLiveGoogleData();
-  if(!loaded){
-    if(window.POUNCEY_PUBLIC_DATA || window.POUNCY_PUBLIC_DATA){
-      data = window.POUNCEY_PUBLIC_DATA || window.POUNCY_PUBLIC_DATA;
-    }
-  }
+  if(!loaded && (window.POUNCEY_PUBLIC_DATA || window.POUNCY_PUBLIC_DATA)) data = window.POUNCEY_PUBLIC_DATA || window.POUNCY_PUBLIC_DATA;
   useData();
 });
 </script>
