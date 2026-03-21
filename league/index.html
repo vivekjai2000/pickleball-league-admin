@@ -908,6 +908,19 @@ tr:nth-child(even) td{
   }
 }
 
+
+/* Photo upload removed patch */
+.photo-removed-note{
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  color:#9a3412;
+  border-radius:16px;
+  padding:12px 14px;
+  margin-top:12px;
+  font-size:14px;
+  line-height:1.45;
+}
+
 </style>
 </head>
 <body>
@@ -953,21 +966,21 @@ tr:nth-child(even) td{
     </div>
     <div class="card" style="margin-top:16px">
       <h2>Player Profile Enrollment</h2>
-      <div class="small">Create your player profile or update your photo. If your profile already exists, your existing profile will be updated instead of creating a duplicate. Existing player ratings are protected and cannot be changed here.</div>
+      <div class="small">Create your player profile. If your profile already exists, your existing profile will be updated instead of creating a duplicate. Existing player ratings are protected and cannot be changed here.</div>
       <div class="row2" style="margin-top:12px">
         <div><label style="display:block;font-weight:700;margin-bottom:6px">Player Name</label><input id="enrollPlayerName" type="text" placeholder="Enter your name"></div>
         <div><label style="display:block;font-weight:700;margin-bottom:6px">Rating</label><input id="enrollPlayerRating" type="number" step="0.01" placeholder="Required for new players"></div>
       </div>
       <div class="row2" style="margin-top:12px">
-        <div><label style="display:block;font-weight:700;margin-bottom:6px">Upload Photo</label><input id="enrollPlayerPhotoFile" type="file" accept="image/*"></div>
-        <div><label style="display:block;font-weight:700;margin-bottom:6px">Preview</label><div id="leaguePhotoPreview" class="small" style="margin-top:10px">No image selected.</div></div>
+        
+        
       </div>
       <div class="row2" style="margin-top:12px">
         <div><label style="display:block;font-weight:700;margin-bottom:6px">Note</label><div class="small" style="margin-top:10px">Photo is optional. Photos are uploaded to Google Drive and only the Drive image URL is stored. Existing players can update their photo here. Ratings for existing players stay protected.</div></div>
         <div></div>
       </div>
       <button style="margin-top:12px" onclick="saveLeaguePlayerProfile()">Save Profile</button>
-      <div id="enrollPlayerStatus" class="small" style="margin-top:10px">No profile changes submitted yet.</div>
+      <div id="enrollPlayerStatus" class="small" style="margin-top:10px">No profile changes submitted yet.</div><div class="photo-removed-note">Photo upload functionality has been removed from this version to keep League data loading stable.</div>
     </div>
 
     <div class="card" style="margin-top:16px">
@@ -1092,14 +1105,8 @@ try {
 } catch (e) {}
 
 function getPlayerPhotoMarkup(name, large=false){
-  const p = (data.roster || []).find(x => normalizeLeaguePlayerName(x.name) === normalizeLeaguePlayerName(name));
-  const cls = large ? 'player-photo-lg' : 'player-avatar';
   const fcls = large ? 'player-photo-lg-fallback' : 'player-avatar-fallback';
   const initial = esc((name || '?').trim().charAt(0).toUpperCase() || '?');
-  const photoUrl = p && typeof p.photoUrl === 'string' && p.photoUrl.length < 200000 ? p.photoUrl : '';
-  if(photoUrl){
-    return `<img src="${esc(photoUrl)}" alt="${esc(name)}" class="${cls}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="${fcls}" style="display:none">${initial}</div>`;
-  }
   return `<div class="${fcls}">${initial}</div>`;
 }
 function showTab(id, btn) {
@@ -1647,64 +1654,11 @@ async function callLeagueGoogle(action, payload={}){
 
 
 async function callLeagueGooglePostOnly(action, payload={}){
-  const url = getLiveGoogleUrl();
-  if(!url) throw new Error("Google Sheets live URL is not configured.");
-
-  const body = JSON.stringify({action, payload});
-  let res = null;
-  let lastErr = null;
-
-  try{
-    res = await fetch(url, {
-      method:"POST",
-      headers: {"Content-Type":"text/plain;charset=utf-8"},
-      body,
-      mode:"cors",
-      credentials:"omit",
-      cache:"no-store"
-    });
-  }catch(err){
-    lastErr = err;
-  }
-
-  if((!res || !res.ok) && body.length < 65000){
-    try{
-      res = await fetch(url + "?data=" + encodeURIComponent(body) + "&ts=" + Date.now(), {
-        method:"GET",
-        mode:"cors",
-        credentials:"omit",
-        cache:"no-store"
-      });
-    }catch(err){
-      lastErr = err;
-    }
-  }
-
-  if(!res) throw new Error(lastErr && lastErr.message ? lastErr.message : "Photo upload request failed.");
-  const text = await res.text();
-  let json;
-  try{
-    json = JSON.parse(text);
-  }catch(e){
-    throw new Error(text && text.trim() ? text.slice(0,160) : "Unexpected Apps Script response.");
-  }
-  if(!json.ok) throw new Error(json.error || json.message || "Google sync failed.");
-  return json;
+  throw new Error("Photo upload has been removed from this version.");
 }
 
 async function uploadLeaguePlayerPhotoToDriveFromFile(file, playerName, previousFileId=""){
-  const dataUrl = await leagueFileToDataUrl(file);
-  const payload = {
-    playerName: playerName,
-    dataUrl: dataUrl,
-    previousFileId: previousFileId || "",
-    folderId: (data.profile && data.profile.googleDriveFolderId) || ""
-  };
-  const res = await callLeagueGooglePostOnly("uploadPlayerPhoto", payload);
-  if(res && res.data && res.data.folderId && (!data.profile.googleDriveFolderId || !String(data.profile.googleDriveFolderId).trim())){
-    data.profile.googleDriveFolderId = res.data.folderId;
-  }
-  return res.data || {};
+  throw new Error("Photo upload has been removed from this version.");
 }
 
 async function updateMatchScoreOnGoogle(week, dayKey, round, court, score1, score2){
@@ -1783,46 +1737,12 @@ async function savePublicScore(week, dayKey, round, court){
 
 
 async function leagueFileToDataUrl(file, maxSize=128){
-  if(!file) return "";
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
-        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.max(1, Math.round(img.width * scale));
-        canvas.height = Math.max(1, Math.round(img.height * scale));
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.60);
-        if(dataUrl.length > 70000){
-          reject(new Error("Image is still too large after compression. Please crop to a smaller face photo and try again."));
-          return;
-        }
-        resolve(dataUrl);
-      };
-      img.onerror = () => reject(new Error("Could not read image."));
-      img.src = e.target.result;
-    };
-    reader.onerror = () => reject(new Error("Could not read file."));
-    reader.readAsDataURL(file);
-  });
+  return Promise.reject(new Error("Photo upload has been removed from this version."));
 }
 
 function bindLeaguePhotoPreview(){
-  const fileEl = document.getElementById("enrollPlayerPhotoFile");
   const previewEl = document.getElementById("leaguePhotoPreview");
-  if(!previewEl) return;
-
-  if(fileEl && !fileEl.dataset.bound){
-    fileEl.dataset.bound = "1";
-    fileEl.addEventListener("change", async () => {
-      const file = fileEl.files && fileEl.files[0];
-      if(!file){ previewEl.innerHTML = 'No image selected.'; return; }
-      previewEl.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Preview" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid #e5eef8;">`;
-    });
-  }
+  if(previewEl) previewEl.textContent = "Photo upload disabled.";
 }
 
 function normalizeLeaguePlayerName(name){
@@ -1904,33 +1824,16 @@ async function saveLeaguePlayerProfile(){
   const statusEl = document.getElementById("enrollPlayerStatus");
   const name = String((document.getElementById("enrollPlayerName") || {}).value || '').trim();
   const ratingRaw = String((document.getElementById("enrollPlayerRating") || {}).value || '').trim();
-  let photoUrl = "";
-  let photoDriveFileId = "";
-  const fileEl = document.getElementById("enrollPlayerPhotoFile");
-  const file = fileEl && fileEl.files ? fileEl.files[0] : null;
   const rating = ratingRaw === "" ? NaN : Number(ratingRaw);
 
   const existing = (data.roster || []).find(p => normalizeLeaguePlayerName(p.name) === normalizeLeaguePlayerName(name));
   if(existing && ratingRaw !== ""){
-    if(statusEl) statusEl.textContent = `Rating update is not allowed for existing player ${name}. Your existing rating was kept. You can still update the photo.`;
-  }
-
-  if(file){
-    try{
-      const uploaded = await uploadLeaguePlayerPhotoToDriveFromFile(file, name, existing ? String(existing.photoDriveFileId || "") : "");
-      photoUrl = String((uploaded && uploaded.photoUrl) || "").trim();
-      photoDriveFileId = String((uploaded && uploaded.photoDriveFileId) || "").trim();
-    }catch(err){
-      if(statusEl) statusEl.textContent = "Photo upload failed: " + err.message;
-      return;
-    }
+    if(statusEl) statusEl.textContent = `Rating update is not allowed for existing player ${name}. Your existing rating was kept.`;
   }
 
   const result = upsertLeaguePlayerProfile({
     name,
     rating,
-    photoUrl,
-    photoDriveFileId,
     joinedWeek: 1,
     active: true
   }, {source:"league"});
@@ -1942,11 +1845,15 @@ async function saveLeaguePlayerProfile(){
 
   try{
     await saveLeagueStateToGoogle('player profile enrollment');
-    if(statusEl && result.mode === "created") statusEl.textContent = `Created player profile for ${name}. Synced successfully.`;
-    else if(statusEl && !(existing && ratingRaw !== "")) statusEl.textContent = `Updated player profile for ${name}. Synced successfully.`;
-    else if(statusEl && file) statusEl.textContent = `Rating update is not allowed for existing player ${name}. Photo updated successfully and synced.`;
+    if(result.mode === "created"){
+      if(statusEl) statusEl.textContent = `Created player profile for ${name}. Synced successfully.`;
+    } else if(!(existing && ratingRaw !== "")) {
+      if(statusEl) statusEl.textContent = `Updated player profile for ${name}. Synced successfully.`;
+    } else if(statusEl){
+      statusEl.textContent = `Profile for ${name} synced successfully.`;
+    }
   }catch(err){
-    if(statusEl) statusEl.textContent = (statusEl.textContent || "") + " Saved locally, but Google sync failed. Please ask admin to verify the Apps Script deployment. Details: " + err.message;
+    if(statusEl) statusEl.textContent = `Profile for ${name} was saved locally, but Google sync failed: ${err.message}`;
   }
 
   try{
@@ -1955,10 +1862,6 @@ async function saveLeaguePlayerProfile(){
     renderHallOfFame();
     renderOverview();
   }catch(e){}
-
-  const previewEl = document.getElementById("leaguePhotoPreview");
-  if(previewEl) previewEl.textContent = 'No image selected.';
-  if(fileEl) fileEl.value = '';
 }
 
 function renderOverview() {
