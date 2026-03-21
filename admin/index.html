@@ -551,6 +551,19 @@ tr:nth-child(even) td{
   line-height:1.45;
 }
 
+
+/* Shared snapshot note */
+.sync-note{
+  background:#eef6ff;
+  border:1px solid #cfe0ff;
+  color:#1d4ed8;
+  border-radius:16px;
+  padding:12px 14px;
+  margin-top:12px;
+  font-size:14px;
+  line-height:1.45;
+}
+
 </style>
 </head>
 <body>
@@ -939,8 +952,39 @@ tr:nth-child(even) td{
           <button class="secondary" onclick="loadStateFromGoogleSheets()">Load League from Google Sheets</button>
           <button class="red" onclick="resetGoogleSheetsData()">Reset Google Sheets Data</button>
         </div>
-        <div id="googleSyncStatus" class="status">Reset will clear the stored league in Google Sheets. Scores, schedules, roster imports, player changes, check-ins, and playoff updates now auto-save when a Google Script URL is configured. This admin page also auto-refreshes from Google Sheets every 15 seconds.</div><div class="rules-banner" style="margin-top:12px"><div class="rules-banner-title">🛡️ Player profile persistence rules</div><div class="rules-banner-list"><div class="rules-line"><span class="rules-icon green">✓</span><span>Player profiles are permanent until admin removes them.</span></div><div class="rules-line"><span class="rules-icon green">✓</span><span>Schedule refresh must never delete players.</span></div><div class="rules-line"><span class="rules-icon green">✓</span><span>Sync merges profile data and never blindly replaces the full player list.</span></div></div></div>
+        <div class="sync-note">Admin now also writes a same-browser snapshot so League can show the latest roster and weeks immediately on this device, even before public fallback data is refreshed.</div><div id="googleSyncStatus" class="status">Reset will clear the stored league in Google Sheets. Scores, schedules, roster imports, player changes, check-ins, and playoff updates now auto-save when a Google Script URL is configured. This admin page also auto-refreshes from Google Sheets every 15 seconds.</div><div class="rules-banner" style="margin-top:12px"><div class="rules-banner-title">🛡️ Player profile persistence rules</div><div class="rules-banner-list"><div class="rules-line"><span class="rules-icon green">✓</span><span>Player profiles are permanent until admin removes them.</span></div><div class="rules-line"><span class="rules-icon green">✓</span><span>Schedule refresh must never delete players.</span></div><div class="rules-line"><span class="rules-icon green">✓</span><span>Sync merges profile data and never blindly replaces the full player list.</span></div></div></div>
+      
+      <div class="card">
+        <h2>Google Sync Verification</h2>
+        <div class="small">Use this panel to confirm what is actually stored in Google Sheets right now. This checks the live Apps Script response, not just your browser data.</div>
+        <div class="btns" style="margin-top:12px">
+          <button class="primary" onclick="verifyGoogleSheetState()">Verify Live Google Data</button>
+        </div>
+        <div id="googleVerifyStatus" class="status">No live verification run yet.</div>
+        <div class="grid2" style="margin-top:12px">
+          <div class="card">
+            <h3 style="margin-bottom:8px">Live Google Snapshot</h3>
+            <div class="small">Roster count</div>
+            <div id="verifyRosterCount" style="font-size:28px;font-weight:900;margin-bottom:10px">—</div>
+            <div class="small">Weeks count</div>
+            <div id="verifyWeekCount" style="font-size:28px;font-weight:900;margin-bottom:10px">—</div>
+            <div class="small">Current signup week</div>
+            <div id="verifySignupWeek" style="font-size:20px;font-weight:800;margin-bottom:10px">—</div>
+            <div class="small">League title</div>
+            <div id="verifyLeagueTitle" style="font-size:16px;font-weight:700">—</div>
+          </div>
+          <div class="card">
+            <h3 style="margin-bottom:8px">Live Save / Load Health</h3>
+            <div class="small">Last verification time</div>
+            <div id="verifyTimestamp" style="font-size:16px;font-weight:800;margin-bottom:10px">—</div>
+            <div class="small">Profile source</div>
+            <div id="verifySourceHint" style="font-size:16px;font-weight:700;margin-bottom:10px">—</div>
+            <div class="small">Sample players</div>
+            <div id="verifyPlayersSample" class="status" style="margin-top:8px">—</div>
+          </div>
+        </div>
       </div>
+</div>
     </div>
   </div>
 
@@ -949,6 +993,7 @@ tr:nth-child(even) td{
 <script src="../public-data.js"></script>
 <script>
 const KEY = "pouncey_tract_admin_professional_v1";
+const SHARED_LEAGUE_KEY = "pouncey_shared_league_state_v1";
 let state = {profile:{leagueTitle:"Pouncey Tract Weekend Pickleball League",leagueSubtitle:"Short Pump, VA",seasonStart:"2026-04-11",seasonEnd:"2026-10-03",defaultCourts:5,defaultRounds:8,winScore:11,kFactor:24,minMatchesForPlayoffs:8,playoffFormat:12,googleScriptUrl:"https://script.google.com/macros/s/AKfycbx8q6te2Id-CWSAELOSWMBoLDL5uUNpMKEdcgpd2H8yvHDK7QMVT0Dw0UvkPjDu6kVf/exec",currentSignupWeek:""},roster:[],weeks:[],availability:{},playoffs:{}};
 
 function showTab(id, btn){
@@ -1134,7 +1179,7 @@ function loadSampleRoster(){
   rosterInput.value=["Vivek, 4.02","Vimal, 4.00","Vin, 4.00","Murali, 4.00","Sunil, 4.00","Ravi, 4.00","Sheel, 4.25","Doumit, 3.75","Pavan, 3.70","Rohan, 3.60","Amit, 3.55","Raj, 3.50"].join("\n");
 }
 
-function importRoster(){
+async function importRoster(){
   try{
     const raw = (typeof rosterInput !== "undefined" && rosterInput ? rosterInput.value : "");
     const incoming = parseRoster(raw);
@@ -1160,7 +1205,12 @@ function importRoster(){
     try { renderSummary(); } catch(e) {}
     try { saveState(); } catch(e) {}
     if(typeof rosterStatus !== "undefined" && rosterStatus) rosterStatus.textContent = `Roster merged successfully. Added ${added}, updated ${updated}.`;
-    try { autoPushLeagueToGoogleSheets('roster import merge'); } catch(e) {}
+    try {
+      await autoPushLeagueToGoogleSheets('roster import merge');
+      if(typeof rosterStatus !== "undefined" && rosterStatus) rosterStatus.textContent = `Roster merged successfully. Added ${added}, updated ${updated}. Synced successfully.`;
+    } catch(e) {
+      if(typeof rosterStatus !== "undefined" && rosterStatus) rosterStatus.textContent = `Roster merged successfully. Added ${added}, updated ${updated}. Saved locally, but Google sync failed: ${e.message}`;
+    }
   }catch(err){
     if(typeof rosterStatus !== "undefined" && rosterStatus) rosterStatus.textContent = "Roster import failed: " + err.message;
   }
@@ -1559,6 +1609,53 @@ function shareLeagueLink(){
   });
 }
 
+
+async function verifyGoogleSheetState(){
+  const statusEl = document.getElementById("googleVerifyStatus");
+  const rosterEl = document.getElementById("verifyRosterCount");
+  const weekEl = document.getElementById("verifyWeekCount");
+  const signupEl = document.getElementById("verifySignupWeek");
+  const titleEl = document.getElementById("verifyLeagueTitle");
+  const tsEl = document.getElementById("verifyTimestamp");
+  const sourceEl = document.getElementById("verifySourceHint");
+  const sampleEl = document.getElementById("verifyPlayersSample");
+
+  try{
+    if(statusEl) statusEl.textContent = "Checking live Google data...";
+    const json = await callGoogleScript("loadLeagueState", {});
+    const live = json && json.data ? json.data : null;
+    if(!live) throw new Error("No live Google data returned.");
+
+    const roster = Array.isArray(live.roster) ? live.roster : [];
+    const weeks = Array.isArray(live.weeks) ? live.weeks : [];
+    const profile = live.profile || {};
+    const activeRoster = roster.filter(p => p && p.active !== false);
+
+    if(rosterEl) rosterEl.textContent = String(activeRoster.length);
+    if(weekEl) weekEl.textContent = String(weeks.length);
+    if(signupEl) signupEl.textContent = profile.currentSignupWeek ? ("Week " + profile.currentSignupWeek) : "Not set";
+    if(titleEl) titleEl.textContent = profile.leagueTitle || "Not set";
+    if(tsEl) tsEl.textContent = new Date().toLocaleString();
+    if(sourceEl) sourceEl.textContent = "Verified directly from Apps Script / Google Sheets";
+    if(sampleEl) sampleEl.textContent = activeRoster.length
+      ? activeRoster.slice(0,8).map(p => p.name).join(", ")
+      : "No players found in live Google data.";
+
+    if(statusEl){
+      statusEl.textContent = `Live Google verification successful. Found ${activeRoster.length} active players, ${weeks.length} weeks, and current signup week ${profile.currentSignupWeek ? "Week " + profile.currentSignupWeek : "not set"}.`;
+    }
+  }catch(err){
+    if(rosterEl) rosterEl.textContent = "—";
+    if(weekEl) weekEl.textContent = "—";
+    if(signupEl) signupEl.textContent = "—";
+    if(titleEl) titleEl.textContent = "—";
+    if(tsEl) tsEl.textContent = new Date().toLocaleString();
+    if(sourceEl) sourceEl.textContent = "Verification failed";
+    if(sampleEl) sampleEl.textContent = "Could not load live Google data.";
+    if(statusEl) statusEl.textContent = "Live Google verification failed: " + err.message;
+  }
+}
+
 function saveGoogleScriptUrl(){
   const el = document.getElementById("googleScriptUrl");
   const url = (el && el.value ? el.value : "").trim();
@@ -1743,7 +1840,7 @@ function refreshSignupWeekOptions(){
   const cur = String((state.profile && state.profile.currentSignupWeek) || "");
   sel.innerHTML = '<option value="">Select week</option>' + (state.weeks || []).map(w => `<option value="${w.week}" ${String(w.week)===cur?'selected':''}>Week ${w.week}</option>`).join('');
 }
-function setCurrentSignupWeek(){
+async function setCurrentSignupWeek(){
   syncProfileFromUI();
   const sel = document.getElementById("currentSignupWeek");
   const val = sel ? String(sel.value || "") : "";
@@ -1751,16 +1848,25 @@ function setCurrentSignupWeek(){
   saveState();
   const status = document.getElementById("currentSignupWeekStatus");
   if(status) status.textContent = val ? `Current signup week is Week ${val}.` : "No signup week selected yet.";
-  autoPushLeagueToGoogleSheets('current signup week update');
+  try{
+    await autoPushLeagueToGoogleSheets('current signup week update');
+    if(status) status.textContent = val ? `Current signup week is Week ${val}. Synced successfully.` : "No signup week selected yet.";
+  }catch(e){
+    if(status) status.textContent = (val ? `Current signup week is Week ${val}.` : "No signup week selected yet.") + " Saved locally, but Google sync failed: " + e.message;
+  }
 }
-function clearCurrentSignupWeek(){
+async function clearCurrentSignupWeek(){
   state.profile.currentSignupWeek = "";
   const sel = document.getElementById("currentSignupWeek");
   if(sel) sel.value = "";
   saveState();
   const status = document.getElementById("currentSignupWeekStatus");
   if(status) status.textContent = "No signup week selected yet.";
-  autoPushLeagueToGoogleSheets('current signup week clear');
+  try{
+    await autoPushLeagueToGoogleSheets('current signup week clear');
+  }catch(e){
+    if(status) status.textContent = "No signup week selected yet. Saved locally, but Google sync failed: " + e.message;
+  }
 }
 function getSignedUpPlayersFor(weekNum, dayKey){
   const key = `W${weekNum}_${dayKey}`;
@@ -1768,7 +1874,27 @@ function getSignedUpPlayersFor(weekNum, dayKey){
   return Array.isArray(list) ? list.slice() : [];
 }
 
-function generateWeeks(){ syncProfileFromUI(); if(!state.profile.seasonStart || !state.profile.seasonEnd || state.profile.seasonEnd < state.profile.seasonStart){ profileStatus.textContent="Please enter a valid season start and end date."; return; } const sats=saturdaysBetween(state.profile.seasonStart,state.profile.seasonEnd); state.weeks=sats.map((sat,i)=>({week:i+1,saturday:{date:sat,active:false,courts:state.profile.defaultCourts,rounds:state.profile.defaultRounds,schedule:[]},sunday:{date:addDays(sat,1),active:false,courts:state.profile.defaultCourts,rounds:state.profile.defaultRounds,schedule:[]}})); renderWeeks(); renderWeekOptions(); renderSummary(); profileStatus.textContent=`Generated ${state.weeks.length} weeks successfully.`; saveState(); }
+async function generateWeeks(){
+  syncProfileFromUI();
+  if(!state.profile.seasonStart || !state.profile.seasonEnd || state.profile.seasonEnd < state.profile.seasonStart){
+    profileStatus.textContent="Please enter a valid season start and end date.";
+    return;
+  }
+  const sats=saturdaysBetween(state.profile.seasonStart,state.profile.seasonEnd);
+  state.weeks=sats.map((sat,i)=>({week:i+1,saturday:{date:sat,active:false,courts:state.profile.defaultCourts,rounds:state.profile.defaultRounds,schedule:[]},sunday:{date:addDays(sat,1),active:false,courts:state.profile.defaultCourts,rounds:state.profile.defaultRounds,schedule:[]}}));
+  renderWeeks();
+  renderWeekOptions();
+  refreshSignupWeekOptions();
+  renderSummary();
+  profileStatus.textContent=`Generated ${state.weeks.length} weeks successfully.`;
+  saveState();
+  try{
+    await autoPushLeagueToGoogleSheets('generate season weeks');
+    profileStatus.textContent=`Generated ${state.weeks.length} weeks successfully. Synced successfully.`;
+  }catch(e){
+    profileStatus.textContent=`Generated ${state.weeks.length} weeks successfully. Saved locally, but Google sync failed: ${e.message}`;
+  }
+}
 function renderWeeks(){ if(!state.weeks.length){ weeksArea.innerHTML="No weeks generated yet."; return; } weeksArea.innerHTML=state.weeks.map(w=>`
   <div class="week-box">
     <div class="week-title"><div><strong>Week ${w.week}</strong></div><div class="small">Sat ${fmtDate(w.saturday.date)} • Sun ${fmtDate(w.sunday.date)}</div></div>
@@ -2008,7 +2134,19 @@ function copyWeeklyRanking(){ const weekNum=Number(rankWeek.value), day=rankDay.
 function copySeasonSummary(){ const rows=seasonStats().slice(0,10); let txt=`*${state.profile.leagueTitle}*\nSeason Leaderboard\n\n`; rows.forEach((r,i)=>{ txt += `${i+1}. ${r.name}  ${r.wins}-${r.losses}  ${(r.pct*100).toFixed(1)}%  Diff ${r.diff}  ELO ${r.elo.toFixed(1)}\n`; }); navigator.clipboard.writeText(txt.trim()).then(()=>alert("Season summary copied.")); }
 function exportAdminJson(){ const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="pouncey_tract_admin_professional.json"; a.click(); URL.revokeObjectURL(a.href); }
 function exportPublicJs(){ const payload={profile:state.profile, roster:state.roster.map(p=>({name:p.name,rating:p.rating,seed:p.seed,elo:p.elo,joinedWeek:p.joinedWeek,active:p.active})), weeks:state.weeks, availability:state.availability||{}, playoffs:state.playoffs||{}, season:seasonStats()}; const content="window.POUNCEY_PUBLIC_DATA = " + JSON.stringify(payload, null, 2) + ";\n"; const blob=new Blob([content],{type:"application/javascript"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="public-data.js"; a.click(); URL.revokeObjectURL(a.href); }
-function saveState(){ syncProfileFromUI(); localStorage.setItem(KEY, JSON.stringify(state)); }
+
+function writeSharedLeagueSnapshot(){
+  try{
+    const payload = {profile:state.profile, roster:state.roster, weeks:state.weeks, availability:state.availability||{}, playoffs:state.playoffs||{}};
+    localStorage.setItem(SHARED_LEAGUE_KEY, JSON.stringify(payload));
+  }catch(e){}
+}
+
+function saveState(){
+  syncProfileFromUI();
+  localStorage.setItem(KEY, JSON.stringify(state));
+  writeSharedLeagueSnapshot();
+}
 function loadState(){
   const raw=localStorage.getItem(KEY);
   if(!raw){ alert("No saved state found."); return; }
