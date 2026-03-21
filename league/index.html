@@ -924,7 +924,7 @@ async function tryLoadLiveGoogleData(){
       cache:"no-store",
       credentials:"omit"
     });
-    if(!res || !res.ok) {
+    if(!res || !res.ok){
       const viewer = document.getElementById("viewerStatus");
       if(viewer) viewer.textContent = "Live Google load failed. Showing fallback data.";
       return false;
@@ -938,7 +938,7 @@ async function tryLoadLiveGoogleData(){
     }
     if(json && json.ok && json.data){
       data = json.data;
-      sanitizeRosterPhotoUrls();
+      if(typeof sanitizeRosterPhotoUrls === "function") sanitizeRosterPhotoUrls();
       if(data.profile && data.profile.googleScriptUrl){
         try {
           localStorage.setItem("pouncey_google_script_url", data.profile.googleScriptUrl);
@@ -971,13 +971,15 @@ function sanitizeRosterPhotoUrls(){
   });
 }
 function useData() {
-  sanitizeRosterPhotoUrls();
+  if(typeof sanitizeRosterPhotoUrls === "function") sanitizeRosterPhotoUrls();
   const viewer = document.getElementById("viewerStatus");
   if(!data) {
     if(viewer) viewer.textContent = "No league data found yet. Make sure Google Sheets sync is configured or the shared data file is updated.";
     return;
   }
-  if(viewer) viewer.textContent = getLiveGoogleUrl() ? "Live Google Sheets data loaded." : "Public data loaded successfully.";
+  if(viewer) viewer.textContent = getLiveGoogleUrl()
+    ? "Live Google Sheets data loaded."
+    : "Showing fallback public data. Save/test the Apps Script URL in Admin if live data looks outdated.";
 
   const weekOptions = (data.weeks || []).map(w=>`<option value="${w.week}">Week ${w.week}</option>`).join('');
   const weekEl = document.getElementById("weekSel");
@@ -1372,15 +1374,38 @@ async function callLeagueGoogle(action, payload={}){
 async function callLeagueGooglePostOnly(action, payload={}){
   const url = getLiveGoogleUrl();
   if(!url) throw new Error("Google Sheets live URL is not configured.");
+
   const body = JSON.stringify({action, payload});
-  const res = await fetch(url, {
-    method:"POST",
-    headers: {"Content-Type":"text/plain;charset=utf-8"},
-    body,
-    mode:"cors",
-    credentials:"omit",
-    cache:"no-store"
-  });
+  let res = null;
+  let lastErr = null;
+
+  try{
+    res = await fetch(url, {
+      method:"POST",
+      headers: {"Content-Type":"text/plain;charset=utf-8"},
+      body,
+      mode:"cors",
+      credentials:"omit",
+      cache:"no-store"
+    });
+  }catch(err){
+    lastErr = err;
+  }
+
+  if((!res || !res.ok) && body.length < 65000){
+    try{
+      res = await fetch(url + "?data=" + encodeURIComponent(body) + "&ts=" + Date.now(), {
+        method:"GET",
+        mode:"cors",
+        credentials:"omit",
+        cache:"no-store"
+      });
+    }catch(err){
+      lastErr = err;
+    }
+  }
+
+  if(!res) throw new Error(lastErr && lastErr.message ? lastErr.message : "Photo upload request failed.");
   const text = await res.text();
   let json;
   try{
@@ -1482,7 +1507,7 @@ async function savePublicScore(week, dayKey, round, court){
 
 
 
-async function leagueFileToDataUrl(file, maxSize=240){
+async function leagueFileToDataUrl(file, maxSize=128){
   if(!file) return "";
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -1495,9 +1520,9 @@ async function leagueFileToDataUrl(file, maxSize=240){
         canvas.height = Math.max(1, Math.round(img.height * scale));
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.72);
-        if(dataUrl.length > 180000){
-          reject(new Error("Image is still too large after compression. Please choose a smaller photo."));
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.60);
+        if(dataUrl.length > 70000){
+          reject(new Error("Image is still too large after compression. Please crop to a smaller face photo and try again."));
           return;
         }
         resolve(dataUrl);
