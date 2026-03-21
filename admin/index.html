@@ -538,6 +538,19 @@ tr:nth-child(even) td{
   }
 }
 
+
+/* Photo upload removed patch */
+.photo-removed-note{
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  color:#9a3412;
+  border-radius:16px;
+  padding:12px 14px;
+  margin-top:12px;
+  font-size:14px;
+  line-height:1.45;
+}
+
 </style>
 </head>
 <body>
@@ -696,18 +709,18 @@ tr:nth-child(even) td{
           <div><label>Upload Photo</label><input id="newPlayerPhotoFile" type="file" accept="image/*"></div>
         </div>
         <div class="row2">
-          <div><label>Preview</label><div id="adminPhotoPreview" class="small" style="margin-top:10px">No image selected.</div></div>
-          <div><label>Photo update note</label><div class="small" style="margin-top:10px">Upload a photo for new or existing players. Existing player ratings can still be updated by admin here.</div></div>
+          
+          <div><label>Photo update note</label><div class="small" style="margin-top:10px">Photo upload has been removed from this version. Existing player ratings can still be updated by admin here.</div></div>
         </div>
         <div class="row2">
           <div><label>Remove player</label><select id="removePlayerSelect"></select></div>
-          <div><label>Photo update note</label><div class="small" style="margin-top:10px">For existing players, admin can update photo. Existing player ratings stay protected unless changed here by admin.</div></div>
+          <div><label>Photo update note</label><div class="small" style="margin-top:10px">For existing players, admin can update roster details here. Existing player ratings stay protected unless changed here by admin.</div></div>
         </div>
         <div class="btns">
           <button class="green" onclick="addPlayerMidSeason()">Add Player</button>
           <button class="red" onclick="removeSelectedPlayer()">Remove Selected Player</button>
         </div>
-        <div id="playerChangeStatus" class="status">Use this area after the season starts to add or remove players.</div>
+        <div id="playerChangeStatus" class="status">Use this area after the season starts to add or remove players.</div><div class="photo-removed-note">Photo upload functionality has been removed from this version to keep Admin and League stable.</div>
       </div>
     </div>
 
@@ -998,45 +1011,12 @@ function pushProfileToUI(){
 
 
 async function fileToDataUrl(file, maxSize=128){
-  if(!file) return "";
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
-        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.max(1, Math.round(img.width * scale));
-        canvas.height = Math.max(1, Math.round(img.height * scale));
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.60);
-        if(dataUrl.length > 70000){
-          reject(new Error("Image is still too large after compression. Please crop to a smaller face photo and try again."));
-          return;
-        }
-        resolve(dataUrl);
-      };
-      img.onerror = () => reject(new Error("Could not read image."));
-      img.src = e.target.result;
-    };
-    reader.onerror = () => reject(new Error("Could not read file."));
-    reader.readAsDataURL(file);
-  });
+  return Promise.reject(new Error("Photo upload has been removed from this version."));
 }
 
 function bindAdminPhotoPreview(){
-  const fileEl = document.getElementById("newPlayerPhotoFile");
   const previewEl = document.getElementById("adminPhotoPreview");
-  if(!previewEl) return;
-  if(fileEl && !fileEl.dataset.bound){
-    fileEl.dataset.bound = "1";
-    fileEl.addEventListener("change", async () => {
-      const file = fileEl.files && fileEl.files[0];
-      if(!file){ previewEl.innerHTML = 'No image selected.'; return; }
-      previewEl.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Preview" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid #e5eef8;">`;
-    });
-  }
+  if(previewEl) previewEl.textContent = "Photo upload disabled.";
 }
 
 function normalizePlayerName(name){
@@ -1190,10 +1170,6 @@ async function addPlayerMidSeason(){
   const name = String(newPlayerName.value || '').trim();
   const ratingRaw = String(newPlayerRating.value || '').trim();
   const joinedWeek = Number(newPlayerWeek.value || 1);
-  let photoUrl = "";
-  let photoDriveFileId = "";
-  const fileEl = document.getElementById("newPlayerPhotoFile");
-  const file = fileEl && fileEl.files ? fileEl.files[0] : null;
 
   const existing = state.roster.find(p => normalizePlayerName(p.name) === normalizePlayerName(name));
   const rating = ratingRaw === ""
@@ -1207,23 +1183,10 @@ async function addPlayerMidSeason(){
     return;
   }
 
-  if(file){
-    try{
-      const uploaded = await uploadPlayerPhotoToDriveFromFile(file, name, existing ? String(existing.photoDriveFileId || "") : "");
-      photoUrl = String((uploaded && uploaded.photoUrl) || "").trim();
-      photoDriveFileId = String((uploaded && uploaded.photoDriveFileId) || "").trim();
-    }catch(err){
-      playerChangeStatus.textContent = "Photo upload failed: " + err.message;
-      return;
-    }
-  }
-
   const result = upsertPlayerProfile({
     name,
     rating,
     joinedWeek,
-    photoUrl,
-    photoDriveFileId,
     active:true
   }, {source:"admin"});
 
@@ -1236,9 +1199,6 @@ async function addPlayerMidSeason(){
   newPlayerName.value='';
   newPlayerRating.value='';
   newPlayerWeek.value='';
-  if(fileEl) fileEl.value='';
-  const previewEl = document.getElementById("adminPhotoPreview");
-  if(previewEl) previewEl.textContent = 'No image selected.';
 
   try{
     await autoPushLeagueToGoogleSheets('player profile upsert');
@@ -1579,65 +1539,11 @@ async function callGoogleScript(action, payload={}){
 
 
 async function callGoogleScriptPostOnly(action, payload={}){
-  syncProfileFromUI();
-  const url = state.profile.googleScriptUrl || "";
-  if(!url) throw new Error("Save your Google Apps Script URL first.");
-
-  const body = JSON.stringify({action, payload});
-  let res = null;
-  let lastErr = null;
-
-  try{
-    res = await fetch(url, {
-      method: "POST",
-      headers: {"Content-Type": "text/plain;charset=utf-8"},
-      body,
-      mode: "cors",
-      credentials: "omit",
-      cache: "no-store"
-    });
-  }catch(err){
-    lastErr = err;
-  }
-
-  if((!res || !res.ok) && body.length < 65000){
-    try{
-      res = await fetch(url + "?data=" + encodeURIComponent(body) + "&ts=" + Date.now(), {
-        method: "GET",
-        mode: "cors",
-        credentials: "omit",
-        cache: "no-store"
-      });
-    }catch(err){
-      lastErr = err;
-    }
-  }
-
-  if(!res) throw new Error(lastErr && lastErr.message ? lastErr.message : "Photo upload request failed.");
-  const text = await res.text();
-  let data;
-  try { data = JSON.parse(text); } catch(e){ throw new Error("Unexpected Apps Script response: " + text.slice(0,200)); }
-  if(!data.ok) throw new Error(data.error || "Apps Script request failed.");
-  return data;
+  throw new Error("Photo upload has been removed from this version.");
 }
 
 async function uploadPlayerPhotoToDriveFromFile(file, playerName, previousFileId=""){
-  const dataUrl = await fileToDataUrl(file);
-  const payload = {
-    playerName: playerName,
-    dataUrl: dataUrl,
-    previousFileId: previousFileId || "",
-    folderId: (state.profile && state.profile.googleDriveFolderId) || ""
-  };
-  const res = await callGoogleScriptPostOnly("uploadPlayerPhoto", payload);
-  if(res && res.data && res.data.folderId && (!state.profile.googleDriveFolderId || !String(state.profile.googleDriveFolderId).trim())){
-    state.profile.googleDriveFolderId = res.data.folderId;
-    try{
-      const fld = document.getElementById("googleDriveFolderId");
-      if(fld) fld.value = res.data.folderId;
-    }catch(e){}
-  }
-  return res.data || {};
+  throw new Error("Photo upload has been removed from this version.");
 }
 
 function shareLeagueLink(){
