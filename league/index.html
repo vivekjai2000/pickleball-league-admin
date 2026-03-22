@@ -1098,7 +1098,7 @@ tr:nth-child(even) td{
 <script>
 let data = window.POUNCEY_PUBLIC_DATA || null;
 try {
-  const embeddedUrl = (data && data.profile && data.profile.googleScriptUrl) ? data.profile.googleScriptUrl : ((window.POUNCEY_CONFIG && window.POUNCEY_CONFIG.googleScriptUrl) ? window.POUNCEY_CONFIG.googleScriptUrl : "");
+  const embeddedUrl = (data && data.profile && data.profile.googleScriptUrl) ? data.profile.googleScriptUrl : "https://script.google.com/macros/s/AKfycbx8q6te2Id-CWSAELOSWMBoLDL5uUNpMKEdcgpd2H8yvHDK7QMVT0Dw0UvkPjDu6kVf/exec";
   if (embeddedUrl) {
     localStorage.setItem("pouncey_google_script_url", embeddedUrl);
     localStorage.setItem("pouncy_google_script_url", embeddedUrl);
@@ -1189,7 +1189,9 @@ function getLiveGoogleUrl(){
     if(qs) return qs;
   }catch(e){}
   try{
-    if(window.POUNCEY_CONFIG && window.POUNCEY_CONFIG.googleScriptUrl) return String(window.POUNCEY_CONFIG.googleScriptUrl).trim();
+    if(window.POUNCEY_CONFIG && window.POUNCEY_CONFIG.googleScriptUrl){
+      return String(window.POUNCEY_CONFIG.googleScriptUrl).trim();
+    }
   }catch(e){}
   try{
     const embedded = (window.POUNCEY_PUBLIC_DATA || window.POUNCY_PUBLIC_DATA || null);
@@ -1263,9 +1265,11 @@ function useData() {
     if(viewer) viewer.textContent = "No league data found yet. Make sure Google Sheets sync is configured or the shared data file is updated.";
     return;
   }
-  if(viewer) viewer.textContent = getLiveGoogleUrl()
-    ? "Live Google Sheets data loaded."
-    : "Showing fallback public data. Save/test the Apps Script URL in Admin if live data looks outdated.";
+  if(viewer && !viewer.textContent){
+    viewer.textContent = getLiveGoogleUrl()
+      ? "Live Google Sheets data loaded."
+      : "Showing fallback public data.";
+  }
 
   const weekOptions = (data.weeks || []).map(w=>`<option value="${w.week}">Week ${w.week}</option>`).join('');
   const weekEl = document.getElementById("weekSel");
@@ -1666,14 +1670,29 @@ async function uploadLeaguePlayerPhotoToDriveFromFile(file, playerName, previous
 }
 
 async function updateMatchScoreOnGoogle(week, dayKey, round, court, score1, score2){
-  const json = await callLeagueGoogle("updateMatchScore", {
-    week:Number(week),
-    day:String(dayKey),
-    round:Number(round),
-    court:Number(court),
-    score1:Number(score1),
-    score2:Number(score2)
-  });
+  const weekObj = (data.weeks || []).find(w => Number(w.week) === Number(week));
+  const rows = weekObj && weekObj[dayKey] && Array.isArray(weekObj[dayKey].schedule) ? weekObj[dayKey].schedule : [];
+  const match = rows.find(m => Number(m.round) === Number(round) && Number(m.court) === Number(court));
+
+  if(!match){
+    throw new Error("Could not find the selected match in the current schedule.");
+  }
+
+  const payload = {
+    week: Number(week),
+    day: String(dayKey),
+    matchId: String(match.id || ""),
+    team1Score: Number(score1),
+    team2Score: Number(score2),
+
+    // compatibility fallback for older script versions
+    round: Number(round),
+    court: Number(court),
+    score1: Number(score1),
+    score2: Number(score2)
+  };
+
+  const json = await callLeagueGoogle("updateMatchScore", payload);
   if(json.data) data = json.data;
   return json;
 }
