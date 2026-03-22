@@ -1185,6 +1185,28 @@ function buildPlayerStats() {
 function getLiveGoogleUrl(){
   return "https://script.google.com/macros/s/AKfycbx8q6te2Id-CWSAELOSWMBoLDL5uUNpMKEdcgpd2H8yvHDK7QMVT0Dw0UvkPjDu6kVf/exec";
 }
+
+async function parseGoogleJsonResponse(res){
+  if(!res || !res.ok) return null;
+  const text = await res.text();
+  if(!text || !text.trim()) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch(e){}
+
+  const firstBrace = text.indexOf("{");
+  const lastBrace = text.lastIndexOf("}");
+  if(firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace){
+    const candidate = text.slice(firstBrace, lastBrace + 1);
+    try {
+      return JSON.parse(candidate);
+    } catch(e){}
+  }
+
+  return null;
+}
+
 async function tryLoadLiveGoogleData(){
   const url = getLiveGoogleUrl();
   const viewer = document.getElementById("viewerStatus");
@@ -1193,68 +1215,63 @@ async function tryLoadLiveGoogleData(){
     return false;
   }
 
-  async function parseJsonResponse(res){
-    if(!res || !res.ok) return null;
-    const text = await res.text();
-    try { return JSON.parse(text); } catch(e) { return null; }
-  }
+  let json = null;
 
   try{
-    let json = null;
+    const postRes = await fetch(url, {
+      method:"POST",
+      headers: {"Content-Type":"text/plain;charset=utf-8"},
+      body: JSON.stringify({action:"loadLeagueState", payload:{}}),
+      mode:"cors",
+      credentials:"omit",
+      cache:"no-store"
+    });
+    json = await parseGoogleJsonResponse(postRes);
+  }catch(e){}
 
-    // POST first because this is what is already working from Admin.
+  if(!(json && json.ok && json.data)){
     try{
-      const postRes = await fetch(url, {
-        method:"POST",
-        headers: {"Content-Type":"text/plain;charset=utf-8"},
-        body: JSON.stringify({action:"loadLeagueState", payload:{}}),
+      const getRes = await fetch(url + "?action=loadLeagueState&ts=" + Date.now(), {
+        method:"GET",
         mode:"cors",
         credentials:"omit",
         cache:"no-store"
       });
-      json = await parseJsonResponse(postRes);
+      json = await parseGoogleJsonResponse(getRes);
     }catch(e){}
-
-    // GET fallback
-    if(!(json && json.ok && json.data)){
-      try{
-        const getRes = await fetch(url + "?action=loadLeagueState&ts=" + Date.now(), {
-          method:"GET",
-          mode:"cors",
-          credentials:"omit",
-          cache:"no-store"
-        });
-        json = await parseJsonResponse(getRes);
-      }catch(e){}
-    }
-
-    // Bare /exec fallback
-    if(!(json && json.ok && json.data)){
-      try{
-        const bareRes = await fetch(url + "?ts=" + Date.now(), {
-          method:"GET",
-          mode:"cors",
-          credentials:"omit",
-          cache:"no-store"
-        });
-        json = await parseJsonResponse(bareRes);
-      }catch(e){}
-    }
-
-    if(json && json.ok && json.data){
-      data = json.data;
-      if(typeof sanitizeRosterPhotoUrls === "function") sanitizeRosterPhotoUrls();
-      const rosterCount = Array.isArray(data.roster) ? data.roster.filter(p => p && p.active !== false).length : 0;
-      const weekCount = Array.isArray(data.weeks) ? data.weeks.length : 0;
-      const curWeek = data && data.profile && data.profile.currentSignupWeek ? ("Week " + data.profile.currentSignupWeek) : "Not set";
-      if(viewer) viewer.textContent = `Live Google Sheets data loaded. Players: ${rosterCount}. Weeks: ${weekCount}. Current signup week: ${curWeek}.`;
-      return true;
-    }
-
-    if(viewer) viewer.textContent = "Google response was empty or invalid. Showing fallback data.";
-  }catch(e){
-    if(viewer) viewer.textContent = "Live Google load failed. Showing fallback data.";
   }
+
+  if(!(json && json.ok && json.data)){
+    try{
+      const bareRes = await fetch(url + "?ts=" + Date.now(), {
+        method:"GET",
+        mode:"cors",
+        credentials:"omit",
+        cache:"no-store"
+      });
+      json = await parseGoogleJsonResponse(bareRes);
+    }catch(e){}
+  }
+
+  if(json && json.ok && json.data){
+    data = json.data;
+    if(typeof sanitizeRosterPhotoUrls === "function") sanitizeRosterPhotoUrls();
+
+    const rosterCount = Array.isArray(data.roster)
+      ? data.roster.filter(p => p && p.active !== false).length
+      : 0;
+    const weekCount = Array.isArray(data.weeks) ? data.weeks.length : 0;
+    const curWeek = data && data.profile && data.profile.currentSignupWeek
+      ? ("Week " + data.profile.currentSignupWeek)
+      : "Not set";
+
+    if(viewer){
+      viewer.textContent = `Live Google Sheets data loaded. Players: ${rosterCount}. Weeks: ${weekCount}. Current signup week: ${curWeek}.`;
+    }
+    return true;
+  }
+
+  if(viewer) viewer.textContent = "Google response was empty or invalid. Showing fallback data.";
   return false;
 }
 
@@ -2313,7 +2330,9 @@ function renderHallOfFame() {
 
 window.addEventListener('load', async ()=>{
   const loaded = await tryLoadLiveGoogleData();
-  if(!loaded && (window.POUNCEY_PUBLIC_DATA || window.POUNCY_PUBLIC_DATA)) data = window.POUNCEY_PUBLIC_DATA || window.POUNCY_PUBLIC_DATA;
+  if(!loaded && (window.POUNCEY_PUBLIC_DATA || window.POUNCY_PUBLIC_DATA)){
+    data = window.POUNCEY_PUBLIC_DATA || window.POUNCY_PUBLIC_DATA;
+  }
   useData();
 });
 </script>
