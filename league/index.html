@@ -975,9 +975,12 @@ tr:nth-child(even) td{
         
         
       </div>
-      
+      <div class="row2" style="margin-top:12px">
+        <div><label style="display:block;font-weight:700;margin-bottom:6px">Note</label><div class="small" style="margin-top:10px">Photo is optional. Photos are uploaded to Google Drive and only the Drive image URL is stored. Existing players can update their photo here. Ratings for existing players stay protected.</div></div>
+        <div></div>
+      </div>
       <button style="margin-top:12px" onclick="saveLeaguePlayerProfile()">Save Profile</button>
-      <div id="enrollPlayerStatus" class="small" style="margin-top:10px">No profile changes submitted yet.</div>
+      <div id="enrollPlayerStatus" class="small" style="margin-top:10px">No profile changes submitted yet.</div><div class="photo-removed-note">Photo upload functionality has been removed from this version to keep League data loading stable.</div>
     </div>
 
     <div class="card" style="margin-top:16px">
@@ -1090,6 +1093,7 @@ tr:nth-child(even) td{
   </div>
 </div>
 
+<script src="../config.js"></script>
 <script src="../public-data.js"></script>
 <script>
 let data = window.POUNCEY_PUBLIC_DATA || null;
@@ -1159,45 +1163,17 @@ function loadPublicFile() {
   };
   reader.readAsText(file);
 }
-
-function getMatchScore1(m){
-  const raw = (m && m.score1 != null) ? m.score1 : ((m && m.team1Score != null) ? m.team1Score : 0);
-  const n = Number(raw);
-  return Number.isFinite(n) ? n : 0;
-}
-function getMatchScore2(m){
-  const raw = (m && m.score2 != null) ? m.score2 : ((m && m.team2Score != null) ? m.team2Score : 0);
-  const n = Number(raw);
-  return Number.isFinite(n) ? n : 0;
-}
-function normalizeLeagueDataForScores(){
-  if(!data || !Array.isArray(data.weeks)) return;
-  data.weeks.forEach(w => {
-    ["saturday","sunday"].forEach(dayKey => {
-      const rows = w && w[dayKey] && Array.isArray(w[dayKey].schedule) ? w[dayKey].schedule : [];
-      rows.forEach(m => {
-        if(m.score1 == null && m.team1Score != null) m.score1 = Number(m.team1Score);
-        if(m.score2 == null && m.team2Score != null) m.score2 = Number(m.team2Score);
-      });
-    });
-  });
-}
-
 function buildPlayerStats() {
-  normalizeLeagueDataForScores();
   const stats = {};
   (data.roster||[]).forEach(p => stats[p.name] = {name:p.name,wins:0,losses:0,pf:0,pa:0,elo:Number(p.elo||0),active:p.active!==false,photoUrl:String(p.photoUrl||"")});
   (data.weeks||[]).forEach(w => ["saturday","sunday"].forEach(day => (w[day]?.schedule||[]).forEach(m => {
     if(!m.completed) return;
-    const [a,b,c,d] = [m.team1?.[0],m.team1?.[1],m.team2?.[0],m.team2?.[1]];
-    [a,b,c,d].filter(Boolean).forEach(n => { if(!stats[n]) stats[n] = {name:n,wins:0,losses:0,pf:0,pa:0,elo:0,active:true,photoUrl:""}; });
-    const s1 = getMatchScore1(m), s2 = getMatchScore2(m);
-    if(a){ stats[a].pf += s1; stats[a].pa += s2; }
-    if(b){ stats[b].pf += s1; stats[b].pa += s2; }
-    if(c){ stats[c].pf += s2; stats[c].pa += s1; }
-    if(d){ stats[d].pf += s2; stats[d].pa += s1; }
-    if(s1 > s2) { if(a) stats[a].wins++; if(b) stats[b].wins++; if(c) stats[c].losses++; if(d) stats[d].losses++; }
-    else if(s2 > s1) { if(c) stats[c].wins++; if(d) stats[d].wins++; if(a) stats[a].losses++; if(b) stats[b].losses++; }
+    const [a,b,c,d] = [m.team1[0],m.team1[1],m.team2[0],m.team2[1]];
+    [a,b,c,d].forEach(n => { if(!stats[n]) stats[n] = {name:n,wins:0,losses:0,pf:0,pa:0,elo:0,active:true,photoUrl:""}; });
+    stats[a].pf += Number(m.score1||0); stats[b].pf += Number(m.score1||0); stats[c].pf += Number(m.score2||0); stats[d].pf += Number(m.score2||0);
+    stats[a].pa += Number(m.score2||0); stats[b].pa += Number(m.score2||0); stats[c].pa += Number(m.score1||0); stats[d].pa += Number(m.score1||0);
+    if(Number(m.score1||0) > Number(m.score2||0)) { stats[a].wins++; stats[b].wins++; stats[c].losses++; stats[d].losses++; }
+    else { stats[c].wins++; stats[d].wins++; stats[a].losses++; stats[b].losses++; }
   })));
   const minMatches = Number(data.profile?.minMatchesForPlayoffs || 8);
   return Object.values(stats).map(s => {
@@ -1211,6 +1187,11 @@ function getLiveGoogleUrl(){
     const params = new URLSearchParams(window.location.search);
     const qs = params.get("gs") || params.get("googleScriptUrl");
     if(qs) return qs;
+  }catch(e){}
+  try{
+    if(window.POUNCEY_CONFIG && window.POUNCEY_CONFIG.googleScriptUrl){
+      return String(window.POUNCEY_CONFIG.googleScriptUrl).trim();
+    }
   }catch(e){}
   try{
     const embedded = (window.POUNCEY_PUBLIC_DATA || window.POUNCY_PUBLIC_DATA || null);
@@ -1246,6 +1227,10 @@ async function tryLoadLiveGoogleData(){
     if(json && json.ok && json.data){
       data = json.data;
       if(typeof sanitizeRosterPhotoUrls === "function") sanitizeRosterPhotoUrls();
+      const configuredUrl = (window.POUNCEY_CONFIG && window.POUNCEY_CONFIG.googleScriptUrl) ? String(window.POUNCEY_CONFIG.googleScriptUrl).trim() : "";
+      if(configuredUrl){
+        try { localStorage.setItem("pouncey_google_script_url", configuredUrl); localStorage.setItem("pouncy_google_script_url", configuredUrl); } catch(e) {}
+      }
       if(data.profile && data.profile.googleScriptUrl){
         try {
           localStorage.setItem("pouncey_google_script_url", data.profile.googleScriptUrl);
@@ -1279,7 +1264,6 @@ function sanitizeRosterPhotoUrls(){
 }
 function useData() {
   if(typeof sanitizeRosterPhotoUrls === "function") sanitizeRosterPhotoUrls();
-  normalizeLeagueDataForScores();
   const viewer = document.getElementById("viewerStatus");
   if(!data) {
     if(viewer) viewer.textContent = "No league data found yet. Make sure Google Sheets sync is configured or the shared data file is updated.";
@@ -1428,7 +1412,7 @@ function getWeeklyRankingRows(){
     const matches = (targetWeek[dayKey] && Array.isArray(targetWeek[dayKey].schedule)) ? targetWeek[dayKey].schedule : [];
     matches.filter(m => m.completed).forEach(m => {
       const t1 = m.team1 || [], t2 = m.team2 || [];
-      const s1 = getMatchScore1(m), s2 = getMatchScore2(m);
+      const s1 = Number(m.score1 || 0), s2 = Number(m.score2 || 0);
       [...t1, ...t2].forEach(name => {
         if(!stats[name]) stats[name] = {name, wins:0, losses:0, pf:0, pa:0};
       });
@@ -1592,7 +1576,7 @@ function renderLatestResultsWidget() {
           <div class="latest-meta">Round ${m.round} • Court ${m.court}</div>
         </div>
         <div class="latest-score-col">
-          <div class="latest-score-pill">${getMatchScore1(m)}-${getMatchScore2(m)}</div>
+          <div class="latest-score-pill">${m.score1}-${m.score2}</div>
         </div>
         <div class="latest-team right">
           <div class="avatar-stack">
@@ -1971,7 +1955,7 @@ function renderSchedule() {
   scheduleBox.innerHTML = rows.map(m => {
     const editor = (!m.completed && editable)
       ? `<div style="margin-top:12px"><input type="number" min="0" inputmode="numeric" id="sched1_${weekNum}_${day}_${m.round}_${m.court}" style="width:64px;padding:8px;border:1px solid #ccd7e5;border-radius:10px" placeholder="0"> <input type="number" min="0" inputmode="numeric" id="sched2_${weekNum}_${day}_${m.round}_${m.court}" style="width:64px;padding:8px;border:1px solid #ccd7e5;border-radius:10px" placeholder="0"> <button style="padding:8px 10px;min-height:auto" onclick="saveScheduleScore(${weekNum}, '${day}', ${m.round}, ${m.court})">Save</button><div class="small" id="schedmsg_${weekNum}_${day}_${m.round}_${m.court}" style="margin-top:6px"></div></div>`
-      : `<div class="info-value" style="margin-top:12px">${m.completed ? `${getMatchScore1(m)}-${getMatchScore2(m)}` : 'Pending'}</div>`;
+      : `<div class="info-value" style="margin-top:12px">${m.completed ? `${m.score1}-${m.score2}` : 'Pending'}</div>`;
     return `
       <div class="player-profile-card" style="margin-top:12px">
         <div class="player-profile-hero">
@@ -2088,7 +2072,7 @@ function renderHistory() {
           <div class="info-card">
             <div class="info-label">${m.day[0].toUpperCase()+m.day.slice(1)} • Round ${m.round} • Court ${m.court}</div>
             <div class="info-value" style="margin-top:8px">${teamWithAvatarsMarkup(m.team1)}<div style="margin:8px 0;font-weight:800">vs</div>${teamWithAvatarsMarkup(m.team2)}</div>
-            <div class="small" style="margin-top:6px">Result: ${getMatchScore1(m)}-${getMatchScore2(m)}</div>
+            <div class="small" style="margin-top:6px">Result: ${m.score1}-${m.score2}</div>
           </div>
         `).join('')}</div>`
       : '<div class="small" style="margin-top:12px">No completed match results yet for this week.</div>';
@@ -2133,7 +2117,7 @@ function buildPlayerDeepStats(){
           base[name].weekSessionCounts[w.week] = (base[name].weekSessionCounts[w.week] || 0) + 1;
           base[name].bestWeekSessions = Math.max(base[name].bestWeekSessions, base[name].weekSessionCounts[w.week]);
         });
-        const s1 = getMatchScore1(m), s2 = getMatchScore2(m);
+        const s1 = Number(m.score1||0), s2 = Number(m.score2||0);
         (m.team1 || []).forEach(name => { base[name].pf += s1; base[name].pa += s2; if(s1>s2) base[name].wins++; else if(s2>s1) base[name].losses++; else base[name].ties++; });
         (m.team2 || []).forEach(name => { base[name].pf += s2; base[name].pa += s1; if(s2>s1) base[name].wins++; else if(s1>s2) base[name].losses++; else base[name].ties++; });
       });
@@ -2271,7 +2255,7 @@ function renderWeeklyAwardsPublic(){
   ['saturday','sunday'].forEach(d => (activeWeek[d]?.schedule || []).forEach(m => { if(m.completed) matches.push({...m, day:d}); }));
   let matchOfWeek = null, closest = 999;
   matches.forEach(m => {
-    const diff = Math.abs(getMatchScore1(m) - getMatchScore2(m));
+    const diff = Math.abs(Number(m.score1||0) - Number(m.score2||0));
     if(diff < closest){ closest = diff; matchOfWeek = m; }
   });
 
