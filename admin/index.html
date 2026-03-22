@@ -990,6 +990,7 @@ tr:nth-child(even) td{
 
 </div>
 
+<script src="../config.js"></script>
 <script src="../public-data.js"></script>
 <script>
 const KEY = "pouncey_tract_admin_professional_v1";
@@ -1014,6 +1015,14 @@ function esc(s){ return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;")
 function fmtDate(iso){ if(!iso) return ""; const d=new Date(iso+"T12:00:00"); return d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); }
 function addDays(iso,n){ const d=new Date(iso+"T12:00:00"); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
 function saturdaysBetween(start,end){ let d=new Date(start+"T12:00:00"); while(d.getDay()!==6) d.setDate(d.getDate()+1); const arr=[]; while(d.toISOString().slice(0,10)<=end){ arr.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+7); } return arr; }
+
+function getConfiguredGoogleScriptUrl(){
+  try{
+    return (window.POUNCEY_CONFIG && window.POUNCEY_CONFIG.googleScriptUrl) ? String(window.POUNCEY_CONFIG.googleScriptUrl).trim() : "";
+  }catch(e){}
+  return "";
+}
+
 function syncProfileFromUI(){
   const googleUrlEl = document.getElementById("googleScriptUrl");
   const googleDriveFolderEl = document.getElementById("googleDriveFolderId");
