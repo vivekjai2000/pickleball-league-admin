@@ -1018,9 +1018,27 @@ function saturdaysBetween(start,end){ let d=new Date(start+"T12:00:00"); while(d
 
 function getConfiguredGoogleScriptUrl(){
   try{
-    return (window.POUNCEY_CONFIG && window.POUNCEY_CONFIG.googleScriptUrl) ? String(window.POUNCEY_CONFIG.googleScriptUrl).trim() : "";
+    if(window.POUNCEY_CONFIG && window.POUNCEY_CONFIG.googleScriptUrl){
+      return String(window.POUNCEY_CONFIG.googleScriptUrl).trim();
+    }
   }catch(e){}
   return "";
+}
+
+function applyConfiguredGoogleScriptUrl(){
+  const configured = getConfiguredGoogleScriptUrl();
+  if(!configured) return;
+  if(!state.profile) state.profile = {};
+  if(!state.profile.googleScriptUrl) state.profile.googleScriptUrl = configured;
+  try{
+    if(!localStorage.getItem("pouncey_google_script_url")){
+      localStorage.setItem("pouncey_google_script_url", configured);
+    }
+  }catch(e){}
+  const gs = document.getElementById("googleScriptUrl");
+  if(gs && !gs.value) gs.value = configured;
+  const statusEl = document.getElementById("googleScriptStatus");
+  if(statusEl) statusEl.textContent = "Google Apps Script URL loaded automatically from config.js.";
 }
 
 function syncProfileFromUI(){
@@ -1039,7 +1057,7 @@ function syncProfileFromUI(){
     kFactor: Number(kFactor.value || 24),
     minMatchesForPlayoffs: Number((minMatchesEl && minMatchesEl.value) || state.profile.minMatchesForPlayoffs || 8),
     playoffFormat: Number((playoffEl && playoffEl.value) || state.profile.playoffFormat || 12),
-    googleScriptUrl: (googleUrlEl && googleUrlEl.value ? googleUrlEl.value.trim() : (state.profile.googleScriptUrl || localStorage.getItem("pouncey_google_script_url") || "")),
+    googleScriptUrl: (googleUrlEl && googleUrlEl.value ? googleUrlEl.value.trim() : (state.profile.googleScriptUrl || localStorage.getItem("pouncey_google_script_url") || getConfiguredGoogleScriptUrl() || "")),
     googleDriveFolderId: (googleDriveFolderEl && googleDriveFolderEl.value ? googleDriveFolderEl.value.trim() : (state.profile.googleDriveFolderId || "")),
     currentSignupWeek: ((document.getElementById("currentSignupWeek")||{}).value || state.profile.currentSignupWeek || "")
   };
@@ -1060,7 +1078,7 @@ function pushProfileToUI(){
   const pf = document.getElementById("playoffFormat");
   if (pf) pf.value = String(p.playoffFormat ?? 12);
   const gs = document.getElementById("googleScriptUrl");
-  if (gs) gs.value = p.googleScriptUrl || localStorage.getItem("pouncey_google_script_url") || "";
+  if (gs) gs.value = p.googleScriptUrl || localStorage.getItem("pouncey_google_script_url") || getConfiguredGoogleScriptUrl() || "";
 }
 
 
@@ -1669,8 +1687,11 @@ function saveGoogleScriptUrl(){
   const el = document.getElementById("googleScriptUrl");
   const url = (el && el.value ? el.value : "").trim();
   if(!url){
+    url = getConfiguredGoogleScriptUrl();
+  }
+  if(!url){
     const statusEl = document.getElementById("googleScriptStatus");
-    if(statusEl) statusEl.textContent = "Please enter a valid URL.";
+    if(statusEl) statusEl.textContent = "No Apps Script URL found. Add it to config.js or enter it here.";
     return;
   }
   if(!state.profile) state.profile = {};
@@ -1738,6 +1759,7 @@ async function silentRefreshFromGoogleSheets(){
     state.availability = loaded.availability || {};
     state.playoffs = loaded.playoffs || {};
     pushProfileToUI();
+applyConfiguredGoogleScriptUrl();
     renderRoster();
     renderWeeks();
     renderWeekOptions();
