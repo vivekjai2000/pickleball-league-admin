@@ -1057,7 +1057,7 @@ function syncProfileFromUI(){
     kFactor: Number(kFactor.value || 24),
     minMatchesForPlayoffs: Number((minMatchesEl && minMatchesEl.value) || state.profile.minMatchesForPlayoffs || 8),
     playoffFormat: Number((playoffEl && playoffEl.value) || state.profile.playoffFormat || 12),
-    googleScriptUrl: (googleUrlEl && googleUrlEl.value ? googleUrlEl.value.trim() : (state.profile.googleScriptUrl || localStorage.getItem("pouncey_google_script_url") || getConfiguredGoogleScriptUrl() || "")),
+    googleScriptUrl: (getConfiguredGoogleScriptUrl() || (googleUrlEl && googleUrlEl.value ? googleUrlEl.value.trim() : "") || state.profile.googleScriptUrl || localStorage.getItem("pouncey_google_script_url") || ""),
     googleDriveFolderId: (googleDriveFolderEl && googleDriveFolderEl.value ? googleDriveFolderEl.value.trim() : (state.profile.googleDriveFolderId || "")),
     currentSignupWeek: ((document.getElementById("currentSignupWeek")||{}).value || state.profile.currentSignupWeek || "")
   };
@@ -1078,7 +1078,7 @@ function pushProfileToUI(){
   const pf = document.getElementById("playoffFormat");
   if (pf) pf.value = String(p.playoffFormat ?? 12);
   const gs = document.getElementById("googleScriptUrl");
-  if (gs) gs.value = p.googleScriptUrl || localStorage.getItem("pouncey_google_script_url") || getConfiguredGoogleScriptUrl() || "";
+  if (gs) gs.value = getConfiguredGoogleScriptUrl() || p.googleScriptUrl || localStorage.getItem("pouncey_google_script_url") || "";
 }
 
 
@@ -1703,24 +1703,21 @@ async function verifyGoogleSheetState(){
 }
 
 function saveGoogleScriptUrl(){
-  const el = document.getElementById("googleScriptUrl");
-  const url = (el && el.value ? el.value : "").trim();
+  const configured = applyConfiguredGoogleScriptUrl(true);
+  const url = configured || getConfiguredGoogleScriptUrl();
+  const statusEl = document.getElementById("googleScriptStatus");
   if(!url){
-    url = getConfiguredGoogleScriptUrl();
-  }
-  if(!url){
-    const statusEl = document.getElementById("googleScriptStatus");
-    if(statusEl) statusEl.textContent = "No Apps Script URL found. Add it to config.js or enter it here.";
+    if(statusEl) statusEl.textContent = "No Apps Script URL found in config.js.";
     return;
   }
   if(!state.profile) state.profile = {};
   state.profile.googleScriptUrl = url;
-  try {
+  try{
     localStorage.setItem("pouncey_google_script_url", url);
-  } catch(e) {}
+  }catch(e){}
   saveState();
-  const statusEl = document.getElementById("googleScriptStatus");
-  if(statusEl) statusEl.textContent = "Google Apps Script URL saved."; startAdminAutoRefresh();
+  if(statusEl) statusEl.textContent = "Google Apps Script URL loaded automatically from config.js.";
+  try{ startAdminAutoRefresh(); }catch(e){}
 }
 async function testGoogleScriptConnection(){
   try{
@@ -1762,7 +1759,7 @@ function buildAdminSheetSnapshot(payload){
 async function silentRefreshFromGoogleSheets(){
   try{
     syncProfileFromUI();
-    const url = (state.profile && state.profile.googleScriptUrl) || localStorage.getItem("pouncey_google_script_url") || "";
+    const url = getConfiguredGoogleScriptUrl() || (state.profile && state.profile.googleScriptUrl) || localStorage.getItem("pouncey_google_script_url") || "";
     if(!url) return;
     const res = await fetch(url + "?action=loadLeagueState", {method:"GET", mode:"cors"});
     const json = await res.json();
@@ -1778,6 +1775,7 @@ async function silentRefreshFromGoogleSheets(){
     state.availability = loaded.availability || {};
     state.playoffs = loaded.playoffs || {};
     pushProfileToUI();
+applyConfiguredGoogleScriptUrl(true);
 applyConfiguredGoogleScriptUrl();
     renderRoster();
     renderWeeks();
@@ -1798,7 +1796,7 @@ applyConfiguredGoogleScriptUrl();
 function startAdminAutoRefresh(){
   if(ADMIN_AUTO_REFRESH_HANDLE) clearInterval(ADMIN_AUTO_REFRESH_HANDLE);
   syncProfileFromUI();
-  const url = (state.profile && state.profile.googleScriptUrl) || localStorage.getItem("pouncey_google_script_url") || "";
+  const url = getConfiguredGoogleScriptUrl() || (state.profile && state.profile.googleScriptUrl) || localStorage.getItem("pouncey_google_script_url") || "";
   if(!url) return;
   ADMIN_AUTO_REFRESH_HANDLE = setInterval(silentRefreshFromGoogleSheets, 15000);
 }
