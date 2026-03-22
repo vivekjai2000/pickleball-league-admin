@@ -1394,10 +1394,20 @@ function saveCheckin(){
   autoPushLeagueToGoogleSheets('check-in save');
 }
 function generateAllSchedules(){
-  let count = 0;
+  let generatedCount = 0;
+  let skippedSundayCount = 0;
+
   state.weeks.forEach(week => {
-    ['saturday','sunday'].forEach(dayKey => {
+    ["saturday","sunday"].forEach(dayKey => {
       if(!week[dayKey].active) return;
+
+      if(dayKey === "sunday"){
+        const sundayBlockReason = getSundayGenerationBlockReason(week);
+        if(sundayBlockReason){
+          skippedSundayCount++;
+          return;
+        }
+      }
 
       const signedUpPlayers = getSignedUpPlayersFor(week.week, dayKey);
       if(!signedUpPlayers.length) return;
@@ -1407,15 +1417,24 @@ function generateAllSchedules(){
 
       if(players.length >= 4){
         week[dayKey].schedule = buildSmartSchedule(players, week[dayKey].courts, week[dayKey].rounds);
-        count++;
+        generatedCount++;
       }
     });
   });
+
   saveState();
   renderSummary();
-  bulkScheduleStatus.textContent = count
-    ? `Generated ${count} active day schedules using signed-up players only.`
-    : `No schedules were generated. Make sure players signed up and at least 4 players are signed up per active day.`;
+
+  if(generatedCount){
+    bulkScheduleStatus.textContent = skippedSundayCount
+      ? `Generated ${generatedCount} active day schedules. Skipped ${skippedSundayCount} Sunday schedule(s) because Saturday was not fully completed.`
+      : `Generated ${generatedCount} active day schedules using signed-up players only.`;
+  } else {
+    bulkScheduleStatus.textContent = skippedSundayCount
+      ? `No new schedules were generated. Sunday schedules were blocked until Saturday is fully completed.`
+      : `No schedules were generated. Make sure players signed up and at least 4 players are signed up per active day.`;
+  }
+
   autoPushLeagueToGoogleSheets('bulk schedule generation');
 }
 
@@ -2031,6 +2050,26 @@ function previewSignedUpPlayersForSchedule(){
   previewEl.textContent = `Scheduling with: ${players.join(", ")}`;
 }
 
+
+function getAdminDayRows(weekObj, dayKey){
+  return weekObj && weekObj[dayKey] && Array.isArray(weekObj[dayKey].schedule) ? weekObj[dayKey].schedule : [];
+}
+
+function getSundayGenerationBlockReason(weekObj){
+  if(!weekObj) return "Week not found.";
+  if(!(weekObj.sunday && weekObj.sunday.active)) return "";
+  if(!(weekObj.saturday && weekObj.saturday.active)) return "";
+  const saturdayRows = getAdminDayRows(weekObj, "saturday");
+  if(!saturdayRows.length){
+    return `Cannot generate Sunday for Week ${weekObj.week} yet. Saturday schedule has not been generated.`;
+  }
+  const pendingSaturday = saturdayRows.filter(m => !m.completed);
+  if(pendingSaturday.length){
+    return `Cannot generate Sunday for Week ${weekObj.week} yet. Saturday games are not fully completed. Complete all Saturday matches first.`;
+  }
+  return "";
+}
+
 function generateDaySchedule(){
   const weekNum = Number(pickWeek.value);
   const dayLabel = pickDay.value;
@@ -2039,6 +2078,15 @@ function generateDaySchedule(){
 
   if(!week){ scheduleStatus.textContent = "Week not found."; previewSignedUpPlayersForSchedule(); return; }
   if(!week[dayKey].active){ scheduleStatus.textContent = `${dayLabel} is not active for Week ${weekNum}.`; previewSignedUpPlayersForSchedule(); return; }
+
+  if(dayKey === "sunday"){
+    const sundayBlockReason = getSundayGenerationBlockReason(week);
+    if(sundayBlockReason){
+      scheduleStatus.textContent = sundayBlockReason;
+      previewSignedUpPlayersForSchedule();
+      return;
+    }
+  }
 
   const existingRows = week[dayKey].schedule || [];
   if(existingRows.length && existingRows.every(m => m.completed)){
