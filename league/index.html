@@ -975,12 +975,8 @@ tr:nth-child(even) td{
         
         
       </div>
-      <div class="row2" style="margin-top:12px">
-        <div><label style="display:block;font-weight:700;margin-bottom:6px">Note</label><div class="small" style="margin-top:10px">Photo is optional. Photos are uploaded to Google Drive and only the Drive image URL is stored. Existing players can update their photo here. Ratings for existing players stay protected.</div></div>
-        <div></div>
-      </div>
-      <button style="margin-top:12px" onclick="saveLeaguePlayerProfile()">Save Profile</button>
-      <div id="enrollPlayerStatus" class="small" style="margin-top:10px">No profile changes submitted yet.</div><div class="photo-removed-note">Photo upload functionality has been removed from this version to keep League data loading stable.</div>
+            <button style="margin-top:12px" onclick="saveLeaguePlayerProfile()">Save Profile</button>
+      <div id="enrollPlayerStatus" class="small" style="margin-top:10px">No profile changes submitted yet.</div>
     </div>
 
     <div class="card" style="margin-top:16px">
@@ -1163,47 +1159,17 @@ function loadPublicFile() {
   };
   reader.readAsText(file);
 }
-
-function getMatchScore1(m){
-  const raw = (m && m.score1 != null) ? m.score1 : (m && m.team1Score != null ? m.team1Score : 0);
-  const n = Number(raw);
-  return Number.isFinite(n) ? n : 0;
-}
-function getMatchScore2(m){
-  const raw = (m && m.score2 != null) ? m.score2 : (m && m.team2Score != null ? m.team2Score : 0);
-  const n = Number(raw);
-  return Number.isFinite(n) ? n : 0;
-}
-function normalizeLeagueDataForRendering(){
-  if(!data || !Array.isArray(data.weeks)) return;
-  data.weeks.forEach(w => {
-    ["saturday","sunday"].forEach(dayKey => {
-      const rows = (w && w[dayKey] && Array.isArray(w[dayKey].schedule)) ? w[dayKey].schedule : [];
-      rows.forEach((m, idx) => {
-        if(m.score1 == null && m.team1Score != null) m.score1 = Number(m.team1Score);
-        if(m.score2 == null && m.team2Score != null) m.score2 = Number(m.team2Score);
-        if(!m.id){
-          m.id = `W${w.week}_${dayKey}_${m.round || 0}_${m.court || idx + 1}`;
-        }
-      });
-    });
-  });
-}
 function buildPlayerStats() {
-  normalizeLeagueDataForRendering();
   const stats = {};
   (data.roster||[]).forEach(p => stats[p.name] = {name:p.name,wins:0,losses:0,pf:0,pa:0,elo:Number(p.elo||0),active:p.active!==false,photoUrl:String(p.photoUrl||"")});
   (data.weeks||[]).forEach(w => ["saturday","sunday"].forEach(day => (w[day]?.schedule||[]).forEach(m => {
     if(!m.completed) return;
-    const [a,b,c,d] = [m.team1?.[0],m.team1?.[1],m.team2?.[0],m.team2?.[1]];
-    [a,b,c,d].filter(Boolean).forEach(n => { if(!stats[n]) stats[n] = {name:n,wins:0,losses:0,pf:0,pa:0,elo:0,active:true,photoUrl:""}; });
-    const s1 = getMatchScore1(m), s2 = getMatchScore2(m);
-    if(a){ stats[a].pf += s1; stats[a].pa += s2; }
-    if(b){ stats[b].pf += s1; stats[b].pa += s2; }
-    if(c){ stats[c].pf += s2; stats[c].pa += s1; }
-    if(d){ stats[d].pf += s2; stats[d].pa += s1; }
-    if(s1 > s2) { if(a) stats[a].wins++; if(b) stats[b].wins++; if(c) stats[c].losses++; if(d) stats[d].losses++; }
-    else if(s2 > s1) { if(c) stats[c].wins++; if(d) stats[d].wins++; if(a) stats[a].losses++; if(b) stats[b].losses++; }
+    const [a,b,c,d] = [m.team1[0],m.team1[1],m.team2[0],m.team2[1]];
+    [a,b,c,d].forEach(n => { if(!stats[n]) stats[n] = {name:n,wins:0,losses:0,pf:0,pa:0,elo:0,active:true,photoUrl:""}; });
+    stats[a].pf += Number(m.score1||0); stats[b].pf += Number(m.score1||0); stats[c].pf += Number(m.score2||0); stats[d].pf += Number(m.score2||0);
+    stats[a].pa += Number(m.score2||0); stats[b].pa += Number(m.score2||0); stats[c].pa += Number(m.score1||0); stats[d].pa += Number(m.score1||0);
+    if(Number(m.score1||0) > Number(m.score2||0)) { stats[a].wins++; stats[b].wins++; stats[c].losses++; stats[d].losses++; }
+    else { stats[c].wins++; stats[d].wins++; stats[a].losses++; stats[b].losses++; }
   })));
   const minMatches = Number(data.profile?.minMatchesForPlayoffs || 8);
   return Object.values(stats).map(s => {
@@ -1290,13 +1256,12 @@ function sanitizeRosterPhotoUrls(){
 }
 function useData() {
   if(typeof sanitizeRosterPhotoUrls === "function") sanitizeRosterPhotoUrls();
-  normalizeLeagueDataForRendering();
   const viewer = document.getElementById("viewerStatus");
   if(!data) {
     if(viewer) viewer.textContent = "No league data found yet. Make sure Google Sheets sync is configured or the shared data file is updated.";
     return;
   }
-  if(viewer && !viewer.textContent) viewer.textContent = getLiveGoogleUrl()
+  if(viewer) viewer.textContent = getLiveGoogleUrl()
     ? "Live Google Sheets data loaded."
     : "Showing fallback public data. Save/test the Apps Script URL in Admin if live data looks outdated.";
 
@@ -1439,7 +1404,7 @@ function getWeeklyRankingRows(){
     const matches = (targetWeek[dayKey] && Array.isArray(targetWeek[dayKey].schedule)) ? targetWeek[dayKey].schedule : [];
     matches.filter(m => m.completed).forEach(m => {
       const t1 = m.team1 || [], t2 = m.team2 || [];
-      const s1 = getMatchScore1(m), s2 = getMatchScore2(m);
+      const s1 = Number(m.score1 || 0), s2 = Number(m.score2 || 0);
       [...t1, ...t2].forEach(name => {
         if(!stats[name]) stats[name] = {name, wins:0, losses:0, pf:0, pa:0};
       });
@@ -2080,8 +2045,8 @@ function renderHistory() {
             court: m.court,
             team1: m.team1 || [],
             team2: m.team2 || [],
-            score1: getMatchScore1(m),
-            score2: getMatchScore2(m)
+            score1: Number(m.score1 || 0),
+            score2: Number(m.score2 || 0)
           });
         }
       });
@@ -2127,7 +2092,6 @@ function renderHistory() {
 }
 
 function buildPlayerDeepStats(){
-  normalizeLeagueDataForRendering();
   const base = {};
   (data.roster || []).forEach(p => {
     base[p.name] = {name:p.name,rating:Number(p.rating || 0),elo:Number(p.elo || 0),wins:0,losses:0,ties:0,sessions:new Set(),lastPlayedWeek:0,lastPlayedDay:"",bestWeekSessions:0,weekSessionCounts:{},pf:0,pa:0,photoUrl:String(p.photoUrl||"")};
@@ -2145,7 +2109,7 @@ function buildPlayerDeepStats(){
           base[name].weekSessionCounts[w.week] = (base[name].weekSessionCounts[w.week] || 0) + 1;
           base[name].bestWeekSessions = Math.max(base[name].bestWeekSessions, base[name].weekSessionCounts[w.week]);
         });
-        const s1 = getMatchScore1(m), s2 = getMatchScore2(m);
+        const s1 = Number(m.score1||0), s2 = Number(m.score2||0);
         (m.team1 || []).forEach(name => { base[name].pf += s1; base[name].pa += s2; if(s1>s2) base[name].wins++; else if(s2>s1) base[name].losses++; else base[name].ties++; });
         (m.team2 || []).forEach(name => { base[name].pf += s2; base[name].pa += s1; if(s2>s1) base[name].wins++; else if(s1>s2) base[name].losses++; else base[name].ties++; });
       });
@@ -2160,32 +2124,6 @@ function buildPlayerDeepStats(){
     const displayRating = p.elo ? p.elo / 100 : p.rating;
     return {...p,totalSessions,freq,diff,pct,displayRating};
   }).sort((a,b) => b.displayRating-a.displayRating || b.pct-a.pct || a.name.localeCompare(b.name));
-}
-
-
-function findLastPlayedForPlayer(name){
-  const rows = buildPlayerDeepStats();
-  const row = rows.find(r => normalizeLeaguePlayerName(r.name) === normalizeLeaguePlayerName(name));
-  if(!row || !row.lastPlayedWeek) return "Not played yet";
-  const day = row.lastPlayedDay ? row.lastPlayedDay.charAt(0).toUpperCase() + row.lastPlayedDay.slice(1) : "";
-  return `Week ${row.lastPlayedWeek}${day ? " • " + day : ""}`;
-}
-function findBestWeekForPlayer(name){
-  const rows = buildPlayerDeepStats();
-  const row = rows.find(r => normalizeLeaguePlayerName(r.name) === normalizeLeaguePlayerName(name));
-  if(!row || !row.bestWeekSessions) return "No sessions yet";
-  const weekEntries = Object.entries(row.weekSessionCounts || {}).sort((a,b) => Number(b[1]) - Number(a[1]) || Number(a[0]) - Number(b[0]));
-  if(!weekEntries.length) return "No sessions yet";
-  return `Week ${weekEntries[0][0]} • ${weekEntries[0][1]} session${Number(weekEntries[0][1]) === 1 ? "" : "s"}`;
-}
-function estimatePlayerFrequency(name){
-  const rows = buildPlayerDeepStats();
-  const row = rows.find(r => normalizeLeaguePlayerName(r.name) === normalizeLeaguePlayerName(name));
-  if(!row) return "New";
-  if(row.freq >= 0.75) return "Very Frequent";
-  if(row.freq >= 0.45) return "Regular";
-  if(row.freq > 0) return "Occasional";
-  return "New";
 }
 
 function renderPlayers() {
