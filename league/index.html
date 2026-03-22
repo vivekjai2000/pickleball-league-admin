@@ -975,8 +975,12 @@ tr:nth-child(even) td{
         
         
       </div>
-            <button style="margin-top:12px" onclick="saveLeaguePlayerProfile()">Save Profile</button>
-      <div id="enrollPlayerStatus" class="small" style="margin-top:10px">No profile changes submitted yet.</div>
+      <div class="row2" style="margin-top:12px">
+        <div><label style="display:block;font-weight:700;margin-bottom:6px">Note</label><div class="small" style="margin-top:10px">Photo is optional. Photos are uploaded to Google Drive and only the Drive image URL is stored. Existing players can update their photo here. Ratings for existing players stay protected.</div></div>
+        <div></div>
+      </div>
+      <button style="margin-top:12px" onclick="saveLeaguePlayerProfile()">Save Profile</button>
+      <div id="enrollPlayerStatus" class="small" style="margin-top:10px">No profile changes submitted yet.</div><div class="photo-removed-note">Photo upload functionality has been removed from this version to keep League data loading stable.</div>
     </div>
 
     <div class="card" style="margin-top:16px">
@@ -1663,16 +1667,53 @@ async function uploadLeaguePlayerPhotoToDriveFromFile(file, playerName, previous
   throw new Error("Photo upload has been removed from this version.");
 }
 
-async function updateMatchScoreOnGoogle(week, dayKey, round, court, score1, score2){
-  const json = await callLeagueGoogle("updateMatchScore", {
-    week:Number(week),
-    day:String(dayKey),
-    round:Number(round),
-    court:Number(court),
-    score1:Number(score1),
-    score2:Number(score2)
+
+function ensureLeagueMatchIds(){
+  if(!data || !Array.isArray(data.weeks)) return;
+  data.weeks.forEach(week => {
+    ["saturday","sunday"].forEach(dayKey => {
+      const rows = week && week[dayKey] && Array.isArray(week[dayKey].schedule) ? week[dayKey].schedule : [];
+      rows.forEach((m, idx) => {
+        if(!m.id){
+          m.id = `W${week.week}_${dayKey}_${m.round || 0}_${m.court || (idx + 1)}`;
+        }
+      });
+    });
   });
+}
+
+function findLeagueMatchForSave(week, dayKey, round, court){
+  ensureLeagueMatchIds();
+  const weekObj = (data.weeks || []).find(w => Number(w.week) === Number(week));
+  const rows = weekObj && weekObj[dayKey] && Array.isArray(weekObj[dayKey].schedule) ? weekObj[dayKey].schedule : [];
+  if(!rows.length) return null;
+  return rows.find(m => Number(m.round) === Number(round) && Number(m.court) === Number(court))
+    || rows.find(m => String(m.id || "") === `W${week}_${dayKey}_${round}_${court}`)
+    || null;
+}
+
+async function updateMatchScoreOnGoogle(week, dayKey, round, court, score1, score2){
+  const match = findLeagueMatchForSave(week, dayKey, round, court);
+  if(!match){
+    throw new Error(`Could not find the selected match for Week ${week} ${String(dayKey).charAt(0).toUpperCase()+String(dayKey).slice(1)}, Round ${round}, Court ${court}.`);
+  }
+
+  const json = await callLeagueGoogle("updateMatchScore", {
+    week: Number(week),
+    day: String(dayKey),
+    matchId: String(match.id || ""),
+    team1Score: Number(score1),
+    team2Score: Number(score2),
+
+    // compatibility fallback for older script versions
+    round: Number(round),
+    court: Number(court),
+    score1: Number(score1),
+    score2: Number(score2)
+  });
+
   if(json.data) data = json.data;
+  ensureLeagueMatchIds();
   return json;
 }
 
