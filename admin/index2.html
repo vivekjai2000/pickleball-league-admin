@@ -979,7 +979,106 @@ html[data-theme="dark"] .mobile-menu-item.active{
   border-color:#27457a !important;
   color:#bfdbfe !important;
 }
+/* =========================
+   PREMIUM UI (DARK + LIGHT FIX)
+   ========================= */
 
+:root{
+  --ui-text-1:#0f172a;
+  --ui-text-2:#64748b;
+  --ui-card:#ffffff;
+  --ui-border:#e2e8f0;
+  --ui-accent:#2563eb;
+}
+
+html[data-theme="dark"]{
+  --ui-text-1:#f1f5f9;
+  --ui-text-2:#94a3b8;
+  --ui-card:#0f172a;
+  --ui-border:#1e293b;
+  --ui-accent:#60a5fa;
+}
+
+/* TEXT FIX */
+body, .card, .match-card, .player-card{
+  color: var(--ui-text-1) !important;
+}
+
+.small, .subtitle, .meta{
+  color: var(--ui-text-2) !important;
+}
+
+/* PLAYER NAMES FIX */
+.player-name,
+.match-player-name,
+.latest-result-card strong,
+.latest-result-card span{
+  color: var(--ui-text-1) !important;
+}
+
+/* CARDS PREMIUM LOOK */
+.card,
+.match-card,
+.player-card,
+.playoff-match-card{
+  background: linear-gradient(180deg, var(--ui-card), rgba(255,255,255,0.02));
+  border: 1px solid var(--ui-border);
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+
+/* SCORE BADGES */
+.score-box,
+.latest-score-pill{
+  background: rgba(37,99,235,0.1);
+  color: var(--ui-text-1);
+  border: 1px solid rgba(37,99,235,0.2);
+}
+
+/* SELECTED PLAYER FIX */
+.selected{
+  background: rgba(37,99,235,0.15) !important;
+  border: 1px solid var(--ui-accent) !important;
+  color: var(--ui-text-1) !important;
+}
+
+/* PLAYOFF UI */
+.playoff-team-name,
+.bracket-team-name{
+  color: var(--ui-text-1) !important;
+}
+
+.playoff-score-input{
+  background: #0b1220;
+  color: white;
+  border: 1px solid var(--ui-border);
+}
+
+/* NAV FIX */
+.bottom-nav{
+  background: var(--ui-card);
+  border-top: 1px solid var(--ui-border);
+}
+
+.bottom-nav-item{
+  color: var(--ui-text-2);
+}
+
+.bottom-nav-item.active{
+  color: var(--ui-accent);
+}
+
+/* MOBILE FIX */
+@media (max-width:700px){
+  .match-card,
+  .latest-result-card{
+    padding: 12px;
+  }
+
+  .player-name{
+    font-size: 14px;
+  }
+}
 </style>
 </head>
 <body>
